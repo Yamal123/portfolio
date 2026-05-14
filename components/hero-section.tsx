@@ -7,16 +7,13 @@ import { ArrowRight, Sparkles } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 
 const keywordEmojis: Record<string, string> = {
-  "跨境供应链": "📦",
-  "AI Agent": "🤖",
-  "AI": "🤖",
-  "RAG": "🧠",
-  "意图识别": "🎯",
+  "产品设计": "🎨",
+  "技术探索": "🔬",
+  "供应链": "📦",
+  "AI Agent": "�",
   "摄影": "📷",
   "旅行": "✈️",
   "美食": "🍜",
-  "产品设计": "🎨",
-  "供应链": "📦",
 }
 
 interface Particle {
@@ -44,11 +41,11 @@ export default function HeroSection() {
   const [cursorVisible, setCursorVisible] = useState(true)
   const [visibleSections, setVisibleSections] = useState<number[]>([])
 
-  const title1 = language === "zh" ? "产品经理" : "Product Manager"
-  const title2 = language === "zh" ? "跨境供应链 × AI Agent" : "Cross-border Supply Chain × AI Agent"
+  const title1 = language === "zh" ? "你好，我是" : "Hello, I'm"
+  const title2 = "PM 思钱想厚"
   const description = language === "zh" 
-    ? "深耕跨境供应链与AI Agent赛道，专注RAG与意图识别技术应用。热爱摄影、旅行与美食，奔赴山海，记录烟火。" 
-    : "Deep expertise in cross-border supply chain and AI Agent, focusing on RAG and intent recognition applications. Passionate about photography, travel and food."
+    ? "热爱产品设计与技术探索，专注供应链和AI Agent领域。热爱摄影、旅行与美食，奔赴山海，记录烟火。" 
+    : "Passionate about product design and technology exploration, focusing on supply chain and AI Agent. Love photography, travel and food, exploring mountains and seas, capturing the warmth of life."
 
   useEffect(() => {
     const particlesArray: Particle[] = []
@@ -79,6 +76,12 @@ export default function HeroSection() {
   }, [])
 
   useEffect(() => {
+    setTitleText1("")
+    setTitleText2("")
+    setDescText("")
+    setShowCursor(false)
+    setCursorVisible(true)
+
     let title1Index = 0
     let title2Index = 0
     let descIndex = 0
@@ -173,32 +176,66 @@ export default function HeroSection() {
     let lastIndex = 0
     let keyCounter = 0
 
-    Object.keys(keywordEmojis).forEach(keyword => {
+    const sortedKeywords = Object.keys(keywordEmojis).sort((a, b) => b.length - a.length)
+    const matches: {start: number, end: number, keyword: string}[] = []
+
+    sortedKeywords.forEach(keyword => {
       const regex = new RegExp(keyword, "g")
       let match
       while ((match = regex.exec(text)) !== null) {
-        if (match.index > lastIndex) {
-          parts.push(
-            <span key={`text-${keyCounter++}`}>
-              {text.slice(lastIndex, match.index)}
-            </span>
-          )
+        matches.push({
+          start: match.index,
+          end: match.index + keyword.length,
+          keyword
+        })
+      }
+    })
+
+    matches.sort((a, b) => a.start - b.start)
+
+    const usedIndices = new Set<number>()
+    const filteredMatches: {start: number, end: number, keyword: string}[] = []
+
+    matches.forEach(match => {
+      let overlaps = false
+      for (let i = match.start; i < match.end; i++) {
+        if (usedIndices.has(i)) {
+          overlaps = true
+          break
         }
+      }
+      if (!overlaps) {
+        filteredMatches.push(match)
+        for (let i = match.start; i < match.end; i++) {
+          usedIndices.add(i)
+        }
+      }
+    })
+
+    filteredMatches.sort((a, b) => a.start - b.start)
+
+    filteredMatches.forEach(match => {
+      if (match.start > lastIndex) {
         parts.push(
-          <span 
-            key={`keyword-${keyCounter++}`}
-            className="relative group inline-block cursor-help"
-          >
-            <span className="text-orange-400 font-semibold border-b-2 border-dashed border-orange-400 pb-0.5 hover:text-orange-300 transition-colors">
-              {keyword}
-            </span>
-            <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-20 shadow-lg">
-              {keywordEmojis[keyword]} {keyword}
-            </span>
+          <span key={`text-${keyCounter++}`}>
+            {text.slice(lastIndex, match.start)}
           </span>
         )
-        lastIndex = match.index + keyword.length
       }
+      parts.push(
+        <span 
+          key={`keyword-${keyCounter++}`}
+          className="relative group inline-block cursor-help"
+        >
+          <span className="text-orange-400 font-semibold border-b-2 border-dashed border-orange-400 pb-0.5 hover:text-orange-300 transition-colors">
+            {match.keyword}
+          </span>
+          <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-20 shadow-lg">
+            {keywordEmojis[match.keyword]} {match.keyword}
+          </span>
+        </span>
+      )
+      lastIndex = match.end
     })
 
     if (lastIndex < text.length) {
@@ -264,20 +301,30 @@ export default function HeroSection() {
                 data-index="1"
                 className={`text-5xl md:text-6xl lg:text-7xl font-bold leading-tight min-h-[1.2em] transition-all duration-700 ${visibleSections.includes(1) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
               >
-                {titleText2.split("").map((char, index) => (
-                  <span 
-                    key={index} 
-                    className={`inline-block transition-all duration-300 hover:translate-y-[-2px] hover:translate-x-[1px] ${
-                      char === "×" 
-                        ? "text-gray-500 mx-2" 
-                        : theme === "dark" 
-                          ? "text-white" 
-                          : "text-gray-900"
-                    }`}
-                  >
-                    {char}
-                  </span>
-                ))}
+                {titleText2.split("").map((char, index) => {
+                  const pmStart = title2.indexOf("PM")
+                  const isBrandPm =
+                    pmStart >= 0 &&
+                    index >= pmStart &&
+                    index < pmStart + 2 &&
+                    title2.slice(pmStart, pmStart + 2) === "PM"
+                  const isMutedSlash = char === "/" && index === 0
+                  const colorClass = isMutedSlash
+                    ? "text-gray-500 mx-0.5"
+                    : isBrandPm
+                      ? "text-orange-400"
+                      : theme === "dark"
+                        ? "text-white"
+                        : "text-gray-900"
+                  return (
+                    <span
+                      key={index}
+                      className={`inline-block transition-all duration-300 hover:translate-y-[-2px] hover:translate-x-[1px] ${colorClass}`}
+                    >
+                      {char === " " ? "\u00a0" : char}
+                    </span>
+                  )
+                })}
               </h1>
             </div>
 

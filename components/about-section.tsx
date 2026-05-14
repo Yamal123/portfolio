@@ -4,7 +4,7 @@ import { useState } from "react"
 import Image from "next/image"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
-import { Mail, Linkedin, MessageCircle, Download } from "lucide-react"
+import { Mail, Linkedin, MessageCircle } from "lucide-react"
 
 export default function AboutSection() {
   const { language } = useLanguage()
@@ -40,7 +40,7 @@ export default function AboutSection() {
             {language === "zh" ? "关于我" : "About Me"}
           </p>
           <h2 className={`text-4xl md:text-5xl font-bold mb-6 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-            {language === "zh" ? "职业简介" : "Professional Profile"}
+            {language === "zh" ? "PM 思钱想厚" : "Professional Profile"}
           </h2>
         </div>
 
@@ -196,24 +196,6 @@ export default function AboutSection() {
                 </div>
               )}
             </div>
-
-            <a
-              href="/resume"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`group relative w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 ${
-                theme === "dark" ? "bg-gray-900 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"
-              }`}
-              onMouseEnter={() => setHoveredContact("resume")}
-              onMouseLeave={() => setHoveredContact(null)}
-            >
-              <Download className={`w-6 h-6 ${theme === "dark" ? "text-gray-400 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`} />
-              {hoveredContact === "resume" && (
-                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap shadow-lg">
-                  {language === "zh" ? "下载简历" : "Download Resume"}
-                </div>
-              )}
-            </a>
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
 import { ArrowRight, CheckCircle, Zap } from "lucide-react"
@@ -175,30 +176,36 @@ export default function PortfolioSection() {
                   ))}
                 </div>
 
-                <button className={`w-full py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
-                  hoveredProject === project.id
-                    ? "bg-orange-500 text-white"
-                    : theme === "dark"
-                      ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}>
-                  {language === "zh" ? "查看详情" : "View Details"}
-                  <ArrowRight className={`w-4 h-4 transition-transform ${hoveredProject === project.id ? "translate-x-1" : ""}`} />
-                </button>
+                        <Link
+                    href="/portfolio"
+                    className={`w-full py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+                      hoveredProject === project.id
+                        ? "bg-orange-500 text-white"
+                        : theme === "dark"
+                          ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    {language === "zh" ? "查看详情" : "View Details"}
+                    <ArrowRight className={`w-4 h-4 transition-transform ${hoveredProject === project.id ? "translate-x-1" : ""}`} />
+                  </Link>
               </div>
             </div>
           ))}
         </div>
 
         <div className="text-center mt-12">
-          <button className={`px-8 py-4 border rounded-full font-semibold transition-all duration-300 hover:scale-105 ${
-            theme === "dark"
-              ? "border-gray-700 text-white hover:border-orange-400 hover:text-orange-400"
-              : "border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-500"
-          }`}>
+          <Link
+            href="/portfolio"
+            className={`px-8 py-4 border rounded-full font-semibold transition-all duration-300 hover:scale-105 inline-flex items-center ${
+              theme === "dark"
+                ? "border-gray-700 text-white hover:border-orange-400 hover:text-orange-400"
+                : "border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-500"
+            }`}
+          >
             {language === "zh" ? "查看更多项目" : "View More Projects"}
             <ArrowRight className="w-5 h-5 inline-block ml-2" />
-          </button>
+          </Link>
         </div>
       </div>
     </section>

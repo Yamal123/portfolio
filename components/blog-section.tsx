@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { ExternalLink, Calendar, Tag, Copy, Check } from "lucide-react"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
@@ -205,14 +206,17 @@ export default function BlogSection() {
         )}
 
         <div className="text-center mt-12">
-          <button className={`px-8 py-4 border rounded-full font-semibold transition-all duration-300 hover:scale-105 ${
-            theme === "dark"
-              ? "border-gray-700 text-white hover:border-orange-400 hover:text-orange-400"
-              : "border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-500"
-          }`}>
+          <Link
+            href="/blog"
+            className={`px-8 py-4 border rounded-full font-semibold transition-all duration-300 hover:scale-105 inline-flex items-center ${
+              theme === "dark"
+                ? "border-gray-700 text-white hover:border-orange-400 hover:text-orange-400"
+                : "border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-500"
+            }`}
+          >
             {language === "zh" ? "查看更多文章" : "View More Articles"}
             <ExternalLink className="w-5 h-5 inline-block ml-2" />
-          </button>
+          </Link>
         </div>
       </div>
     </section>
