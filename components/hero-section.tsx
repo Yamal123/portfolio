@@ -7,13 +7,26 @@ import { ArrowRight, Sparkles } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 
 const keywordEmojis: Record<string, string> = {
+  "跨境供应链": "📦",
   "AI Agent": "🤖",
   "AI": "🤖",
+  "RAG": "🧠",
+  "意图识别": "🎯",
   "摄影": "📷",
   "旅行": "✈️",
   "美食": "🍜",
   "产品设计": "🎨",
   "供应链": "📦",
+}
+
+interface Particle {
+  id: number
+  x: number
+  y: number
+  size: number
+  speedX: number
+  speedY: number
+  opacity: number
 }
 
 export default function HeroSection() {
@@ -22,6 +35,7 @@ export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const [mouseX, setMouseX] = useState(0)
   const [mouseY, setMouseY] = useState(0)
+  const [particles, setParticles] = useState<Particle[]>([])
   
   const [titleText1, setTitleText1] = useState("")
   const [titleText2, setTitleText2] = useState("")
@@ -30,11 +44,39 @@ export default function HeroSection() {
   const [cursorVisible, setCursorVisible] = useState(true)
   const [visibleSections, setVisibleSections] = useState<number[]>([])
 
-  const title1 = language === "zh" ? "你好，我是" : "Hello, I'm"
-  const title2 = "PM 思钱想厚"
+  const title1 = language === "zh" ? "产品经理" : "Product Manager"
+  const title2 = language === "zh" ? "跨境供应链 × AI Agent" : "Cross-border Supply Chain × AI Agent"
   const description = language === "zh" 
-    ? "热爱产品设计与 AI 探索，专注深耕供应链与AI Agent赛道。热爱摄影、旅行与美食，奔赴山海，记录烟火。" 
-    : "Passionate about product design and AI exploration, with deep expertise in supply chain and AI Agent. Enjoying photography, travel and food, chasing mountains and seas, recording the warmth of life."
+    ? "深耕跨境供应链与AI Agent赛道，专注RAG与意图识别技术应用。热爱摄影、旅行与美食，奔赴山海，记录烟火。" 
+    : "Deep expertise in cross-border supply chain and AI Agent, focusing on RAG and intent recognition applications. Passionate about photography, travel and food."
+
+  useEffect(() => {
+    const particlesArray: Particle[] = []
+    for (let i = 0; i < 50; i++) {
+      particlesArray.push({
+        id: i,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: Math.random() * 3 + 1,
+        speedX: (Math.random() - 0.5) * 0.3,
+        speedY: (Math.random() - 0.5) * 0.3,
+        opacity: Math.random() * 0.5 + 0.1,
+      })
+    }
+    setParticles(particlesArray)
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setParticles(prev => prev.map(p => ({
+        ...p,
+        x: (p.x + p.speedX) % 100,
+        y: (p.y + p.speedY) % 100,
+      })))
+    }, 50)
+
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     let title1Index = 0
@@ -48,31 +90,37 @@ export default function HeroSection() {
       } else {
         clearInterval(timer1)
       }
-    }, 104)
+    }, 80)
 
-    const timer2 = setInterval(() => {
-      if (title2Index <= title2.length) {
-        setTitleText2(title2.slice(0, title2Index))
-        title2Index++
-      } else {
-        clearInterval(timer2)
-      }
-    }, 69)
+    const timer2 = setTimeout(() => {
+      const interval = setInterval(() => {
+        if (title2Index <= title2.length) {
+          setTitleText2(title2.slice(0, title2Index))
+          title2Index++
+        } else {
+          clearInterval(interval)
+        }
+      }, 60)
+      return () => clearInterval(interval)
+    }, title1.length * 80 + 300)
 
-    const timer3 = setInterval(() => {
-      if (descIndex <= description.length) {
-        setDescText(description.slice(0, descIndex))
-        descIndex++
-      } else {
-        clearInterval(timer3)
-        setShowCursor(true)
-      }
-    }, 43)
+    const timer3 = setTimeout(() => {
+      const interval = setInterval(() => {
+        if (descIndex <= description.length) {
+          setDescText(description.slice(0, descIndex))
+          descIndex++
+        } else {
+          clearInterval(interval)
+          setShowCursor(true)
+        }
+      }, 40)
+      return () => clearInterval(interval)
+    }, (title1.length * 80) + (title2.length * 60) + 600)
 
     return () => {
       clearInterval(timer1)
-      clearInterval(timer2)
-      clearInterval(timer3)
+      clearTimeout(timer2)
+      clearTimeout(timer3)
     }
   }, [language, title1, title2, description])
 
@@ -90,8 +138,8 @@ export default function HeroSection() {
     const handleMouseMove = (e: MouseEvent) => {
       if (sectionRef.current) {
         const rect = sectionRef.current.getBoundingClientRect()
-        setMouseX((e.clientX - rect.left - rect.width / 2) / 20)
-        setMouseY((e.clientY - rect.top - rect.height / 2) / 20)
+        setMouseX((e.clientX - rect.left - rect.width / 2) / 30)
+        setMouseY((e.clientY - rect.top - rect.height / 2) / 30)
       }
     }
 
@@ -141,7 +189,7 @@ export default function HeroSection() {
             key={`keyword-${keyCounter++}`}
             className="relative group inline-block cursor-help"
           >
-            <span className="border-b-2 border-dashed border-orange-400 pb-0.5">
+            <span className="text-orange-400 font-semibold border-b-2 border-dashed border-orange-400 pb-0.5 hover:text-orange-300 transition-colors">
               {keyword}
             </span>
             <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-20 shadow-lg">
@@ -168,14 +216,37 @@ export default function HeroSection() {
     <section 
       id="home" 
       ref={sectionRef}
-      className={`min-h-screen relative flex items-center pt-20 ${theme === "dark" ? "bg-black" : "bg-white"} overflow-hidden`}
+      className="min-h-screen relative flex items-center pt-20 overflow-hidden"
+      style={{
+        background: theme === "dark" 
+          ? "linear-gradient(180deg, #1A1A1A 0%, #000000 100%)" 
+          : "linear-gradient(180deg, #fafafa 0%, #ffffff 100%)"
+      }}
     >
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {particles.map((particle) => (
+          <div
+            key={particle.id}
+            className="absolute rounded-full bg-orange-500"
+            style={{
+              left: `${particle.x}%`,
+              top: `${particle.y}%`,
+              width: `${particle.size}px`,
+              height: `${particle.size}px`,
+              opacity: theme === "dark" ? particle.opacity * 0.6 : particle.opacity * 0.3,
+              transform: `translate(${mouseX * 0.5}px, ${mouseY * 0.5}px)`,
+              transition: "transform 0.3s ease-out",
+            }}
+          />
+        ))}
+      </div>
+
       <div 
-        className="absolute top-1/4 left-1/4 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl transition-transform duration-300 ease-out"
+        className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl transition-transform duration-500 ease-out"
         style={{ transform: `translate(${mouseX}px, ${mouseY}px)` }}
       ></div>
       <div 
-        className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl transition-transform duration-300 ease-out"
+        className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-3xl transition-transform duration-500 ease-out"
         style={{ transform: `translate(${-mouseX * 0.8}px, ${-mouseY * 0.8}px)` }}
       ></div>
       
@@ -185,7 +256,7 @@ export default function HeroSection() {
             <div className="space-y-4">
               <p 
                 data-index="0"
-                className={`font-medium tracking-wide min-h-[1.5em] transition-all duration-700 ${theme === "dark" ? "text-orange-400" : "text-orange-500"} ${visibleSections.includes(0) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+                className={`font-medium tracking-wide min-h-[1.5em] transition-all duration-700 text-orange-400 ${visibleSections.includes(0) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
               >
                 {titleText1}
               </p>
@@ -193,12 +264,20 @@ export default function HeroSection() {
                 data-index="1"
                 className={`text-5xl md:text-6xl lg:text-7xl font-bold leading-tight min-h-[1.2em] transition-all duration-700 ${visibleSections.includes(1) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
               >
-                {titleText2.split("").map((char, index) => {
-                  if (index < 2) {
-                    return <span key={index} className="text-orange-400">{char}</span>
-                  }
-                  return <span key={index} className={theme === "dark" ? "text-white" : "text-gray-900"}>{char}</span>
-                })}
+                {titleText2.split("").map((char, index) => (
+                  <span 
+                    key={index} 
+                    className={`inline-block transition-all duration-300 hover:translate-y-[-2px] hover:translate-x-[1px] ${
+                      char === "×" 
+                        ? "text-gray-500 mx-2" 
+                        : theme === "dark" 
+                          ? "text-white" 
+                          : "text-gray-900"
+                    }`}
+                  >
+                    {char}
+                  </span>
+                ))}
               </h1>
             </div>
 
@@ -220,17 +299,17 @@ export default function HeroSection() {
               className={`flex flex-col sm:flex-row gap-4 transition-all duration-700 ${visibleSections.includes(3) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
             >
               <button
-                onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
+                onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}
                 className="px-8 py-4 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
               >
                 {language === "zh" ? "联系我" : "Contact Me"}
                 <ArrowRight className="w-5 h-5" />
               </button>
               <button
-                onClick={() => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })}
+                onClick={() => document.getElementById("portfolio")?.scrollIntoView({ behavior: "smooth" })}
                 className={`px-8 py-4 border rounded-full font-semibold transition-all duration-300 ${theme === "dark" ? "border-gray-700 text-white hover:border-orange-400 hover:text-orange-400" : "border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-500"}`}
               >
-                {language === "zh" ? "查看项目" : "View Projects"}
+                {language === "zh" ? "查看作品集" : "View Portfolio"}
               </button>
             </div>
 
@@ -239,7 +318,7 @@ export default function HeroSection() {
               className={`flex flex-wrap gap-4 transition-all duration-700 ${visibleSections.includes(4) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
             >
               <a
-                href="https://www.google.com/search?q=GitHub+余猛"
+                href="https://github.com/Yamal123"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${theme === "dark" ? "bg-gray-800 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"}`}
@@ -253,11 +332,29 @@ export default function HeroSection() {
                   className={`w-6 h-6 ${theme === "dark" ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`}
                 />
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                  GitHub · @Yu Meng
+                  GitHub
                 </div>
               </a>
               <a
-                href="https://www.google.com/search?q=知乎+余猛"
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${theme === "dark" ? "bg-gray-800 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"}`}
+                aria-label="LinkedIn"
+              >
+                <Image 
+                  src="/icons/linkedin.svg" 
+                  alt="LinkedIn" 
+                  width={24} 
+                  height={24} 
+                  className={`w-6 h-6 ${theme === "dark" ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`}
+                />
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
+                  LinkedIn
+                </div>
+              </a>
+              <a
+                href="https://zhihu.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${theme === "dark" ? "bg-gray-800 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"}`}
@@ -271,61 +368,25 @@ export default function HeroSection() {
                   className={`w-6 h-6 ${theme === "dark" ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`}
                 />
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                  {language === "zh" ? "知乎 · @余猛" : "Zhihu · @Yu Meng"}
+                  {language === "zh" ? "知乎" : "Zhihu"}
                 </div>
               </a>
               <a
-                href="https://www.google.com/search?q=脉脉+余猛"
+                href="https://medium.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${theme === "dark" ? "bg-gray-800 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"}`}
-                aria-label="Maimai"
+                aria-label="Medium"
               >
                 <Image 
-                  src="/images/脉脉.svg" 
-                  alt="Maimai" 
+                  src="/icons/medium.svg" 
+                  alt="Medium" 
                   width={24} 
                   height={24} 
                   className={`w-6 h-6 ${theme === "dark" ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`}
                 />
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                  {language === "zh" ? "脉脉 · @余猛" : "Maimai · @Yu Meng"}
-                </div>
-              </a>
-              <a
-                href="https://www.google.com/search?q=语雀+余猛"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${theme === "dark" ? "bg-gray-800 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"}`}
-                aria-label="Yuque"
-              >
-                <Image 
-                  src="/images/语雀.svg" 
-                  alt="Yuque" 
-                  width={24} 
-                  height={24} 
-                  className={`w-6 h-6 ${theme === "dark" ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`}
-                />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                  {language === "zh" ? "语雀 · @余猛" : "Yuque · @Yu Meng"}
-                </div>
-              </a>
-              <a
-                href="https://www.google.com/search?q=微信公众号+余猛"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${theme === "dark" ? "bg-gray-800 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"}`}
-                aria-label="WeChat"
-              >
-                <Image 
-                  src="/images/微信公众号.svg" 
-                  alt="WeChat" 
-                  width={24} 
-                  height={24} 
-                  className={`w-6 h-6 ${theme === "dark" ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`}
-                />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                  {language === "zh" ? "微信公众号 · @余猛" : "WeChat · @Yu Meng"}
+                  Medium
                 </div>
               </a>
             </div>

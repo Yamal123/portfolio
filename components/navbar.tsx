@@ -21,9 +21,9 @@ export default function Navbar() {
 
   const navItems = [
     { id: "home", label: language === "zh" ? "首页" : "Home" },
-    { id: "skills", label: language === "zh" ? "擅长领域" : "Skills" },
-    { id: "projects", label: language === "zh" ? "Vibe Coding项目" : "Vibe Coding" },
-    { id: "about", label: language === "zh" ? "关于" : "About" },
+    { id: "portfolio", label: language === "zh" ? "作品集" : "Portfolio" },
+    { id: "blog", label: language === "zh" ? "方法论" : "Methodology" },
+    { id: "about", label: language === "zh" ? "关于我" : "About" },
   ]
 
   const handleNavClick = (id: string) => {
@@ -68,6 +68,14 @@ export default function Navbar() {
                 {item.label}
               </button>
             ))}
+            <a
+              href="/resume"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-5 py-2.5 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 transition-all duration-300 hover:scale-105"
+            >
+              {language === "zh" ? "简历直达" : "Resume"}
+            </a>
           </div>
 
           {/* Theme Toggle Button */}
@@ -111,6 +119,14 @@ export default function Navbar() {
                 {item.label}
               </button>
             ))}
+            <a
+              href="/resume"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full text-center px-5 py-3 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 transition-all duration-300"
+            >
+              {language === "zh" ? "简历直达" : "Resume"}
+            </a>
           </div>
         </div>
       )}

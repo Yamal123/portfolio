@@ -1,12 +1,16 @@
 "use client"
 
+import { useState } from "react"
 import Image from "next/image"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
+import { Mail, Linkedin, MessageCircle, Download } from "lucide-react"
 
 export default function AboutSection() {
   const { language } = useLanguage()
   const { theme } = useTheme()
+  const [hoveredContact, setHoveredContact] = useState<string | null>(null)
+  const [showQRCode, setShowQRCode] = useState(false)
 
   const stats = [
     { value: "2+", label: language === "zh" ? "年经验" : "Years Exp" },
@@ -15,11 +19,32 @@ export default function AboutSection() {
     { value: "40%", label: language === "zh" ? "效率提升" : "Efficiency Gain" },
   ]
 
+  const skills = [
+    { name: "AI Agent", level: 95 },
+    { name: "RAG", level: 90 },
+    { name: "LLM", level: 88 },
+    { name: "意图识别", level: 85 },
+    { name: "跨境供应链", level: 92 },
+    { name: "产品设计", level: 88 },
+    { name: "数据分析", level: 82 },
+    { name: "项目管理", level: 85 },
+  ]
+
   return (
-    <section id="about" className={`py-24 relative ${theme === "dark" ? "bg-black" : "bg-gray-50"}`}>
+    <section id="about" className="py-24 relative overflow-hidden" style={{ background: theme === "dark" ? "#000000" : "#ffffff" }}>
+      <div className={`absolute top-0 left-0 w-full h-px ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`}></div>
+      
       <div className="max-w-6xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Left - Avatar */}
+        <div className="text-center mb-16">
+          <p className="font-medium tracking-wide mb-4 text-orange-400">
+            {language === "zh" ? "关于我" : "About Me"}
+          </p>
+          <h2 className={`text-4xl md:text-5xl font-bold mb-6 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+            {language === "zh" ? "职业简介" : "Professional Profile"}
+          </h2>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-16 items-center mb-20">
           <div className="relative">
             <div className="absolute -top-8 -left-8 w-full h-full border-2 border-orange-500/20 rounded-[3rem]"></div>
             <div className={`absolute -bottom-8 -right-8 w-full h-full border-2 rounded-[3rem] ${
@@ -39,21 +64,7 @@ export default function AboutSection() {
             </div>
           </div>
 
-          {/* Right - Content */}
           <div className="space-y-8">
-            <div>
-              <p className={`font-medium tracking-wide mb-4 ${
-                theme === "dark" ? "text-orange-400" : "text-orange-500"
-              }`}>
-                {language === "zh" ? "关于我" : "About Me"}
-              </p>
-              <h2 className={`text-4xl md:text-5xl font-bold mb-6 ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}>
-                {language === "zh" ? "为什么雇用我？" : "Why Hire Me?"}
-              </h2>
-            </div>
-
             <p className={`text-lg leading-relaxed ${
               theme === "dark" ? "text-gray-400" : "text-gray-600"
             }`}>
@@ -66,11 +77,10 @@ export default function AboutSection() {
               theme === "dark" ? "text-gray-400" : "text-gray-600"
             }`}>
               {language === "zh" 
-                ? "具备国际化产品视野，有中东、拉美地区产品经验，能打造可复制的海外AI产品方案。" 
-                : "International product perspective with Middle East and Latin America experience, able to build replicable overseas AI product solutions."}
+                ? "具备国际化产品视野，有中东、拉美地区产品经验，能打造可复制的海外AI产品方案。热爱摄影、旅行与美食，相信好的产品源于对生活的深度观察。" 
+                : "International product perspective with Middle East and Latin America experience, able to build replicable overseas AI product solutions. Passionate about photography, travel and food, believing great products come from deep observation of life."}
             </p>
 
-            {/* Stats */}
             <div className="grid grid-cols-2 gap-6 pt-4">
               {stats.map((stat, index) => (
                 <div key={index} className={`rounded-2xl p-6 text-center ${
@@ -83,14 +93,127 @@ export default function AboutSection() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
 
-            {/* CTA */}
-            <button
-              onClick={() => document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })}
-              className="px-8 py-4 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 transition-all duration-300 hover:scale-105"
+        <div className="mb-20">
+          <h3 className={`text-2xl font-bold mb-8 text-center ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+            {language === "zh" ? "技能标签" : "Skills"}
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {skills.map((skill, index) => (
+              <div 
+                key={index}
+                className={`p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
+                  theme === "dark"
+                    ? "bg-gray-900/50 border border-gray-800 hover:border-orange-500/30"
+                    : "bg-white border border-gray-200 hover:border-orange-300"
+                }`}
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <span className={`font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                    {skill.name}
+                  </span>
+                  <span className="text-orange-400 text-sm">{skill.level}%</span>
+                </div>
+                <div className={`h-1.5 rounded-full overflow-hidden ${
+                  theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+                }`}>
+                  <div 
+                    className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full transition-all duration-500"
+                    style={{ width: `${skill.level}%` }}
+                  ></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h3 className={`text-2xl font-bold mb-8 text-center ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+            {language === "zh" ? "联系方式" : "Contact"}
+          </h3>
+          <div className="flex flex-wrap justify-center gap-4">
+            <a
+              href="mailto:yumeng@aipmym.com"
+              className={`group relative w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+                theme === "dark" ? "bg-gray-900 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"
+              }`}
+              onMouseEnter={() => setHoveredContact("email")}
+              onMouseLeave={() => setHoveredContact(null)}
             >
-              {language === "zh" ? "开始合作" : "Let's Work Together"}
-            </button>
+              <Mail className={`w-6 h-6 ${theme === "dark" ? "text-gray-400 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`} />
+              {hoveredContact === "email" && (
+                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap shadow-lg">
+                  yumeng@aipmym.com
+                </div>
+              )}
+            </a>
+
+            <a
+              href="https://linkedin.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`group relative w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+                theme === "dark" ? "bg-gray-900 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"
+              }`}
+              onMouseEnter={() => setHoveredContact("linkedin")}
+              onMouseLeave={() => setHoveredContact(null)}
+            >
+              <Linkedin className={`w-6 h-6 ${theme === "dark" ? "text-gray-400 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`} />
+              {hoveredContact === "linkedin" && (
+                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap shadow-lg">
+                  LinkedIn
+                </div>
+              )}
+            </a>
+
+            <div className="relative">
+              <button
+                onClick={() => setShowQRCode(!showQRCode)}
+                className={`group relative w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+                  theme === "dark" ? "bg-gray-900 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"
+                }`}
+                onMouseEnter={() => setHoveredContact("wechat")}
+                onMouseLeave={() => setHoveredContact(null)}
+              >
+                <MessageCircle className={`w-6 h-6 ${theme === "dark" ? "text-gray-400 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`} />
+                {hoveredContact === "wechat" && !showQRCode && (
+                  <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap shadow-lg">
+                    {language === "zh" ? "微信" : "WeChat"}
+                  </div>
+                )}
+              </button>
+
+              {showQRCode && (
+                <div className="absolute -bottom-48 left-1/2 -translate-x-1/2 bg-white p-3 rounded-xl shadow-2xl border border-gray-200 z-50">
+                  <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <span className="text-4xl">📱</span>
+                  </div>
+                  <p className="text-center text-xs text-gray-600 mt-2">
+                    {language === "zh" ? "微信二维码" : "WeChat QR Code"}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <a
+              href="/resume"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`group relative w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+                theme === "dark" ? "bg-gray-900 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"
+              }`}
+              onMouseEnter={() => setHoveredContact("resume")}
+              onMouseLeave={() => setHoveredContact(null)}
+            >
+              <Download className={`w-6 h-6 ${theme === "dark" ? "text-gray-400 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`} />
+              {hoveredContact === "resume" && (
+                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap shadow-lg">
+                  {language === "zh" ? "下载简历" : "Download Resume"}
+                </div>
+              )}
+            </a>
           </div>
         </div>
       </div>
