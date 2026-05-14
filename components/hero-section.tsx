@@ -3,8 +3,8 @@
 import Image from "next/image"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
-import { ArrowRight, Sparkles, Video, BookOpen, MessageCircle, Github, MessageSquare, Users } from "lucide-react"
-import { useState, useEffect, useMemo } from "react"
+import { ArrowRight, Sparkles } from "lucide-react"
+import { useState, useEffect } from "react"
 
 export default function HeroSection() {
   const { language } = useLanguage()
@@ -19,24 +19,8 @@ export default function HeroSection() {
   const title1 = language === "zh" ? "你好，我是" : "Hello, I'm"
   const title2 = "PM 思钱想厚"
   const description = language === "zh" 
-    ? "拥有2年AI产品经验，专注于将AI技术转化为实际业务价值。" 
-    : "2 years of AI Product Manager experience, focused on turning AI technology into real business value."
-
-  const colors = [
-    "text-orange-400",
-    "text-blue-400",
-    "text-purple-400",
-    "text-green-400",
-  ]
-
-  const coloredIndices = useMemo(() => {
-    const indices = new Set<number>()
-    const maxColored = Math.floor(description.length * 0.3)
-    while (indices.size < maxColored) {
-      indices.add(Math.floor(Math.random() * description.length))
-    }
-    return indices
-  }, [description])
+    ? "热爱产品设计与 AI 探索，专注深耕供应链与AI Agent赛道。热爱摄影、旅行与美食，奔赴山海，记录烟火。" 
+    : "Passionate about product design and AI exploration, with deep expertise in supply chain and AI Agent. Enjoying photography, travel and food, chasing mountains and seas, recording the warmth of life."
 
   useEffect(() => {
     let title1Index = 0
@@ -88,13 +72,6 @@ export default function HeroSection() {
     return () => clearInterval(cursorTimer)
   }, [showCursor])
 
-  const getCharColor = (index: number) => {
-    if (coloredIndices.has(index)) {
-      return colors[index % colors.length]
-    }
-    return theme === "dark" ? "text-gray-400" : "text-gray-600"
-  }
-
   return (
     <section id="home" className={`min-h-screen relative flex items-center pt-20 ${
       theme === "dark" ? "bg-black" : "bg-white"
@@ -121,12 +98,10 @@ export default function HeroSection() {
               </h1>
             </div>
 
-            <div className={`text-lg md:text-xl max-w-lg leading-relaxed min-h-[4em]`}>
-              {descText.split("").map((char, index) => (
-                <span key={index} className={getCharColor(index)}>
-                  {char}
-                </span>
-              ))}
+            <div className={`text-lg md:text-xl max-w-lg leading-relaxed min-h-[8em] whitespace-pre-wrap ${
+              theme === "dark" ? "text-gray-400" : "text-gray-600"
+            }`}>
+              {descText}
               {showCursor && (
                 <span 
                   className={`inline-block w-[3px] h-[1.2em] bg-orange-400 ml-1 align-middle ${
@@ -159,31 +134,25 @@ export default function HeroSection() {
 
             <div className="flex flex-wrap gap-4">
               <a
-                href="https://www.google.com/search?q=Bilibili+余猛"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg bg-gradient-to-br from-pink-500 to-pink-600 text-white"
-                aria-label="Bilibili"
-              >
-                <Video className="w-6 h-6" />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                  {language === "zh" ? "Bilibili · @余猛" : "Bilibili · @余猛"}
-                </div>
-              </a>
-              <a
-                href="https://www.google.com/search?q=语雀+余猛"
+                href="https://www.google.com/search?q=GitHub+余猛"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${
                   theme === "dark"
-                    ? "bg-gray-800 hover:bg-orange-500 text-gray-300 hover:text-white"
-                    : "bg-gray-100 hover:bg-orange-500 text-gray-600 hover:text-white"
+                    ? "bg-gray-800 hover:bg-orange-500"
+                    : "bg-gray-100 hover:bg-orange-500"
                 }`}
-                aria-label="Yuque"
+                aria-label="GitHub"
               >
-                <BookOpen className="w-6 h-6" />
+                <Image 
+                  src="/images/githubb.svg" 
+                  alt="GitHub" 
+                  width={24} 
+                  height={24} 
+                  className={`w-6 h-6 ${theme === "dark" ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`}
+                />
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                  {language === "zh" ? "语雀 · @余猛" : "Yuque · @余猛"}
+                  GitHub · @Yu Meng
                 </div>
               </a>
               <a
@@ -192,46 +161,20 @@ export default function HeroSection() {
                 rel="noopener noreferrer"
                 className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${
                   theme === "dark"
-                    ? "bg-gray-800 hover:bg-orange-500 text-gray-300 hover:text-white"
-                    : "bg-gray-100 hover:bg-orange-500 text-gray-600 hover:text-white"
+                    ? "bg-gray-800 hover:bg-orange-500"
+                    : "bg-gray-100 hover:bg-orange-500"
                 }`}
                 aria-label="Zhihu"
               >
-                <MessageCircle className="w-6 h-6" />
+                <Image 
+                  src="/images/知乎.svg" 
+                  alt="Zhihu" 
+                  width={24} 
+                  height={24} 
+                  className={`w-6 h-6 ${theme === "dark" ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`}
+                />
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                  {language === "zh" ? "知乎 · @余猛" : "Zhihu · @余猛"}
-                </div>
-              </a>
-              <a
-                href="https://www.google.com/search?q=GitHub+余猛"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${
-                  theme === "dark"
-                    ? "bg-gray-800 hover:bg-orange-500 text-gray-300 hover:text-white"
-                    : "bg-gray-100 hover:bg-orange-500 text-gray-600 hover:text-white"
-                }`}
-                aria-label="GitHub"
-              >
-                <Github className="w-6 h-6" />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                  GitHub · @余猛
-                </div>
-              </a>
-              <a
-                href="https://www.google.com/search?q=微信公众号+余猛"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${
-                  theme === "dark"
-                    ? "bg-gray-800 hover:bg-orange-500 text-gray-300 hover:text-white"
-                    : "bg-gray-100 hover:bg-orange-500 text-gray-600 hover:text-white"
-                }`}
-                aria-label="WeChat"
-              >
-                <MessageSquare className="w-6 h-6" />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                  {language === "zh" ? "微信公众号 · @余猛" : "WeChat · @余猛"}
+                  {language === "zh" ? "知乎 · @余猛" : "Zhihu · @Yu Meng"}
                 </div>
               </a>
               <a
@@ -240,14 +183,64 @@ export default function HeroSection() {
                 rel="noopener noreferrer"
                 className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${
                   theme === "dark"
-                    ? "bg-gray-800 hover:bg-orange-500 text-gray-300 hover:text-white"
-                    : "bg-gray-100 hover:bg-orange-500 text-gray-600 hover:text-white"
+                    ? "bg-gray-800 hover:bg-orange-500"
+                    : "bg-gray-100 hover:bg-orange-500"
                 }`}
                 aria-label="Maimai"
               >
-                <Users className="w-6 h-6" />
+                <Image 
+                  src="/images/脉脉.svg" 
+                  alt="Maimai" 
+                  width={24} 
+                  height={24} 
+                  className={`w-6 h-6 ${theme === "dark" ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`}
+                />
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                  {language === "zh" ? "脉脉 · @余猛" : "Maimai · @余猛"}
+                  {language === "zh" ? "脉脉 · @余猛" : "Maimai · @Yu Meng"}
+                </div>
+              </a>
+              <a
+                href="https://www.google.com/search?q=语雀+余猛"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${
+                  theme === "dark"
+                    ? "bg-gray-800 hover:bg-orange-500"
+                    : "bg-gray-100 hover:bg-orange-500"
+                }`}
+                aria-label="Yuque"
+              >
+                <Image 
+                  src="/images/语雀.svg" 
+                  alt="Yuque" 
+                  width={24} 
+                  height={24} 
+                  className={`w-6 h-6 ${theme === "dark" ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`}
+                />
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
+                  {language === "zh" ? "语雀 · @余猛" : "Yuque · @Yu Meng"}
+                </div>
+              </a>
+              <a
+                href="https://www.google.com/search?q=微信公众号+余猛"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${
+                  theme === "dark"
+                    ? "bg-gray-800 hover:bg-orange-500"
+                    : "bg-gray-100 hover:bg-orange-500"
+                }`}
+                aria-label="WeChat"
+              >
+                <Image 
+                  src="/images/微信公众号.svg" 
+                  alt="WeChat" 
+                  width={24} 
+                  height={24} 
+                  className={`w-6 h-6 ${theme === "dark" ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`}
+                />
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
+                  {language === "zh" ? "微信公众号 · @余猛" : "WeChat · @Yu Meng"}
                 </div>
               </a>
             </div>
