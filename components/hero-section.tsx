@@ -4,7 +4,7 @@ import Image from "next/image"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
 import { ArrowRight, Sparkles } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 export default function HeroSection() {
   const { language } = useLanguage()
@@ -15,12 +15,18 @@ export default function HeroSection() {
   const [descText, setDescText] = useState("")
   const [showCursor, setShowCursor] = useState(false)
   const [cursorVisible, setCursorVisible] = useState(true)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const title1 = language === "zh" ? "你好，我是" : "Hello, I'm"
   const title2 = "PM 思钱想厚"
   const description = language === "zh" 
     ? "热爱产品设计与 AI 探索，专注深耕供应链与AI Agent赛道。热爱摄影、旅行与美食，奔赴山海，记录烟火。" 
     : "Passionate about product design and AI exploration, with deep expertise in supply chain and AI Agent. Enjoying photography, travel and food, chasing mountains and seas, recording the warmth of life."
+
+  const keywords = language === "zh" 
+    ? ["产品设计", "AI", "探索", "供应链", "AI Agent", "摄影", "旅行", "美食"]
+    : ["product design", "AI", "exploration", "supply chain", "AI Agent", "photography", "travel", "food"]
 
   useEffect(() => {
     let title1Index = 0
@@ -72,12 +78,110 @@ export default function HeroSection() {
     return () => clearInterval(cursorTimer)
   }, [showCursor])
 
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect()
+        setMousePosition({
+          x: (e.clientX - rect.left) / rect.width,
+          y: (e.clientY - rect.top) / rect.height
+        })
+      }
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
+
+  const renderHighlightedText = (text: string) => {
+    let result: JSX.Element[] = []
+    let lastIndex = 0
+    
+    keywords.forEach((keyword, idx) => {
+      const regex = new RegExp(keyword, 'g')
+      let match
+      
+      while ((match = regex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+          result.push(
+            <span key={`text-${idx}-${match.index}`} className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>
+              {text.slice(lastIndex, match.index)}
+            </span>
+          )
+        }
+        
+        result.push(
+          <span 
+            key={`keyword-${idx}-${match.index}`} 
+            className={`inline-block transition-all duration-300 cursor-default hover:text-orange-400 hover:-translate-y-0.5 ${
+              theme === "dark" ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
+            {keyword}
+          </span>
+        )
+        
+        lastIndex = match.index + keyword.length
+      }
+    })
+    
+    if (lastIndex < text.length) {
+      result.push(
+        <span key="text-end" className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>
+          {text.slice(lastIndex)}
+        </span>
+      )
+    }
+    
+    if (result.length === 0) {
+      return <span className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>{text}</span>
+    }
+    
+    return result
+  }
+
   return (
     <section id="home" className={`min-h-screen relative flex items-center pt-20 ${
       theme === "dark" ? "bg-black" : "bg-white"
-    } overflow-hidden`}>
-      <div className="absolute top-20 left-10 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-20 right-10 w-60 h-60 bg-orange-500/10 rounded-full blur-3xl"></div>
+    } overflow-hidden`} ref={containerRef}>
+      <div 
+        className="absolute top-20 left-10 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl transition-all duration-500"
+        style={{
+          transform: `translate(${mousePosition.x * 20}px, ${mousePosition.y * 20}px)`
+        }}
+      ></div>
+      <div 
+        className="absolute bottom-20 right-10 w-60 h-60 bg-orange-500/10 rounded-full blur-3xl transition-all duration-500"
+        style={{
+          transform: `translate(${(mousePosition.x - 1) * 30}px, ${(mousePosition.y - 1) * 30}px)`
+        }}
+      ></div>
+      
+      <div 
+        className="absolute inset-0 overflow-hidden pointer-events-none"
+        style={{ opacity: 0.03 }}
+      >
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div
+            key={i}
+            className={`absolute rounded-full ${theme === "dark" ? "bg-orange-400" : "bg-orange-500"}`}
+            style={{
+              width: Math.random() * 4 + 1 + "px",
+              height: Math.random() * 4 + 1 + "px",
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animation: `float ${3 + Math.random() * 4}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 3}s`
+            }}
+          />
+        ))}
+        <style>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
+            50% { transform: translateY(-20px) translateX(10px); opacity: 0.8; }
+          }
+        `}</style>
+      </div>
       
       <div className="relative z-10 max-w-6xl mx-auto px-6 w-full">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -96,12 +200,23 @@ export default function HeroSection() {
                   return <span key={index} className={theme === "dark" ? "text-white" : "text-gray-900"}>{char}</span>
                 })}
               </h1>
+              <div className={`flex items-center gap-2 mt-2 ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
+                <span className="text-sm">AI Product Manager</span>
+                <span className="w-1 h-1 rounded-full bg-orange-400 animate-pulse"></span>
+                <span className="text-sm">
+                  {language === "zh" ? "正在探索" : "Exploring"}
+                </span>
+                <span 
+                  className={`inline-block w-[2px] h-4 bg-orange-400 ${
+                    cursorVisible ? "opacity-100" : "opacity-0"
+                  }`}
+                  style={{ transition: "opacity 0.1s" }}
+                />
+              </div>
             </div>
 
-            <div className={`text-lg md:text-xl max-w-lg leading-relaxed min-h-[8em] whitespace-pre-wrap ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}>
-              {descText}
+            <div className={`text-lg md:text-xl max-w-lg leading-relaxed min-h-[8em] whitespace-pre-wrap`}>
+              {renderHighlightedText(descText)}
               {showCursor && (
                 <span 
                   className={`inline-block w-[3px] h-[1.2em] bg-orange-400 ml-1 align-middle ${
