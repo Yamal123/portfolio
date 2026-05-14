@@ -200,7 +200,7 @@ export default function Footer() {
           }`}>
             {language === "zh" ? "用 ❤️ 和 AI 构建" : "Built with ❤️ and AI"}
           </p>
-          <p className={theme === "dark" ? "text-gray-500" : "text-gray-500"} className="text-sm">
+          <p className="text-sm text-gray-500">
             © {new Date().getFullYear()} Yu Meng. All rights reserved.
           </p>
         </div>

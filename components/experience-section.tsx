@@ -84,7 +84,7 @@ export default function ExperienceSection() {
                       </div>
                       <div className="mt-2 md:mt-0 md:text-right">
                         <p className={theme === "dark" ? "text-gray-400" : "text-gray-500"}>{exp.period}</p>
-                        <p className={theme === "dark" ? "text-gray-500" : "text-gray-400"} className="text-sm">{exp.location}</p>
+                        <p className={`text-sm ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>{exp.location}</p>
                       </div>
                     </div>
                     <p className={`leading-relaxed ${

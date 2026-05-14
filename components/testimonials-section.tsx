@@ -70,7 +70,7 @@ export default function TestimonialsSection() {
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}>{testimonial.name}</div>
                 <div className="text-orange-400">{testimonial.role}</div>
-                <div className={theme === "dark" ? "text-gray-500" : "text-gray-400"} className="text-sm">{testimonial.company}</div>
+                <div className={`text-sm ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>{testimonial.company}</div>
               </div>
             </div>
           ))}

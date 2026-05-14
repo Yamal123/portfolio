@@ -79,7 +79,7 @@ export default function CeloPage() {
   }
 
   const toggleLanguage = () => {
-    setLanguage(language === "en" ? "es" : "en")
+    setLanguage(language === "en" ? "zh" : "en")
   }
 
   return (
