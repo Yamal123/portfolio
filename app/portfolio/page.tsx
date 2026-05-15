@@ -22,8 +22,8 @@ export default function PortfolioPage() {
     if (!searchQuery) return projectsData
     const query = searchQuery.toLowerCase()
     return projectsData.filter(project => 
-      project.title[language === "zh" ? "zh" : "en"].toLowerCase().includes(query) ||
-      project.category[language === "zh" ? "zh" : "en"].toLowerCase().includes(query) ||
+      project.name[language === "zh" ? "zh" : "en"].toLowerCase().includes(query) ||
+      project.type[language === "zh" ? "zh" : "en"].toLowerCase().includes(query) ||
       project.keywords.some(keyword => keyword.toLowerCase().includes(query)) ||
       project.intro[language === "zh" ? "zh" : "en"].toLowerCase().includes(query)
     )
@@ -105,7 +105,7 @@ export default function PortfolioPage() {
                   {project.thumbnail ? (
                     <Image
                       src={project.thumbnail}
-                      alt={project.title[language === "zh" ? "zh" : "en"]}
+                      alt={project.name[language === "zh" ? "zh" : "en"]}
                       fill
                       className="object-cover transition-transform duration-700 group-hover:scale-110"
                     />
@@ -117,14 +117,14 @@ export default function PortfolioPage() {
                   <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent`}></div>
                   <div className="absolute top-4 left-4">
                     <span className="px-3 py-1 bg-orange-500/90 text-white text-xs font-semibold rounded-full backdrop-blur-sm">
-                      {project.category[language === "zh" ? "zh" : "en"]}
+                      {project.type[language === "zh" ? "zh" : "en"]}
                     </span>
                   </div>
                 </div>
                 
                 <div className="p-5">
                   <h3 className={`text-lg font-bold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                    {project.title[language === "zh" ? "zh" : "en"]}
+                    {project.name[language === "zh" ? "zh" : "en"]}
                   </h3>
                   
                   <p className={`text-sm mb-3 line-clamp-2 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
@@ -134,7 +134,7 @@ export default function PortfolioPage() {
                   <div className="flex items-center justify-between mb-4">
                     <span className={`flex items-center text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
                       <Calendar className="w-3 h-3 mr-1" />
-                      {formatDate(project.updatedAt)}
+                      {formatDate(project.createdAt)}
                     </span>
                   </div>
 
