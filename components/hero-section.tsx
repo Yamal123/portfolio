@@ -287,19 +287,19 @@ export default function HeroSection() {
         style={{ transform: `translate(${-mouseX * 0.8}px, ${-mouseY * 0.8}px)` }}
       ></div>
       
-      <div className="relative z-10 max-w-6xl mx-auto px-6 w-full">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <div className="space-y-8">
-            <div className="space-y-4">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+          <div className="space-y-6 sm:space-y-8">
+            <div className="space-y-3 sm:space-y-4">
               <p 
                 data-index="0"
-                className={`font-medium tracking-wide min-h-[1.5em] transition-all duration-700 text-orange-400 ${visibleSections.includes(0) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+                className={`text-base sm:text-lg font-medium tracking-wide min-h-[1.5em] transition-all duration-700 text-orange-400 ${visibleSections.includes(0) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
               >
                 {titleText1}
               </p>
               <h1 
                 data-index="1"
-                className={`text-5xl md:text-6xl lg:text-7xl font-bold leading-tight min-h-[1.2em] transition-all duration-700 ${visibleSections.includes(1) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+                className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight min-h-[1.2em] transition-all duration-700 ${visibleSections.includes(1) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
               >
                 {titleText2.split("").map((char, index) => {
                   const pmStart = title2.indexOf("PM")
@@ -330,7 +330,7 @@ export default function HeroSection() {
 
             <div 
               data-index="2"
-              className={`text-lg md:text-xl max-w-lg leading-relaxed min-h-[8em] transition-all duration-700 ${theme === "dark" ? "text-gray-400" : "text-gray-600"} ${visibleSections.includes(2) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+              className={`text-base sm:text-lg md:text-xl leading-relaxed min-h-[6em] sm:min-h-[8em] transition-all duration-700 ${theme === "dark" ? "text-gray-400" : "text-gray-600"} ${visibleSections.includes(2) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
             >
               {renderDescriptionWithEmojis(descText)}
               {showCursor && (
@@ -343,18 +343,18 @@ export default function HeroSection() {
 
             <div 
               data-index="3"
-              className={`flex flex-col sm:flex-row gap-4 transition-all duration-700 ${visibleSections.includes(3) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+              className={`flex flex-col sm:flex-row gap-3 sm:gap-4 transition-all duration-700 ${visibleSections.includes(3) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
             >
               <button
                 onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}
-                className="px-8 py-4 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
+                className="px-6 sm:px-8 py-3 sm:py-4 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 text-sm sm:text-base"
               >
                 {language === "zh" ? "联系我" : "Contact Me"}
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               <button
                 onClick={() => document.getElementById("portfolio")?.scrollIntoView({ behavior: "smooth" })}
-                className={`px-8 py-4 border rounded-full font-semibold transition-all duration-300 ${theme === "dark" ? "border-gray-700 text-white hover:border-orange-400 hover:text-orange-400" : "border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-500"}`}
+                className={`px-6 sm:px-8 py-3 sm:py-4 border rounded-full font-semibold transition-all duration-300 text-sm sm:text-base ${theme === "dark" ? "border-gray-700 text-white hover:border-orange-400 hover:text-orange-400" : "border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-500"}`}
               >
                 {language === "zh" ? "查看作品集" : "View Portfolio"}
               </button>

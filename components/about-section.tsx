@@ -31,27 +31,27 @@ export default function AboutSection() {
   ]
 
   return (
-    <section id="about" className="py-24 relative overflow-hidden" style={{ background: theme === "dark" ? "#000000" : "#ffffff" }}>
+    <section id="about" className="py-16 sm:py-24 relative overflow-hidden" style={{ background: theme === "dark" ? "#000000" : "#ffffff" }}>
       <div className={`absolute top-0 left-0 w-full h-px ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`}></div>
       
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <p className="font-medium tracking-wide mb-4 text-orange-400">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12 sm:mb-16">
+          <p className="text-sm sm:text-base font-medium tracking-wide mb-3 sm:mb-4 text-orange-400">
             {language === "zh" ? "关于我" : "About Me"}
           </p>
-          <h2 className={`text-4xl md:text-5xl font-bold mb-6 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+          <h2 className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
             {language === "zh" ? "PM 思钱想厚" : "Professional Profile"}
           </h2>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-16 items-center mb-20">
-          <div className="relative">
-            <div className="absolute -top-8 -left-8 w-full h-full border-2 border-orange-500/20 rounded-[3rem]"></div>
-            <div className={`absolute -bottom-8 -right-8 w-full h-full border-2 rounded-[3rem] ${
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center mb-16 sm:mb-20">
+          <div className="relative max-w-sm mx-auto lg:mx-0">
+            <div className="absolute -top-4 sm:-top-8 -left-4 sm:-left-8 w-full h-full border-2 border-orange-500/20 rounded-[2rem] sm:rounded-[3rem]"></div>
+            <div className={`absolute -bottom-4 sm:-bottom-8 -right-4 sm:-right-8 w-full h-full border-2 rounded-[2rem] sm:rounded-[3rem] ${
               theme === "dark" ? "border-gray-800" : "border-gray-200"
             }`}></div>
             
-            <div className={`relative w-full aspect-square rounded-[2.5rem] overflow-hidden border ${
+            <div className={`relative w-full aspect-square rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden border ${
               theme === "dark" ? "border-gray-800" : "border-gray-200"
             }`}>
               <Image
@@ -64,8 +64,8 @@ export default function AboutSection() {
             </div>
           </div>
 
-          <div className="space-y-8">
-            <p className={`text-lg leading-relaxed ${
+          <div className="space-y-6 sm:space-y-8">
+            <p className={`text-sm sm:text-base md:text-lg leading-relaxed ${
               theme === "dark" ? "text-gray-400" : "text-gray-600"
             }`}>
               {language === "zh" 
@@ -73,7 +73,7 @@ export default function AboutSection() {
                 : "2 years of AI Product Manager experience, deep understanding of LLM, RAG, and Agent technologies, led enterprise-grade AI applications from 0 to 1 based on Dify."}
             </p>
 
-            <p className={`text-lg leading-relaxed ${
+            <p className={`text-sm sm:text-base md:text-lg leading-relaxed ${
               theme === "dark" ? "text-gray-400" : "text-gray-600"
             }`}>
               {language === "zh" 
@@ -81,26 +81,26 @@ export default function AboutSection() {
                 : "International product perspective with Middle East and Latin America experience, able to build replicable overseas AI product solutions. Passionate about photography, travel and food, believing great products come from deep observation of life."}
             </p>
 
-            <div className="grid grid-cols-2 gap-6 pt-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-6 pt-4">
               {stats.map((stat, index) => (
-                <div key={index} className={`rounded-2xl p-6 text-center ${
+                <div key={index} className={`rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center ${
                   theme === "dark"
                     ? "bg-gray-900/50 border border-gray-800"
                     : "bg-white border border-gray-200"
                 }`}>
-                  <div className="text-4xl font-bold text-orange-400 mb-2">{stat.value}</div>
-                  <div className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>{stat.label}</div>
+                  <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-orange-400 mb-1 sm:mb-2">{stat.value}</div>
+                  <div className={`text-xs sm:text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>{stat.label}</div>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="mb-20">
-          <h3 className={`text-2xl font-bold mb-8 text-center ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+        <div className="mb-16 sm:mb-20">
+          <h3 className={`text-xl sm:text-2xl font-bold mb-6 sm:mb-8 text-center ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
             {language === "zh" ? "技能标签" : "Skills"}
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
             {skills.map((skill, index) => (
               <div 
                 key={index}

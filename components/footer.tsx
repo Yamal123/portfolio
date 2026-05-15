@@ -1,210 +1,270 @@
 "use client"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
-import { useState } from "react"
-import { Check, Copy, Phone, Mail, Send, Loader2 } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Send, Loader2, X } from "lucide-react"
+
+interface ToastProps {
+  message: string
+  type: 'success' | 'error'
+  onClose: () => void
+}
+
+function Toast({ message, type, onClose }: ToastProps) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 4000)
+    return () => clearTimeout(timer)
+  }, [onClose])
+
+  return (
+    <div className={`fixed top-20 right-4 sm:right-8 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg transition-all duration-300 ${
+      type === 'success' 
+        ? 'bg-green-500 text-white' 
+        : 'bg-red-500 text-white'
+    }`}>
+      <span>{message}</span>
+      <button onClick={onClose} className="hover:opacity-80">
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  )
+}
 
 export default function Footer() {
   const { language } = useLanguage()
   const { theme } = useTheme()
-  const [copiedPhone, setCopiedPhone] = useState(false)
-  const [copiedEmail, setCopiedEmail] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
+    contact: "",
     message: ""
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [clientInfo, setClientInfo] = useState({ ip: "", device: "" })
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
-  const handleCopyPhone = () => {
-    navigator.clipboard.writeText("15690630301")
-    setCopiedPhone(true)
-    setTimeout(() => setCopiedPhone(false), 3000)
-  }
-
-  const handleCopyEmail = () => {
-    navigator.clipboard.writeText("yumengfine@163.com")
-    setCopiedEmail(true)
-    setTimeout(() => setCopiedEmail(false), 3000)
-  }
+  useEffect(() => {
+    const getClientInfo = async () => {
+      try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json')
+        const ipData = await ipResponse.json()
+        setClientInfo(prev => ({ ...prev, ip: ipData.ip || 'Unknown' }))
+      } catch {
+        setClientInfo(prev => ({ ...prev, ip: 'Unknown' }))
+      }
+      
+      const device = /Mobile|Android|iOS|iPhone|iPad|iPod/.test(navigator.userAgent) 
+        ? 'Mobile' 
+        : 'Desktop'
+      setClientInfo(prev => ({ ...prev, device }))
+    }
+    getClientInfo()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!formData.contact.trim()) {
+      setToast({ message: language === "zh" ? "请填写联系方式" : "Please fill in contact information", type: 'error' })
+      return
+    }
+    
+    if (!formData.message.trim()) {
+      setToast({ message: language === "zh" ? "请填写备注" : "Please fill in message", type: 'error' })
+      return
+    }
+
     setIsSubmitting(true)
-    
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    alert(language === "zh" ? "感谢您的联系！我会尽快回复。" : "Thank you for your message! I'll get back to you soon.")
-    setFormData({ name: "", email: "", message: "" })
+
+    try {
+      const message = `
+称呼: ${formData.name || '未填写'}
+联系方式: ${formData.contact}
+备注: ${formData.message}
+IP地址: ${clientInfo.ip}
+发送设备: ${clientInfo.device}
+发送时间: ${new Date().toLocaleString('zh-CN')}
+      `.trim()
+
+      const response = await fetch('https://open.feishu.cn/open-apis/bot/v2/hook/68f2a726-8bc7-4c48-af48-3fc499a563f5', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          msg_type: 'text',
+          content: {
+            text: message
+          }
+        })
+      })
+
+      if (response.ok) {
+        setToast({ message: language === "zh" ? "感谢您的联系！我会尽快回复。" : "Thank you for your message! I'll get back to you soon.", type: 'success' })
+        setFormData({ name: "", contact: "", message: "" })
+      } else {
+        setToast({ message: language === "zh" ? "发送失败，请稍后重试" : "Failed to send, please try again later", type: 'error' })
+      }
+    } catch {
+      setToast({ message: language === "zh" ? "发送失败，请稍后重试" : "Failed to send, please try again later", type: 'error' })
+    }
+
     setIsSubmitting(false)
   }
 
+  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value.slice(0, 1000)
+    setFormData({ ...formData, message: value })
+  }
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.slice(0, 100)
+    setFormData({ ...formData, name: value })
+  }
+
+  const handleContactChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.slice(0, 100)
+    setFormData({ ...formData, contact: value })
+  }
+
   return (
-    <footer id="contact" className={`py-24 relative ${
-      theme === "dark" ? "bg-black" : "bg-white"
-    }`}>
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-500/5 to-orange-500/10"></div>
+    <>
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)} 
+        />
+      )}
       
-      <div className="max-w-6xl mx-auto px-6 relative z-10">
-        <div className="text-center mb-16">
-          <p className={`font-medium tracking-wide mb-4 ${
-            theme === "dark" ? "text-orange-400" : "text-orange-500"
-          }`}>
-            {language === "zh" ? "联系我" : "Contact"}
-          </p>
-          <h2 className={`text-4xl md:text-5xl font-bold mb-6 ${
-            theme === "dark" ? "text-white" : "text-gray-900"
-          }`}>
-            {language === "zh" ? "有一个很棒的项目想法？" : "Have an Awesome Project Idea?"}
-          </h2>
-          <p className={`text-lg max-w-2xl mx-auto ${
-            theme === "dark" ? "text-gray-400" : "text-gray-600"
-          }`}>
-            {language === "zh" ? "让我们一起把它变为现实" : "Let's talk about it"}
-          </p>
-        </div>
+      <footer id="contact" className={`py-16 sm:py-24 relative ${
+        theme === "dark" ? "bg-black" : "bg-white"
+      }`}>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-500/5 to-orange-500/10"></div>
+        
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-12 sm:mb-16">
+            <p className={`text-sm sm:text-base font-medium tracking-wide mb-3 sm:mb-4 ${
+              theme === "dark" ? "text-orange-400" : "text-orange-500"
+            }`}>
+              {language === "zh" ? "联系我" : "Contact"}
+            </p>
+            <h2 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}>
+              {language === "zh" ? "有一个很棒的项目想法？" : "Have an Awesome Project Idea?"}
+            </h2>
+            <p className={`text-sm sm:text-base md:text-lg max-w-2xl mx-auto ${
+              theme === "dark" ? "text-gray-400" : "text-gray-600"
+            }`}>
+              {language === "zh" ? "让我们一起把它变为现实" : "Let's talk about it"}
+            </p>
+          </div>
 
-        <div className="grid lg:grid-cols-2 gap-12">
-          {/* Left - Contact Info */}
-          <div className="space-y-8">
-            <div className={`rounded-3xl p-8 flex items-center gap-6 transition-all duration-300 group cursor-pointer ${
+          {/* Contact Form */}
+          <div className="max-w-xl mx-auto">
+            <div className={`rounded-2xl sm:rounded-3xl p-4 sm:p-8 ${
               theme === "dark"
-                ? "bg-gray-900/50 border border-gray-800 hover:border-orange-500/30"
-                : "bg-gray-50 border border-gray-200 hover:border-orange-400/30"
-            }`} onClick={handleCopyPhone}>
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-600/20 flex items-center justify-center text-orange-400 group-hover:scale-110 transition-transform duration-300">
-                <Phone className="w-6 h-6" />
-              </div>
-              <div className="flex-1">
-                <p className={`text-sm mb-1 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}>{language === "zh" ? "电话" : "Phone"}</p>
-                <p className={`text-xl font-bold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}>15690630301</p>
-              </div>
-              {copiedPhone ? <Check className="w-5 h-5 text-green-500" /> : <Copy className={`w-5 h-5 ${
-                theme === "dark" ? "text-gray-400 group-hover:text-orange-400" : "text-gray-500 group-hover:text-orange-500"
-              }`} />}
-            </div>
-
-            <div className={`rounded-3xl p-8 flex items-center gap-6 transition-all duration-300 group cursor-pointer ${
-              theme === "dark"
-                ? "bg-gray-900/50 border border-gray-800 hover:border-orange-500/30"
-                : "bg-gray-50 border border-gray-200 hover:border-orange-400/30"
-            }`} onClick={handleCopyEmail}>
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-600/20 flex items-center justify-center text-orange-400 group-hover:scale-110 transition-transform duration-300">
-                <Mail className="w-6 h-6" />
-              </div>
-              <div className="flex-1">
-                <p className={`text-sm mb-1 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}>{language === "zh" ? "邮箱" : "Email"}</p>
-                <p className={`text-xl font-bold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}>yumengfine@163.com</p>
-              </div>
-              {copiedEmail ? <Check className="w-5 h-5 text-green-500" /> : <Copy className={`w-5 h-5 ${
-                theme === "dark" ? "text-gray-400 group-hover:text-orange-400" : "text-gray-500 group-hover:text-orange-500"
-              }`} />}
+                ? "bg-gray-900/50 border border-gray-800"
+                : "bg-gray-50 border border-gray-200"
+            }`}>
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                <div>
+                  <label className={`block text-xs sm:text-sm mb-2 ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}>{language === "zh" ? "称呼" : "Name"}</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={handleNameChange}
+                    maxLength={100}
+                    className={`w-full px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl focus:outline-none transition-all duration-300 text-sm sm:text-base ${
+                      theme === "dark"
+                        ? "bg-black border border-gray-800 text-white focus:border-orange-500"
+                        : "bg-white border border-gray-300 text-gray-900 focus:border-orange-500"
+                    }`}
+                    placeholder={language === "zh" ? "怎么称呼您？" : "How should I address you?"}
+                  />
+                </div>
+                <div>
+                  <label className={`block text-xs sm:text-sm mb-2 ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}>{language === "zh" ? "联系方式" : "Contact"}</label>
+                  <input
+                    type="text"
+                    value={formData.contact}
+                    onChange={handleContactChange}
+                    maxLength={100}
+                    className={`w-full px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl focus:outline-none transition-all duration-300 text-sm sm:text-base ${
+                      theme === "dark"
+                        ? "bg-black border border-gray-800 text-white focus:border-orange-500"
+                        : "bg-white border border-gray-300 text-gray-900 focus:border-orange-500"
+                    }`}
+                    placeholder={language === "zh" ? "您的邮箱/电话/VX" : "Your email/phone/wechat"}
+                    required
+                  />
+                </div>
+                <div className="relative">
+                  <label className={`block text-xs sm:text-sm mb-2 ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}>{language === "zh" ? "备注" : "Message"}</label>
+                  <textarea
+                    value={formData.message}
+                    onChange={handleMessageChange}
+                    className={`w-full px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl focus:outline-none transition-all duration-300 h-24 sm:h-32 resize-none text-sm sm:text-base ${
+                      theme === "dark"
+                        ? "bg-black border border-gray-800 text-white focus:border-orange-500"
+                        : "bg-white border border-gray-300 text-gray-900 focus:border-orange-500"
+                    }`}
+                    placeholder={language === "zh" ? "请输入备注内容..." : "Enter your message..."}
+                    required
+                  />
+                  <span className={`absolute bottom-3 sm:bottom-4 right-3 sm:right-4 text-xs ${
+                    formData.message.length >= 1000 
+                      ? "text-red-500" 
+                      : theme === "dark" ? "text-gray-500" : "text-gray-400"
+                  }`}>
+                    {formData.message.length}/1000
+                  </span>
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${
+                    isSubmitting
+                      ? "bg-gray-500 cursor-not-allowed opacity-70"
+                      : "bg-orange-500 hover:bg-orange-600 hover:scale-[1.02] active:scale-[0.98]"
+                  } text-white`}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                      {language === "zh" ? "发送中..." : "Sending..."}
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                      {language === "zh" ? "发送消息" : "Send Message"}
+                    </>
+                  )}
+                </button>
+              </form>
             </div>
           </div>
 
-          {/* Right - Contact Form */}
-          <div className={`rounded-3xl p-8 ${
-            theme === "dark"
-              ? "bg-gray-900/50 border border-gray-800"
-              : "bg-gray-50 border border-gray-200"
+          <div className={`mt-16 sm:mt-24 pt-8 sm:pt-12 border-t text-center ${
+            theme === "dark" ? "border-gray-800" : "border-gray-200"
           }`}>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className={`block text-sm mb-2 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}>{language === "zh" ? "姓名" : "Name"}</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className={`w-full px-6 py-4 rounded-2xl focus:outline-none transition-all duration-300 ${
-                    theme === "dark"
-                      ? "bg-black border border-gray-800 text-white focus:border-orange-500"
-                      : "bg-white border border-gray-300 text-gray-900 focus:border-orange-500"
-                  }`}
-                  placeholder={language === "zh" ? "您的姓名" : "Your name"}
-                  required
-                />
-              </div>
-              <div>
-                <label className={`block text-sm mb-2 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}>{language === "zh" ? "邮箱" : "Email"}</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className={`w-full px-6 py-4 rounded-2xl focus:outline-none transition-all duration-300 ${
-                    theme === "dark"
-                      ? "bg-black border border-gray-800 text-white focus:border-orange-500"
-                      : "bg-white border border-gray-300 text-gray-900 focus:border-orange-500"
-                  }`}
-                  placeholder={language === "zh" ? "您的邮箱" : "Your email"}
-                  required
-                />
-              </div>
-              <div>
-                <label className={`block text-sm mb-2 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}>{language === "zh" ? "消息" : "Message"}</label>
-                <textarea
-                  value={formData.message}
-                  onChange={(e) => setFormData({...formData, message: e.target.value})}
-                  className={`w-full px-6 py-4 rounded-2xl focus:outline-none transition-all duration-300 h-32 resize-none ${
-                    theme === "dark"
-                      ? "bg-black border border-gray-800 text-white focus:border-orange-500"
-                      : "bg-white border border-gray-300 text-gray-900 focus:border-orange-500"
-                  }`}
-                  placeholder={language === "zh" ? "您想说什么？" : "What would you like to say?"}
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className={`w-full py-4 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
-                  isSubmitting
-                    ? "bg-gray-500 cursor-not-allowed opacity-70"
-                    : "bg-orange-500 hover:bg-orange-600 hover:scale-[1.02] active:scale-[0.98]"
-                } text-white`}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    {language === "zh" ? "发送中..." : "Sending..."}
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5" />
-                    {language === "zh" ? "发送消息" : "Send Message"}
-                  </>
-                )}
-              </button>
-            </form>
+            <p className={`mb-4 ${
+              theme === "dark" ? "text-gray-400" : "text-gray-600"
+            }`}>
+              {language === "zh" ? "用 ❤️ 和 AI 构建" : "Built with ❤️ and AI"}
+            </p>
+            <p className="text-sm text-gray-500">
+              © {new Date().getFullYear()} Yu Meng. All rights reserved.
+            </p>
           </div>
         </div>
-
-        <div className={`mt-24 pt-12 border-t text-center ${
-          theme === "dark" ? "border-gray-800" : "border-gray-200"
-        }`}>
-          <p className={`mb-4 ${
-            theme === "dark" ? "text-gray-400" : "text-gray-600"
-          }`}>
-            {language === "zh" ? "用 ❤️ 和 AI 构建" : "Built with ❤️ and AI"}
-          </p>
-          <p className="text-sm text-gray-500">
-            © {new Date().getFullYear()} Yu Meng. All rights reserved.
-          </p>
-        </div>
-      </div>
-    </footer>
+      </footer>
+    </>
   )
 }
