@@ -1,23 +1,23 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import Link from "next/link"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
-import { use } from "react"
-import { ExternalLink, Calendar, Tag, Copy, Check, ArrowLeft } from "lucide-react"
+import { ExternalLink, Calendar, Tag, Copy, Check } from "lucide-react"
 import { articlesData, type Article } from "@/data/articles"
 import PageNav from "@/components/page-nav"
 
 // 简单的Markdown渲染器
 const MarkdownRenderer = ({ content, theme }: { content: string, theme: string }) => {
   const renderContent = content.split('\n').map((line, index) => {
+    const orangeColor = theme === "dark" ? "text-orange-400" : "text-orange-500"
     if (line.startsWith('### ')) {
-      return <h3 key={index} className="text-xl font-bold mt-6 mb-3 text-orange-400">{line.slice(4)}</h3>
+      return <h3 key={index} className={`text-xl font-bold mt-6 mb-3 ${orangeColor}`}>{line.slice(4)}</h3>
     } else if (line.startsWith('## ')) {
-      return <h2 key={index} className="text-2xl font-bold mt-8 mb-4 text-orange-400">{line.slice(3)}</h2>
+      return <h2 key={index} className={`text-2xl font-bold mt-8 mb-4 ${orangeColor}`}>{line.slice(3)}</h2>
     } else if (line.startsWith('# ')) {
-      return <h1 key={index} className="text-3xl font-bold mt-10 mb-6 text-orange-400">{line.slice(2)}</h1>
+      return <h1 key={index} className={`text-3xl font-bold mt-10 mb-6 ${orangeColor}`}>{line.slice(2)}</h1>
     } else if (line.startsWith('- **')) {
       return (
         <li key={index} className="ml-6 my-2 list-disc">
@@ -40,8 +40,12 @@ const MarkdownRenderer = ({ content, theme }: { content: string, theme: string }
   return <div>{renderContent}</div>
 }
 
-export default function ArticleDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = use(params)
+interface ArticleDetailPageProps {
+  params: { slug: string }
+}
+
+export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
+  const { slug } = params
   const { language } = useLanguage()
   const { theme } = useTheme()
   const [copied, setCopied] = useState(false)
@@ -77,7 +81,7 @@ export default function ArticleDetailPage({ params }: { params: Promise<{ slug: 
           <h1 className={`text-2xl font-bold mb-4 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
             {language === "zh" ? "文章未找到" : "Article not found"}
           </h1>
-          <Link href="/blog" className={`text-orange-400 hover:underline`}>
+          <Link href="/blog" className={`${theme === "dark" ? "text-orange-400" : "text-orange-500"} hover:underline`}>
             {language === "zh" ? "返回文章列表" : "Back to article list"}
           </Link>
         </div>
@@ -105,7 +109,7 @@ export default function ArticleDetailPage({ params }: { params: Promise<{ slug: 
                 onClick={handleCopyLink}
                 className={`flex items-center gap-1 ${theme === "dark" ? "text-gray-400 hover:text-orange-400" : "text-gray-600 hover:text-orange-500"} transition-colors`}
               >
-                {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                {copied ? <Check className={`w-4 h-4 ${theme === "dark" ? "text-green-400" : "text-green-500"}`} /> : <Copy className="w-4 h-4" />}
                 <span>{copied ? (language === "zh" ? "已复制" : "Copied!") : (language === "zh" ? "复制链接" : "Copy link")}</span>
               </button>
             </div>

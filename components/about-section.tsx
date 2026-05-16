@@ -36,7 +36,7 @@ export default function AboutSection() {
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 sm:mb-16">
-          <p className="text-sm sm:text-base font-medium tracking-wide mb-3 sm:mb-4 text-orange-400">
+          <p className={`text-sm sm:text-base font-medium tracking-wide mb-3 sm:mb-4 ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`}>
             {language === "zh" ? "关于我" : "About Me"}
           </p>
           <h2 className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
@@ -114,7 +114,7 @@ export default function AboutSection() {
                   <span className={`font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                     {skill.name}
                   </span>
-                  <span className="text-orange-400 text-sm">{skill.level}%</span>
+                  <span className={`text-sm ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`}>{skill.level}%</span>
                 </div>
                 <div className={`h-1.5 rounded-full overflow-hidden ${
                   theme === "dark" ? "bg-gray-800" : "bg-gray-200"
@@ -144,7 +144,7 @@ export default function AboutSection() {
             >
               <Mail className={`w-6 h-6 ${theme === "dark" ? "text-gray-400 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`} />
               {hoveredContact === "email" && (
-                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap shadow-lg">
+                <div className={`absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 text-xs rounded-lg whitespace-nowrap shadow-lg ${theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-800 text-white"}`}>
                   yumeng@aipmym.com
                 </div>
               )}
@@ -162,7 +162,7 @@ export default function AboutSection() {
             >
               <Linkedin className={`w-6 h-6 ${theme === "dark" ? "text-gray-400 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`} />
               {hoveredContact === "linkedin" && (
-                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap shadow-lg">
+                <div className={`absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 text-xs rounded-lg whitespace-nowrap shadow-lg ${theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-800 text-white"}`}>
                   LinkedIn
                 </div>
               )}
@@ -179,7 +179,7 @@ export default function AboutSection() {
               >
                 <MessageCircle className={`w-6 h-6 ${theme === "dark" ? "text-gray-400 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`} />
                 {hoveredContact === "wechat" && !showQRCode && (
-                  <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap shadow-lg">
+                  <div className={`absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 text-xs rounded-lg whitespace-nowrap shadow-lg ${theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-800 text-white"}`}>
                     {language === "zh" ? "微信" : "WeChat"}
                   </div>
                 )}

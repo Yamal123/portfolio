@@ -54,7 +54,7 @@ export default function PageNav({ showBack = false, backUrl = "/" }: PageNavProp
             {/* Logo */}
             <Link href="/" className="cursor-pointer">
               <span className="text-xl font-bold">
-                <span className="text-orange-400">PM</span>
+                <span className={`${theme === "dark" ? "text-orange-400" : "text-orange-500"}`}>PM</span>
                 <span className={theme === "dark" ? "text-white" : "text-gray-900"}> 思钱想厚</span>
               </span>
             </Link>

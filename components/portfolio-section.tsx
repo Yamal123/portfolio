@@ -35,7 +35,7 @@ export default function PortfolioSection() {
       action: language === "zh" ? "使用 Next.js 构建现代化响应式网站" : "Built modern responsive website with Next.js",
       result: language === "zh" ? "成功展示个人品牌" : "Successfully showcased personal brand",
       tags: ["Next.js", "React", "TypeScript"],
-      image: "/images/portfolio/ai-portfolio.png"
+      image: "/images/portfolio/saiaconfportada.png"
     }
   ]
 
@@ -45,7 +45,7 @@ export default function PortfolioSection() {
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 sm:mb-16">
-          <p className="text-sm sm:text-base font-medium tracking-wide mb-3 sm:mb-4 text-orange-400">
+          <p className={`text-sm sm:text-base font-medium tracking-wide mb-3 sm:mb-4 ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`}>
             {language === "zh" ? "精选项目" : "Featured Projects"}
           </p>
           <h2 className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
@@ -97,16 +97,16 @@ export default function PortfolioSection() {
                 
                 <div className="space-y-3 mb-6">
                   <div className={`flex items-start gap-2 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                    <Zap className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
-                    <span><span className="text-gray-500">{language === "zh" ? "痛点：" : "Problem: "}</span>{project.problem}</span>
+                    <Zap className={`w-4 h-4 mt-0.5 flex-shrink-0 ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`} />
+                    <span><span className={theme === "dark" ? "text-gray-500" : "text-gray-500"}>{language === "zh" ? "痛点：" : "Problem: "}</span>{project.problem}</span>
                   </div>
                   <div className={`flex items-start gap-2 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                    <ArrowRight className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
-                    <span><span className="text-gray-500">{language === "zh" ? "动作：" : "Action: "}</span>{project.action}</span>
+                    <ArrowRight className={`w-4 h-4 mt-0.5 flex-shrink-0 ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`} />
+                    <span><span className={theme === "dark" ? "text-gray-500" : "text-gray-500"}>{language === "zh" ? "动作：" : "Action: "}</span>{project.action}</span>
                   </div>
                   <div className={`flex items-start gap-2 text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-                    <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                    <span><span className="text-gray-500">{language === "zh" ? "结果：" : "Result: "}</span><span className="text-orange-400 font-medium">{project.result}</span></span>
+                    <CheckCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${theme === "dark" ? "text-green-400" : "text-green-500"}`} />
+                    <span><span className={theme === "dark" ? "text-gray-500" : "text-gray-500"}>{language === "zh" ? "结果：" : "Result: "}</span><span className={`font-medium ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`}>{project.result}</span></span>
                   </div>
                 </div>
 

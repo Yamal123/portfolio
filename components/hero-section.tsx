@@ -216,34 +216,21 @@ export default function HeroSection() {
 
     filteredMatches.forEach(match => {
       if (match.start > lastIndex) {
-        parts.push(
-          <span key={`text-${keyCounter++}`}>
-            {text.slice(lastIndex, match.start)}
-          </span>
-        )
+        parts.push(<span key={`text-${keyCounter++}`}>{text.slice(lastIndex, match.start)}</span>)
       }
+      const keywordTextClass = theme === "dark" ? "text-orange-400 border-orange-400 hover:text-orange-300" : "text-orange-500 border-orange-500 hover:text-orange-600"
+      const tooltipClass = theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-800 text-white"
       parts.push(
-        <span 
-          key={`keyword-${keyCounter++}`}
-          className="relative group inline-block cursor-help"
-        >
-          <span className="text-orange-400 font-semibold border-b-2 border-dashed border-orange-400 pb-0.5 hover:text-orange-300 transition-colors">
-            {match.keyword}
-          </span>
-          <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-20 shadow-lg">
-            {keywordEmojis[match.keyword]} {match.keyword}
-          </span>
+        <span key={`keyword-${keyCounter++}`} className="relative group inline-block cursor-help">
+          <span className={`font-semibold border-b-2 border-dashed pb-0.5 transition-colors ${keywordTextClass}`}>{match.keyword}</span>
+          <span className={`absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-20 shadow-lg ${tooltipClass}`}>{keywordEmojis[match.keyword]} {match.keyword}</span>
         </span>
       )
       lastIndex = match.end
     })
 
     if (lastIndex < text.length) {
-      parts.push(
-        <span key={`text-${keyCounter++}`}>
-          {text.slice(lastIndex)}
-        </span>
-      )
+      parts.push(<span key={`text-${keyCounter++}`}>{text.slice(lastIndex)}</span>)
     }
 
     return parts.length > 0 ? parts : <span>{text}</span>

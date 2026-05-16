@@ -20,7 +20,7 @@ export const projectsData: Project[] = [
     id: 1,
     slug: "ai-portfolio",
     name: { zh: "AI 产品经理作品集", en: "AI Product Manager Portfolio" },
-    thumbnail: "/images/portfolio/ai-portfolio.png",
+    thumbnail: "/images/portfolio/saiaconfportada.png",
     type: { zh: "个人项目", en: "Personal Project" },
     intro: { 
       zh: "一个展示 AI 产品经理职业背景、项目经验和专业能力的现代化个人作品网站", 
