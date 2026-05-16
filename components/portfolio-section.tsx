@@ -3,41 +3,68 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import useSWR from "swr"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
-import { ArrowRight, CheckCircle, Zap } from "lucide-react"
-import { projectsData } from "@/data/projects"
-
-interface Project {
-  id: number
-  emoji: string
-  category: string
-  title: string
-  problem: string
-  action: string
-  result: string
-  tags: string[]
-  image?: string
-}
+import { ArrowRight, CheckCircle, Zap, Loader2 } from "lucide-react"
+import { fetchAPI } from "@/lib/api/client"
+import { adaptProjects } from "@/lib/api/adapter"
 
 export default function PortfolioSection() {
   const { language } = useLanguage()
   const { theme } = useTheme()
   const [hoveredProject, setHoveredProject] = useState<number | null>(null)
 
-  const projects: Project[] = [
-    {
-      id: 1,
-      emoji: "🌐",
-      category: language === "zh" ? "个人项目" : "Personal Project",
-      title: language === "zh" ? "AI 产品经理作品集" : "AI PM Portfolio",
-      problem: language === "zh" ? "需要一个专业的在线作品集" : "Need a professional online portfolio",
-      action: language === "zh" ? "使用 Next.js 构建现代化响应式网站" : "Built modern responsive website with Next.js",
-      result: language === "zh" ? "成功展示个人品牌" : "Successfully showcased personal brand",
-      tags: ["Next.js", "React", "TypeScript"],
-      image: "/images/portfolio/saiaconfportada.png"
-    }
-  ]
+  const { data: projects, isLoading, error } = useSWR(
+    '/api/public/projects',
+    (url) => fetchAPI<any[]>(url).then(adaptProjects)
+  )
+
+  if (isLoading) {
+    return (
+      <section id="portfolio" className="py-16 sm:py-24 relative overflow-hidden" style={{ background: theme === "dark" ? "#000000" : "#ffffff" }}>
+        <div className={`absolute top-0 left-0 w-full h-px ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`}></div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16">
+            <p className={`text-sm sm:text-base font-medium tracking-wide mb-3 sm:mb-4 ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`}>
+              {language === "zh" ? "精选项目" : "Featured Projects"}
+            </p>
+            <h2 className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+              {language === "zh" ? "作品集" : "Portfolio"}
+            </h2>
+          </div>
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className={`w-8 h-8 animate-spin ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`} />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (error || !projects) {
+    return (
+      <section id="portfolio" className="py-16 sm:py-24 relative overflow-hidden" style={{ background: theme === "dark" ? "#000000" : "#ffffff" }}>
+        <div className={`absolute top-0 left-0 w-full h-px ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`}></div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16">
+            <p className={`text-sm sm:text-base font-medium tracking-wide mb-3 sm:mb-4 ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`}>
+              {language === "zh" ? "精选项目" : "Featured Projects"}
+            </p>
+            <h2 className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+              {language === "zh" ? "作品集" : "Portfolio"}
+            </h2>
+          </div>
+          <div className="text-center py-12">
+            <p className={`text-lg ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+              {language === "zh" ? "加载项目失败，请稍后重试" : "Failed to load projects, please try again later"}
+            </p>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  const displayProjects = projects.slice(0, 6) // 首页只显示前6个项目
 
   return (
     <section id="portfolio" className="py-16 sm:py-24 relative overflow-hidden" style={{ background: theme === "dark" ? "#000000" : "#ffffff" }}>
@@ -57,10 +84,10 @@ export default function PortfolioSection() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map((project) => (
+          {displayProjects.map((project) => (
             <Link
               key={project.id}
-              href="/portfolio"
+              href={`/portfolio/${project.slug}`}
               className={`group rounded-2xl overflow-hidden transition-all duration-500 cursor-pointer ${
                 theme === "dark"
                   ? "bg-gray-900/50 border border-gray-800 hover:border-orange-500/30"
@@ -70,10 +97,10 @@ export default function PortfolioSection() {
               onMouseLeave={() => setHoveredProject(null)}
             >
               <div className={`aspect-video relative overflow-hidden ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}>
-                {project.image ? (
+                {project.thumbnail ? (
                   <Image
-                    src={project.image}
-                    alt={project.title}
+                    src={project.thumbnail}
+                    alt={project.name[language === "zh" ? "zh" : "en"]}
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
@@ -85,33 +112,39 @@ export default function PortfolioSection() {
                 <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent`}></div>
                 <div className="absolute top-4 left-4">
                   <span className="px-3 py-1 bg-orange-500/90 text-white text-xs font-semibold rounded-full backdrop-blur-sm">
-                    {project.category}
+                    {project.type[language === "zh" ? "zh" : "en"]}
                   </span>
                 </div>
               </div>
               
               <div className="p-6">
                 <h3 className={`text-xl font-bold mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                  {project.title}
+                  {project.name[language === "zh" ? "zh" : "en"]}
                 </h3>
                 
                 <div className="space-y-3 mb-6">
-                  <div className={`flex items-start gap-2 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                    <Zap className={`w-4 h-4 mt-0.5 flex-shrink-0 ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`} />
-                    <span><span className={theme === "dark" ? "text-gray-500" : "text-gray-500"}>{language === "zh" ? "痛点：" : "Problem: "}</span>{project.problem}</span>
-                  </div>
-                  <div className={`flex items-start gap-2 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                    <ArrowRight className={`w-4 h-4 mt-0.5 flex-shrink-0 ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`} />
-                    <span><span className={theme === "dark" ? "text-gray-500" : "text-gray-500"}>{language === "zh" ? "动作：" : "Action: "}</span>{project.action}</span>
-                  </div>
-                  <div className={`flex items-start gap-2 text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-                    <CheckCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${theme === "dark" ? "text-green-400" : "text-green-500"}`} />
-                    <span><span className={theme === "dark" ? "text-gray-500" : "text-gray-500"}>{language === "zh" ? "结果：" : "Result: "}</span><span className={`font-medium ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`}>{project.result}</span></span>
-                  </div>
+                  {project.problem[language === "zh" ? "zh" : "en"] && (
+                    <div className={`flex items-start gap-2 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                      <Zap className={`w-4 h-4 mt-0.5 flex-shrink-0 ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`} />
+                      <span><span className={theme === "dark" ? "text-gray-500" : "text-gray-500"}>{language === "zh" ? "痛点：" : "Problem: "}</span>{project.problem[language === "zh" ? "zh" : "en"]}</span>
+                    </div>
+                  )}
+                  {project.action[language === "zh" ? "zh" : "en"] && (
+                    <div className={`flex items-start gap-2 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                      <ArrowRight className={`w-4 h-4 mt-0.5 flex-shrink-0 ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`} />
+                      <span><span className={theme === "dark" ? "text-gray-500" : "text-gray-500"}>{language === "zh" ? "动作：" : "Action: "}</span>{project.action[language === "zh" ? "zh" : "en"]}</span>
+                    </div>
+                  )}
+                  {project.result[language === "zh" ? "zh" : "en"] && (
+                    <div className={`flex items-start gap-2 text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                      <CheckCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${theme === "dark" ? "text-green-400" : "text-green-500"}`} />
+                      <span><span className={theme === "dark" ? "text-gray-500" : "text-gray-500"}>{language === "zh" ? "结果：" : "Result: "}</span><span className={`font-medium ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`}>{project.result[language === "zh" ? "zh" : "en"]}</span></span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {project.tags.map((tag, tagIndex) => (
+                  {project.tags.slice(0, 3).map((tag, tagIndex) => (
                     <span
                       key={tagIndex}
                       className={`px-3 py-1 rounded-full text-xs font-medium ${

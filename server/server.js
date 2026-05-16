@@ -44,7 +44,11 @@ app.post('/api/project/:slug/view', (req, res) => {
   const db = require('./services')
   const { slug } = req.params
   const project = db.incrementProjectView(slug)
-  res.success(project ? { view_count: project.view_count } : null })
+  if (project) {
+    res.success({ view_count: project.view_count })
+  } else {
+    res.success(null)
+  }
 })
 
 app.use('/api/auth', authRoutes)

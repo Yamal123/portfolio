@@ -1,11 +1,14 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import Link from "next/link"
+import useSWR from "swr"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
-import { ExternalLink, Calendar, Tag, Copy, Check } from "lucide-react"
-import { projectsData, type Project } from "@/data/projects"
+import { ExternalLink, Calendar, Tag, Copy, Check, Loader2 } from "lucide-react"
+import { fetchAPI } from "@/lib/api/client"
+import { adaptProject } from "@/lib/api/adapter"
+import type { Project } from '@/data/projects'
 import PageNav from "@/components/page-nav"
 
 // 简单的Markdown渲染器
@@ -49,9 +52,15 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const { theme } = useTheme()
   const [copied, setCopied] = useState(false)
 
-  const project: Project | undefined = useMemo(() => {
-    return projectsData.find(p => p.slug === slug)
-  }, [slug])
+  const { data: project, isLoading, error } = useSWR(
+    slug ? `/api/public/projects?slug=${slug}` : null,
+    (url) => fetchAPI<any[]>(url).then(data => {
+      if (data && data.length > 0) {
+        return adaptProject(data[0])
+      }
+      return null
+    })
+  )
 
   const handleCopyLink = () => {
     const url = typeof window !== 'undefined' ? window.location.href : ''
@@ -72,7 +81,21 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     }
   }
 
-  if (!project) {
+  if (isLoading) {
+    return (
+      <main className={`min-h-screen ${theme === "dark" ? "bg-black" : "bg-white"}`}>
+        <PageNav showBack backUrl="/portfolio" />
+        <div className="max-w-4xl mx-auto px-6 pt-32 pb-24 text-center">
+          <Loader2 className={`w-8 h-8 animate-spin mx-auto ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`} />
+          <p className={`mt-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+            {language === "zh" ? "加载中..." : "Loading..."}
+          </p>
+        </div>
+      </main>
+    )
+  }
+
+  if (error || !project) {
     return (
       <main className={`min-h-screen ${theme === "dark" ? "bg-black" : "bg-white"}`}>
         <PageNav showBack backUrl="/portfolio" />

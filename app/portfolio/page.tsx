@@ -3,13 +3,15 @@
 import { useState, useMemo } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import useSWR from "swr"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
-import { Search, ChevronLeft, ChevronRight, ExternalLink, Calendar, Tag, Github } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, ExternalLink, Calendar, Tag, Github, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import PageNav from "@/components/page-nav"
-import { projectsData } from "@/data/projects"
+import { fetchAPI } from "@/lib/api/client"
+import { adaptProjects } from "@/lib/api/adapter"
 
 export default function PortfolioPage() {
   const { language } = useLanguage()
@@ -18,16 +20,21 @@ export default function PortfolioPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
 
+  const { data: projects, isLoading, error } = useSWR(
+    '/api/public/projects',
+    (url) => fetchAPI<any[]>(url).then(adaptProjects)
+  )
+
   const filteredProjects = useMemo(() => {
-    if (!searchQuery) return projectsData
+    if (!projects || !searchQuery) return projects || []
     const query = searchQuery.toLowerCase()
-    return projectsData.filter(project => 
+    return projects.filter(project =>
       project.name[language === "zh" ? "zh" : "en"].toLowerCase().includes(query) ||
       project.type[language === "zh" ? "zh" : "en"].toLowerCase().includes(query) ||
       project.keywords.some(keyword => keyword.toLowerCase().includes(query)) ||
       project.intro[language === "zh" ? "zh" : "en"].toLowerCase().includes(query)
     )
-  }, [searchQuery, language])
+  }, [searchQuery, language, projects])
 
   const totalPages = Math.ceil(filteredProjects.length / itemsPerPage)
   const currentProjects = filteredProjects.slice(
@@ -45,6 +52,48 @@ export default function PortfolioPage() {
     } catch {
       return dateStr
     }
+  }
+
+  if (isLoading) {
+    return (
+      <main className={`min-h-screen ${theme === "dark" ? "bg-black" : "bg-white"}`}>
+        <PageNav showBack backUrl="/" />
+        <div className="pt-32 pb-24">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-8">
+              <h1 className={`text-4xl md:text-5xl font-bold mb-4 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                {language === "zh" ? "作品集" : "Portfolio"}
+              </h1>
+            </div>
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className={`w-8 h-8 animate-spin ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`} />
+            </div>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  if (error || !projects) {
+    return (
+      <main className={`min-h-screen ${theme === "dark" ? "bg-black" : "bg-white"}`}>
+        <PageNav showBack backUrl="/" />
+        <div className="pt-32 pb-24">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-8">
+              <h1 className={`text-4xl md:text-5xl font-bold mb-4 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                {language === "zh" ? "作品集" : "Portfolio"}
+              </h1>
+            </div>
+            <div className="text-center py-12">
+              <p className={`text-lg ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                {language === "zh" ? "加载项目失败，请稍后重试" : "Failed to load projects, please try again later"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+    )
   }
 
   return (
