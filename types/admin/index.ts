@@ -2,6 +2,7 @@ export interface ApiResponse<T = any> {
   code: number
   message: string
   data: T
+  timestamp?: number
 }
 
 export interface PaginatedResponse<T = any> {
@@ -9,100 +10,151 @@ export interface PaginatedResponse<T = any> {
   total: number
   page: number
   pageSize: number
-  totalPages: number
+  totalPage: number
 }
 
 export interface User {
-  id: string
+  id: number
   username: string
-  email: string
+  nickname: string
   avatar?: string
-  role: 'admin' | 'editor'
-  createdAt: string
-  updatedAt: string
+  created_at: string
+  updated_at: string
+}
+
+export interface SkillCate {
+  id: number
+  cate_name: string
+  cate_icon?: string
+  sort_num: number
 }
 
 export interface Skill {
-  id: string
+  id: number
   name: string
-  category: string
   level: number
-  icon?: string
+  cate_id: number
   description?: string
-  sortOrder: number
-  isVisible: boolean
-  createdAt: string
-  updatedAt: string
+  tags?: string
+  icon_url?: string
+  sort_num: number
+  status: number
+  created_at: string
+  updated_at: string
+}
+
+export interface ProjectCate {
+  id: number
+  cate_name: string
+  sort_num: number
 }
 
 export interface Project {
-  id: string
-  title: string
-  description: string
-  coverImage?: string
-  tags: string[]
-  demoUrl?: string
-  githubUrl?: string
-  techStack: string[]
-  sortOrder: number
-  isVisible: boolean
-  featured: boolean
-  createdAt: string
-  updatedAt: string
+  id: number
+  slug: string
+  name_zh: string
+  name_en: string
+  thumbnail?: string
+  content_zh: string
+  content_en: string
+  tags: string
+  external_url?: string
+  view_count: number
+  cate_id: number
+  status: number
+  sort_num: number
+  deleted_at?: string | null
+  created_at: string
+  updated_at: string
 }
 
-export interface Article {
-  id: string
-  title: string
-  content: string
-  summary?: string
-  coverImage?: string
-  tags: string[]
-  category: string
-  status: 'draft' | 'published'
-  viewCount: number
-  sortOrder: number
-  createdAt: string
-  updatedAt: string
+export interface UserProfile {
+  id: number
+  nickname: string
+  avatar?: string
+  signature?: string
+  introduction?: string
+  years_of_experience?: number
+  project_count?: number
+  success_rate?: number
+  location?: string
+  website?: string
+  github_url?: string
+  linkedin_url?: string
+  twitter_url?: string
+  created_at: string
+  updated_at: string
 }
 
 export interface ContactInfo {
-  id: string
-  type: 'email' | 'phone' | 'wechat' | 'github' | 'linkedin' | 'other'
-  label: string
-  value: string
-  icon?: string
-  url?: string
-  sortOrder: number
-  isVisible: boolean
-  createdAt: string
-  updatedAt: string
+  id: number
+  email: string
+  email_displayed: boolean
+  phone: string
+  phone_displayed: boolean
+  wechat_id: string
+  wechat_displayed: boolean
+  wechat_qrcode?: string
+  github_url?: string
+  linkedin_url?: string
+  twitter_url?: string
+  created_at: string
+  updated_at: string
 }
 
-export interface SiteSettings {
-  id: string
-  siteName: string
-  siteDescription?: string
-  siteLogo?: string
-  favicon?: string
-  seoKeywords?: string
-  seoDescription?: string
-  themeColor?: string
-  analyticsId?: string
-  updatedAt: string
+export interface SiteConfig {
+  config_key: string
+  config_value: string
+  description?: string
+  type?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface SiteSettingsData {
+  site_title: string
+  site_description: string
+  copyright: string
+  favicon: string
+  icp_number: string
+  ga_id: string
+}
+
+export interface StatsData {
+  project_count: number
+  total_skills: number
+  years_of_experience: number
+  success_rate: number
+  completed_projects: number
+  client_satisfaction: number
 }
 
 export interface OperationLog {
-  id: string
-  userId: string
-  username: string
-  action: string
-  module: string
-  targetId?: string
-  detail?: string
-  ip?: string
-  userAgent?: string
-  createdAt: string
+  id: number
+  admin_id: number
+  admin_name: string
+  action_type: 'login' | 'create' | 'update' | 'delete' | 'backup' | 'restore'
+  target_module: string
+  target_id?: number
+  content: string | Record<string, any>
+  ip_address: string
+  user_agent?: string
+  created_at: string
+}
+
+export interface AnalyticsOverview {
+  today_uv: number
+  today_pv: number
+  total_uv: number
+  total_pv: number
+  avg_duration: number
+  bounce_rate: number
+}
+
+export interface AnalyticsTrendItem {
+  date: string
+  uv: number
+  pv: number
 }
 
 export interface LoginParams {
@@ -112,15 +164,5 @@ export interface LoginParams {
 
 export interface LoginResult {
   token: string
-  user: User
-}
-
-export interface DashboardStats {
-  totalProjects: number
-  totalSkills: number
-  totalArticles: number
-  totalViews: number
-  recentLogs: OperationLog[]
-  projectTrend: { date: string; count: number }[]
-  categoryDistribution: { name: string; value: number }[]
+  userInfo: User
 }

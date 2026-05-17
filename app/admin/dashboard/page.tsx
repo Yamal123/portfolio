@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Card, Row, Col, Statistic, Table, Tag, Typography, Button } from 'antd'
+import { Card, Row, Col, Statistic, Table, Tag, Typography, Button, Spin } from 'antd'
 import {
   FileTextOutlined,
   EditOutlined,
@@ -22,49 +22,10 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import Link from 'next/link'
+import useSWR from 'swr'
+import { get } from '@/lib/admin/api'
 
 const { Title } = Typography
-
-const statCards = [
-  {
-    title: '总项目数',
-    value: 128,
-    change: 12.5,
-    icon: <FileTextOutlined />,
-    color: '#1890ff',
-  },
-  {
-    title: '总文章数',
-    value: 56,
-    change: 8.3,
-    icon: <EditOutlined />,
-    color: '#52c41a',
-  },
-  {
-    title: '今日访客',
-    value: 1234,
-    change: -3.2,
-    icon: <UserOutlined />,
-    color: '#faad14',
-  },
-  {
-    title: '总浏览量',
-    value: 45678,
-    change: 15.7,
-    icon: <EyeOutlined />,
-    color: '#eb2f96',
-  },
-]
-
-const trendData = [
-  { date: '05-10', uv: 400, pv: 2400 },
-  { date: '05-11', uv: 300, pv: 1398 },
-  { date: '05-12', uv: 200, pv: 9800 },
-  { date: '05-13', uv: 278, pv: 3908 },
-  { date: '05-14', uv: 189, pv: 4800 },
-  { date: '05-15', uv: 239, pv: 3800 },
-  { date: '05-16', uv: 349, pv: 4300 },
-]
 
 const quickActions = [
   {
@@ -72,12 +33,6 @@ const quickActions = [
     icon: <PlusOutlined style={{ fontSize: 24 }} />,
     link: '/admin/projects?action=create',
     disabled: false,
-  },
-  {
-    title: '发布文章',
-    icon: <EditOutlined style={{ fontSize: 24 }} />,
-    link: '#',
-    disabled: true,
   },
   {
     title: '修改个人信息',
@@ -93,112 +48,79 @@ const quickActions = [
   },
 ]
 
-const logData = [
-  {
-    key: '1',
-    time: '2025-05-16 14:30:22',
-    operator: '管理员',
-    action: '新增',
-    target: '项目案例',
-    detail: '创建了新项目"AI智能客服系统"',
-    ip: '192.168.1.100',
-  },
-  {
-    key: '2',
-    time: '2025-05-16 14:25:18',
-    operator: '管理员',
-    action: '修改',
-    target: '专业技能',
-    detail: '更新了"React"技能等级为专家',
-    ip: '192.168.1.100',
-  },
-  {
-    key: '3',
-    time: '2025-05-16 14:20:45',
-    operator: '管理员',
-    action: '删除',
-    target: '文章管理',
-    detail: '删除了草稿文章"测试内容"',
-    ip: '192.168.1.100',
-  },
-  {
-    key: '4',
-    time: '2025-05-16 14:15:33',
-    operator: '管理员',
-    action: '登录',
-    target: '系统',
-    detail: '用户登录系统',
-    ip: '192.168.1.100',
-  },
-  {
-    key: '5',
-    time: '2025-05-16 10:30:12',
-    operator: '管理员',
-    action: '新增',
-    target: '联系方式',
-    detail: '添加了新的联系邮箱',
-    ip: '192.168.1.101',
-  },
-  {
-    key: '6',
-    time: '2025-05-16 09:45:28',
-    operator: '管理员',
-    action: '修改',
-    target: '系统设置',
-    detail: '修改了站点名称为"AI PM 个人主页"',
-    ip: '192.168.1.100',
-  },
-  {
-    key: '7',
-    time: '2025-05-15 18:20:55',
-    operator: '管理员',
-    action: '新增',
-    target: '履历数据',
-    detail: '添加了新的工作经历记录',
-    ip: '192.168.1.102',
-  },
-  {
-    key: '8',
-    time: '2025-05-15 17:35:40',
-    operator: '管理员',
-    action: '删除',
-    target: '项目案例',
-    detail: '删除了过期的项目展示',
-    ip: '192.168.1.100',
-  },
-  {
-    key: '9',
-    time: '2025-05-15 16:50:18',
-    operator: '管理员',
-    action: '修改',
-    target: '个人主页信息',
-    detail: '更新了个人简介内容',
-    ip: '192.168.1.100',
-  },
-  {
-    key: '10',
-    time: '2025-05-15 15:22:33',
-    operator: '管理员',
-    action: '登录',
-    target: '系统',
-    detail: '用户登录系统',
-    ip: '192.168.1.103',
-  },
-]
-
-const getActionTag = (action: string) => {
+const getActionTag = (actionType: string) => {
   const config: Record<string, { color: string; text: string }> = {
-    新增: { color: 'green', text: '新增' },
-    修改: { color: 'blue', text: '修改' },
-    删除: { color: 'red', text: '删除' },
-    登录: { color: 'purple', text: '登录' },
+    login: { color: 'purple', text: '登录' },
+    create: { color: 'green', text: '新增' },
+    update: { color: 'blue', text: '修改' },
+    delete: { color: 'red', text: '删除' },
+    backup: { color: 'cyan', text: '备份' },
+    restore: { color: 'magenta', text: '恢复' },
   }
   return (
-    <Tag color={config[action]?.color || 'default'}>{config[action]?.text || action}</Tag>
+    <Tag color={config[actionType]?.color || 'default'}>{config[actionType]?.text || actionType}</Tag>
   )
 }
 
 export default function DashboardPage() {
+  const { data: statsData, isLoading: statsLoading } = useSWR('/stats', () => get<any>('/stats'))
+  const { data: analyticsOverview } = useSWR('/analytics/overview', () => get<any>('/analytics/overview'))
+  const { data: trendData } = useSWR('/analytics/trend?days=7', () => get<any>('/analytics/trend?days=7'))
+  const { data: logsData } = useSWR('/logs?page=1&pageSize=10', () => get<any>('/logs?page=1&pageSize=10'))
+
+  const stats = statsData?.data || {}
+  const overview = analyticsOverview?.data || {}
+  const trend = trendData?.data || []
+  const logs = logsData?.data
+
+  const statCards = [
+    {
+      title: '总项目数',
+      value: stats.project_count || 0,
+      change: 0,
+      icon: <FileTextOutlined />,
+      color: '#1890ff',
+    },
+    {
+      title: '总技能数',
+      value: stats.total_skills || 0,
+      change: 0,
+      icon: <EditOutlined />,
+      color: '#52c41a',
+    },
+    {
+      title: '今日访客',
+      value: overview.today_uv || 0,
+      change: 0,
+      icon: <UserOutlined />,
+      color: '#faad14',
+    },
+    {
+      title: '总浏览量',
+      value: overview.total_pv || 0,
+      change: 0,
+      icon: <EyeOutlined />,
+      color: '#eb2f96',
+    },
+  ]
+
+  const chartData = Array.isArray(trend) ? trend.map((item: any) => ({
+    date: item.date ? item.date.slice(5) : '',
+    uv: item.uv || 0,
+    pv: item.pv || 0,
+  })) : []
+
+  const logList = logs?.list || []
+  const logDataSource = logList.map((log: any, index: number) => ({
+    key: String(log.id || index),
+    time: log.created_at || '',
+    operator: log.admin_name || '',
+    action: log.action_type || '',
+    target: log.target_module || '',
+    detail: typeof log.content === 'string' ? log.content : JSON.stringify(log.content),
+    ip: log.ip_address || '',
+  }))
+
   const logColumns = [
     {
       title: '时间',
@@ -216,7 +138,7 @@ export default function DashboardPage() {
       title: '操作类型',
       dataIndex: 'action',
       key: 'action',
-      render: (action: string) => getActionTag(action),
+      render: (actionType: string) => getActionTag(actionType),
     },
     {
       title: '操作对象',
@@ -237,6 +159,15 @@ export default function DashboardPage() {
       width: 140,
     },
   ]
+
+  if (statsLoading && !statsData) {
+    return (
+      <div style={{ textAlign: 'center', padding: 100 }}>
+        <Spin size="large" />
+        <p style={{ marginTop: 16, color: '#999' }}>加载仪表盘数据...</p>
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -262,17 +193,6 @@ export default function DashboardPage() {
                 }
                 value={card.value}
                 prefix={null}
-                suffix={
-                  <span
-                    style={{
-                      fontSize: 14,
-                      marginLeft: 8,
-                      color: card.change > 0 ? '#52c41a' : '#ff4d4f',
-                    }}
-                  >
-                    {card.change > 0 ? '+' : ''}{card.change}%
-                  </span>
-                }
                 valueStyle={{ color: card.color, fontSize: 28 }}
               />
             </Card>
@@ -283,7 +203,7 @@ export default function DashboardPage() {
       <Card style={{ marginTop: 24 }}>
         <Title level={5}>7日访问趋势</Title>
         <ResponsiveContainer width="100%" height={320}>
-          <AreaChart data={trendData}>
+          <AreaChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
             <YAxis />
@@ -311,7 +231,7 @@ export default function DashboardPage() {
       <Title level={5} style={{ marginTop: 24, marginBottom: 16 }}>快捷操作</Title>
       <Row gutter={[16, 16]}>
         {quickActions.map((action, index) => (
-          <Col xs={12} sm={12} key={index}>
+          <Col xs={12} sm={8} key={index}>
             <Link href={action.link}>
               <Card
                 hoverable={!action.disabled}
@@ -333,9 +253,10 @@ export default function DashboardPage() {
         <Title level={5}>最近日志</Title>
         <Table
           columns={logColumns}
-          dataSource={logData}
+          dataSource={logDataSource}
           pagination={false}
           size="middle"
+          locale={{ emptyText: '暂无操作日志' }}
         />
       </Card>
     </div>

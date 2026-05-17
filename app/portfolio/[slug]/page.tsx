@@ -9,6 +9,7 @@ import { ExternalLink, Calendar, Tag, Copy, Check, Loader2 } from "lucide-react"
 import { fetchAPI } from "@/lib/api/client"
 import { adaptProject } from "@/lib/api/adapter"
 import type { Project } from '@/data/projects'
+import type { BackendProject } from "@/lib/api/adapter"
 import PageNav from "@/components/page-nav"
 
 // 简单的Markdown渲染器
@@ -54,9 +55,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
 
   const { data: project, isLoading, error } = useSWR(
     slug ? `/api/public/projects?slug=${slug}` : null,
-    (url) => fetchAPI<any[]>(url).then(data => {
-      if (data && data.length > 0) {
-        return adaptProject(data[0])
+    (url) => fetchAPI<BackendProject | null>(url).then(data => {
+      if (data) {
+        return adaptProject(data)
       }
       return null
     })

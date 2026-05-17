@@ -1,7 +1,6 @@
 import { Project } from '@/data/projects'
 import { Skill } from '@/data/skills'
 
-// 后端项目数据类型
 interface BackendProject {
   id: number
   slug: string
@@ -16,7 +15,6 @@ interface BackendProject {
   created_at: string
 }
 
-// 后端技能数据类型
 interface BackendSkill {
   id: number
   name: string
@@ -24,23 +22,20 @@ interface BackendSkill {
   cate_id: number
 }
 
-// 项目分类映射（根据 cate_id）
 const projectCategoryMap: Record<number, { zh: string; en: string }> = {
-  1: { zh: "个人项目", en: "Personal Project" },
-  2: { zh: "工作项目", en: "Work Project" },
-  3: { zh: "开源项目", en: "Open Source" },
-  4: { zh: "学习项目", en: "Learning Project" },
+  1: { zh: "AI 智能项目", en: "AI Project" },
+  2: { zh: "企业级应用", en: "Enterprise App" },
+  3: { zh: "国际化产品", en: "International Product" },
+  4: { zh: "社会公益", en: "Social Welfare" },
 }
 
-// 技能分类映射（根据 cate_id）
-const skillCategoryMap: Record<number, "ai" | "product" | "technical" | "soft"> = {
-  1: "ai",
-  2: "product",
-  3: "technical",
-  4: "soft",
+const skillCategoryMap: Record<number, { zh: string; en: string }> = {
+  1: { zh: "AI 产品", en: "AI" },
+  2: { zh: "物流供应链", en: "Supply Chain" },
+  3: { zh: "智能客服", en: "Customer Service" },
+  4: { zh: "架构设计", en: "Architecture" },
 }
 
-// 将后端项目数据转换为前端格式
 export function adaptProjects(backendProjects: BackendProject[]): Project[] {
   return backendProjects.map(project => ({
     id: project.id,
@@ -50,7 +45,7 @@ export function adaptProjects(backendProjects: BackendProject[]): Project[] {
       en: project.name_en 
     },
     thumbnail: project.thumbnail || undefined,
-    type: projectCategoryMap[project.cate_id] || { zh: "个人项目", en: "Personal Project" },
+    type: projectCategoryMap[project.cate_id] || { zh: "AI 智能项目", en: "AI Project" },
     intro: { 
       zh: project.content_zh.slice(0, 100) + (project.content_zh.length > 100 ? '...' : ''), 
       en: project.content_en.slice(0, 100) + (project.content_en.length > 100 ? '...' : '') 
@@ -69,7 +64,6 @@ export function adaptProjects(backendProjects: BackendProject[]): Project[] {
   }))
 }
 
-// 将后端单个项目数据转换为前端格式
 export function adaptProject(backendProject: BackendProject): Project {
   return {
     id: backendProject.id,
@@ -79,7 +73,7 @@ export function adaptProject(backendProject: BackendProject): Project {
       en: backendProject.name_en 
     },
     thumbnail: backendProject.thumbnail || undefined,
-    type: projectCategoryMap[backendProject.cate_id] || { zh: "个人项目", en: "Personal Project" },
+    type: projectCategoryMap[backendProject.cate_id] || { zh: "AI 智能项目", en: "AI Project" },
     intro: { 
       zh: backendProject.content_zh.slice(0, 100) + (backendProject.content_zh.length > 100 ? '...' : ''), 
       en: backendProject.content_en.slice(0, 100) + (backendProject.content_en.length > 100 ? '...' : '') 
@@ -98,7 +92,6 @@ export function adaptProject(backendProject: BackendProject): Project {
   }
 }
 
-// 将后端技能数据转换为前端格式
 export function adaptSkills(backendSkills: BackendSkill[]): Skill[] {
   return backendSkills.map(skill => ({
     name: { 
@@ -106,6 +99,6 @@ export function adaptSkills(backendSkills: BackendSkill[]): Skill[] {
       en: skill.name 
     },
     level: skill.level,
-    category: skillCategoryMap[skill.cate_id] || "technical"
+    category: skillCategoryMap[skill.cate_id]?.zh as any || "技术技能"
   }))
 }
