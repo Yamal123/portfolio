@@ -37,8 +37,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (params: LoginParams) => {
     try {
       setLoading(true)
-      const res = await post<{ token: string; user: User }>('/auth/login', params)
-      const { token: newToken, user: newUser } = res
+      const res = await post<{ token: string; userInfo: User }>('/auth/login', params)
+      const { token: newToken, userInfo: newUser } = res.data
       localStorage.setItem(TOKEN_KEY, newToken)
       setToken(newToken)
       setUser(newUser)
