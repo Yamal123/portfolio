@@ -43,7 +43,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(newToken)
       setUser(newUser)
       message.success('登录成功')
-      router.push('/admin/dashboard')
+      setTimeout(() => {
+        router.push('/admin/dashboard')
+      }, 100)
     } catch (error) {
       throw error
     } finally {
