@@ -40,63 +40,60 @@ export default function LoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)',
+      background: '#f2f3f5',
       position: 'relative',
-      overflow: 'hidden',
     }}>
-      {/* 背景装饰圆 */}
+      {/* 背景装饰 */}
       <div style={{
         position: 'absolute',
-        width: 400,
-        height: 400,
+        width: 600,
+        height: 600,
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(249,115,22,0.15) 0%, transparent 70%)',
-        top: -100,
+        background: 'radial-gradient(circle, rgba(51,112,255,0.06) 0%, transparent 70%)',
+        top: -200,
         right: -100,
       }} />
       <div style={{
         position: 'absolute',
-        width: 300,
-        height: 300,
+        width: 500,
+        height: 500,
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(114,137,218,0.12) 0%, transparent 70%)',
-        bottom: -80,
-        left: -80,
+        background: 'radial-gradient(circle, rgba(51,112,255,0.04) 0%, transparent 70%)',
+        bottom: -150,
+        left: -100,
       }} />
 
       <Card
         style={{
-          width: 440,
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-          borderRadius: 16,
-          border: '1px solid rgba(255,255,255,0.08)',
-          backdropFilter: 'blur(10px)',
-          background: 'rgba(15, 23, 42, 0.85)',
+          width: 400,
+          boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+          borderRadius: 8,
+          border: '1px solid #e5e6eb',
+          background: '#fff',
         }}
       >
         {/* Logo 区域 */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{
-            width: 64,
-            height: 64,
+            width: 48,
+            height: 48,
             margin: '0 auto 16px',
-            borderRadius: 16,
-            background: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
+            borderRadius: 10,
+            background: '#3370ff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 28,
-            fontWeight: 800,
+            fontSize: 20,
+            fontWeight: 700,
             color: '#fff',
-            letterSpacing: -1,
-            boxShadow: '0 8px 24px rgba(249,115,22,0.35)',
+            letterSpacing: -0.5,
           }}>
             PM
           </div>
-          <Title level={3} style={{ marginBottom: 6, color: '#fff', fontWeight: 600 }}>
-            AI PM 后台管理
+          <Title level={3} style={{ marginBottom: 6, color: '#1d2129', fontWeight: 600, fontSize: 20 }}>
+            AI PM 后台管理系统
           </Title>
-          <Text type="secondary" style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13 }}>
+          <Text type="secondary" style={{ color: '#86909c', fontSize: 13 }}>
             个人主页内容管理系统
           </Text>
         </div>
@@ -106,7 +103,7 @@ export default function LoginPage() {
           name="login"
           onFinish={onFinish}
           layout="vertical"
-          size="large"
+          size="middle"
           initialValues={{ rememberMe: false }}
           requiredMark={false}
         >
@@ -118,14 +115,9 @@ export default function LoginPage() {
             ]}
           >
             <Input
-              prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
+              prefix={<UserOutlined style={{ color: '#c9cdd4' }} />}
               placeholder="请输入用户名"
-              style={{
-                background: 'rgba(255,255,255,0.1)',
-                borderColor: 'rgba(255,255,255,0.2)',
-                color: '#f1f5f9',
-                height: 44,
-              }}
+              style={{ height: 40, borderRadius: 6 }}
             />
           </Form.Item>
 
@@ -141,19 +133,14 @@ export default function LoginPage() {
             ]}
           >
             <Input.Password
-              prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
+              prefix={<LockOutlined style={{ color: '#c9cdd4' }} />}
               placeholder="请输入密码"
-              style={{
-                background: 'rgba(255,255,255,0.1)',
-                borderColor: 'rgba(255,255,255,0.2)',
-                color: '#f1f5f9',
-                height: 44,
-              }}
+              style={{ height: 40, borderRadius: 6 }}
             />
           </Form.Item>
 
           <Form.Item name="rememberMe" valuePropName="checked">
-            <Checkbox style={{ color: 'rgba(255,255,255,0.6)' }}>记住我</Checkbox>
+            <Checkbox style={{ color: '#4e5969', fontSize: 13 }}>记住我</Checkbox>
           </Form.Item>
 
           <Form.Item>
@@ -163,23 +150,19 @@ export default function LoginPage() {
               block
               loading={loading}
               style={{
-                height: 48,
-                fontSize: 16,
+                height: 40,
+                fontSize: 14,
                 fontWeight: 500,
-                background: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
-                border: 'none',
-                boxShadow: '0 4px 16px rgba(249,115,22,0.3)',
+                borderRadius: 6,
               }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             >
               登 录
             </Button>
           </Form.Item>
         </Form>
 
-        <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <Text style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12 }}>
+        <div style={{ textAlign: 'center', marginTop: 8 }}>
+          <Text style={{ color: '#c9cdd4', fontSize: 12 }}>
             © 2026 AI PM Portfolio · Powered by Next.js
           </Text>
         </div>

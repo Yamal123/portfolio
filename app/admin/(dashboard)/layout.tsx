@@ -25,8 +25,17 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
 
   if (loading || !checked) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Spin size="large" tip="加载中..." />
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        background: '#f2f3f5',
+        gap: 16,
+      }}>
+        <Spin size="large" />
+        <span style={{ color: '#86909c', fontSize: 14 }}>加载中...</span>
       </div>
     )
   }
