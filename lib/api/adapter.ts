@@ -1,104 +1,136 @@
-import { Project } from '@/data/projects'
-import { Skill } from '@/data/skills'
+// 数据适配器：将后端API返回的数据格式转换为前台组件需要的格式
 
-export interface BackendProject {
-  id: number
-  slug: string
-  name_zh: string
-  name_en: string
-  thumbnail?: string
-  content_zh: string
-  content_en: string
-  tags: string
-  view_count: number
-  cate_id: number
-  created_at: string
-}
-
-interface BackendSkill {
-  id: number
-  name: string
-  level: number
-  cate_id: number
-}
-
-const projectCategoryMap: Record<number, { zh: string; en: string }> = {
-  1: { zh: "AI 智能项目", en: "AI Project" },
-  2: { zh: "企业级应用", en: "Enterprise App" },
-  3: { zh: "国际化产品", en: "International Product" },
-  4: { zh: "社会公益", en: "Social Welfare" },
-}
-
-const skillCategoryMap: Record<number, { zh: string; en: string }> = {
-  1: { zh: "AI 产品", en: "AI" },
-  2: { zh: "物流供应链", en: "Supply Chain" },
-  3: { zh: "智能客服", en: "Customer Service" },
-  4: { zh: "架构设计", en: "Architecture" },
-}
-
-export function adaptProjects(backendProjects: BackendProject[]): Project[] {
+// 转换项目数据
+export function adaptProjects(backendProjects: any[]) {
   return backendProjects.map(project => ({
     id: project.id,
     slug: project.slug,
-    name: { 
-      zh: project.name_zh, 
-      en: project.name_en 
+    name: {
+      zh: project.name_zh,
+      en: project.name_en
     },
-    thumbnail: project.thumbnail || undefined,
-    type: projectCategoryMap[project.cate_id] || { zh: "AI 智能项目", en: "AI Project" },
-    intro: { 
-      zh: project.content_zh.slice(0, 100) + (project.content_zh.length > 100 ? '...' : ''), 
-      en: project.content_en.slice(0, 100) + (project.content_en.length > 100 ? '...' : '') 
+    type: {
+      zh: project.type_zh || "个人项目",
+      en: project.type_en || "Personal Project"
     },
-    keywords: project.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-    createdAt: project.created_at,
-    emoji: "🌐",
-    problem: { zh: "", en: "" },
-    action: { zh: "", en: "" },
-    result: { zh: "", en: "" },
-    tags: project.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-    content: { 
-      zh: project.content_zh, 
-      en: project.content_en 
-    }
+    intro: {
+      zh: project.intro_zh || "",
+      en: project.intro_en || ""
+    },
+    problem: {
+      zh: project.problem_zh || "",
+      en: project.problem_en || ""
+    },
+    action: {
+      zh: project.action_zh || "",
+      en: project.action_en || ""
+    },
+    result: {
+      zh: project.result_zh || "",
+      en: project.result_en || ""
+    },
+    thumbnail: project.thumbnail,
+    keywords: project.keywords ? project.keywords.split(',').map((k: string) => k.trim()) : [],
+    tags: project.tags ? project.tags.split(',').map((t: string) => t.trim()) : [],
+    content: {
+      zh: project.content_zh || "",
+      en: project.content_en || ""
+    },
+    emoji: project.emoji || "📦",
+    createdAt: project.created_at?.split(' ')[0] || "",
+    view_count: project.view_count || 0
   }))
 }
 
-export function adaptProject(backendProject: BackendProject): Project {
+// 转换技能数据
+export function adaptSkills(backendSkills: any[]) {
+  // 技能分类映射
+  const categoryMap: Record<number, string> = {
+    1: "ai",
+    2: "product",
+    3: "technical",
+    4: "soft"
+  }
+
+  return backendSkills.map(skill => ({
+    name: {
+      zh: skill.name,
+      en: skill.name // 暂时用中文做英文，后续可以优化
+    },
+    level: skill.level || 80,
+    category: categoryMap[skill.cate_id] || "product",
+    description: skill.description || ""
+  }))
+}
+
+// 转换前台格式为后台API格式（用于创建/更新）
+export function projectToBackend(project: any) {
   return {
-    id: backendProject.id,
-    slug: backendProject.slug,
-    name: { 
-      zh: backendProject.name_zh, 
-      en: backendProject.name_en 
-    },
-    thumbnail: backendProject.thumbnail || undefined,
-    type: projectCategoryMap[backendProject.cate_id] || { zh: "AI 智能项目", en: "AI Project" },
-    intro: { 
-      zh: backendProject.content_zh.slice(0, 100) + (backendProject.content_zh.length > 100 ? '...' : ''), 
-      en: backendProject.content_en.slice(0, 100) + (backendProject.content_en.length > 100 ? '...' : '') 
-    },
-    keywords: backendProject.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-    createdAt: backendProject.created_at,
-    emoji: "🌐",
-    problem: { zh: "", en: "" },
-    action: { zh: "", en: "" },
-    result: { zh: "", en: "" },
-    tags: backendProject.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-    content: { 
-      zh: backendProject.content_zh, 
-      en: backendProject.content_en 
-    }
+    slug: project.slug,
+    cate_id: project.cate_id || 1,
+    name_zh: project.name?.zh || project.name,
+    name_en: project.name?.en || project.name,
+    type_zh: project.type?.zh || "个人项目",
+    type_en: project.type?.en || "Personal Project",
+    intro_zh: project.intro?.zh || project.intro,
+    intro_en: project.intro?.en || project.intro,
+    problem_zh: project.problem?.zh || project.problem,
+    problem_en: project.problem?.en || project.problem,
+    action_zh: project.action?.zh || project.action,
+    action_en: project.action?.en || project.action,
+    result_zh: project.result?.zh || project.result,
+    result_en: project.result?.en || project.result,
+    thumbnail: project.thumbnail,
+    content_zh: project.content?.zh || project.content,
+    content_en: project.content?.en || project.content,
+    keywords: Array.isArray(project.keywords) ? project.keywords.join(',') : project.keywords,
+    tags: Array.isArray(project.tags) ? project.tags.join(',') : project.tags,
+    emoji: project.emoji || "📦",
+    external_url: project.external_url || "",
+    sort_num: project.sort_num || 0,
+    status: project.status ?? 1
   }
 }
 
-export function adaptSkills(backendSkills: BackendSkill[]): Skill[] {
-  return backendSkills.map(skill => ({
-    name: { 
-      zh: skill.name, 
-      en: skill.name 
+// 转换后台项目数据为前台可展示格式
+export function adaptBackendProject(project: any) {
+  return {
+    id: project.id,
+    slug: project.slug,
+    name: {
+      zh: project.name_zh,
+      en: project.name_en
     },
-    level: skill.level,
-    category: skillCategoryMap[skill.cate_id]?.zh as any || "技术技能"
-  }))
+    type: {
+      zh: project.type_zh || "个人项目",
+      en: project.type_en || "Personal Project"
+    },
+    intro: {
+      zh: project.intro_zh || "",
+      en: project.intro_en || ""
+    },
+    problem: {
+      zh: project.problem_zh || "",
+      en: project.problem_en || ""
+    },
+    action: {
+      zh: project.action_zh || "",
+      en: project.action_en || ""
+    },
+    result: {
+      zh: project.result_zh || "",
+      en: project.result_en || ""
+    },
+    thumbnail: project.thumbnail,
+    keywords: project.keywords ? project.keywords.split(',').map((k: string) => k.trim()) : [],
+    tags: project.tags ? project.tags.split(',').map((t: string) => t.trim()) : [],
+    content: {
+      zh: project.content_zh || "",
+      en: project.content_en || ""
+    },
+    emoji: project.emoji || "📦",
+    createdAt: project.created_at?.split(' ')[0] || "",
+    view_count: project.view_count || 0,
+    ...project
+  }
 }

@@ -193,10 +193,22 @@ class DataService {
       cate_id: data.cate_id || 0,
       name_zh: data.name_zh || '',
       name_en: data.name_en || '',
+      type_zh: data.type_zh || '个人项目',
+      type_en: data.type_en || 'Personal Project',
+      intro_zh: data.intro_zh || '',
+      intro_en: data.intro_en || '',
+      problem_zh: data.problem_zh || '',
+      problem_en: data.problem_en || '',
+      action_zh: data.action_zh || '',
+      action_en: data.action_en || '',
+      result_zh: data.result_zh || '',
+      result_en: data.result_en || '',
       thumbnail: data.thumbnail || '',
       content_zh: data.content_zh || '',
       content_en: data.content_en || '',
+      keywords: data.keywords || '',
       tags: data.tags || '',
+      emoji: data.emoji || '📦',
       external_url: data.external_url || '',
       view_count: 0,
       sort_num: data.sort_num || 0,
@@ -417,35 +429,13 @@ class DataService {
     if (cateId) {
       result = result.filter(p => p.cate_id === Number(cateId))
     }
-    return result.sort((a, b) => a.sort_num - b.sort_num).map(p => ({
-      id: p.id,
-      slug: p.slug,
-      cate_id: p.cate_id,
-      name_zh: p.name_zh,
-      name_en: p.name_en,
-      thumbnail: p.thumbnail,
-      tags: p.tags,
-      external_url: p.external_url,
-      view_count: p.view_count
-    }))
+    return result.sort((a, b) => a.sort_num - b.sort_num)
   }
 
   getProjectBySlug(slug) {
     const project = this.data.projects.find(p => p.slug === slug && !p.deleted_at && p.status === 1)
     if (!project) return null
-    return {
-      id: project.id,
-      slug: project.slug,
-      cate_id: project.cate_id,
-      name_zh: project.name_zh,
-      name_en: project.name_en,
-      thumbnail: project.thumbnail,
-      content_zh: project.content_zh,
-      content_en: project.content_en,
-      tags: project.tags,
-      external_url: project.external_url,
-      view_count: project.view_count
-    }
+    return project
   }
 
   getPublicContact() {

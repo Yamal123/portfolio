@@ -1,75 +1,61 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import { message } from 'antd'
-import { post } from '@/lib/admin/api'
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { TOKEN_KEY } from '@/lib/admin/constants'
-import type { User, LoginParams } from '@/types/admin'
+import type { User } from '@/types/admin'
 
 interface AuthContextType {
   user: User | null
   token: string | null
-  isAuthenticated: boolean
-  loading: boolean
-  login: (params: LoginParams) => Promise<void>
+  login: (token: string, user: User) => void
   logout: () => void
+  isAuthenticated: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedToken = localStorage.getItem(TOKEN_KEY)
-      if (storedToken) {
-        setToken(storedToken)
-      }
-      setLoading(false)
+    const savedToken = localStorage.getItem(TOKEN_KEY)
+    const savedUser = localStorage.getItem('admin_user')
+    if (savedToken && savedUser) {
+      setToken(savedToken)
+      setUser(JSON.parse(savedUser))
     }
+    setIsLoading(false)
   }, [])
 
-  const login = useCallback(async (params: LoginParams) => {
-    try {
-      setLoading(true)
-      const res = await post<any>('/auth/login', params)
-      const { token: newToken, userInfo: newUser } = res.data || res
-      localStorage.setItem(TOKEN_KEY, newToken)
-      setToken(newToken)
-      setUser(newUser)
-      message.success('登录成功')
-      setTimeout(() => {
-        router.push('/admin/dashboard')
-      }, 100)
-    } catch (error) {
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }, [router])
+  const login = (newToken: string, newUser: User) => {
+    setToken(newToken)
+    setUser(newUser)
+    localStorage.setItem(TOKEN_KEY, newToken)
+    localStorage.setItem('admin_user', JSON.stringify(newUser))
+  }
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY)
+  const logout = () => {
     setToken(null)
     setUser(null)
-    message.success('已退出登录')
-    router.push('/admin/login')
-  }, [router])
+    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem('admin_user')
+    window.location.href = '/admin/login'
+  }
+
+  if (isLoading) {
+    return null
+  }
 
   return (
     <AuthContext.Provider
       value={{
         user,
         token,
-        isAuthenticated: !!token,
-        loading,
         login,
         logout,
+        isAuthenticated: !!token,
       }}
     >
       {children}
