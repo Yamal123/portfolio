@@ -207,7 +207,7 @@ export default function SkillsPage() {
     try {
       setLoading(true)
       const res = await get('/skills', { page: 1, pageSize: 100 })
-      if (res.code === 200 || res.data) {
+      if (res.code === 1000 || res.data) {
         setSkills(res.data?.list || res.data || [])
       }
     } catch (error) {
@@ -220,7 +220,7 @@ export default function SkillsPage() {
   const fetchCategories = useCallback(async () => {
     try {
       const res = await get('/skills/skill-cates')
-      if (res.code === 200 || res.data) {
+      if (res.code === 1000 || res.data) {
         setCategories(res.data || [])
       }
     } catch (error) {

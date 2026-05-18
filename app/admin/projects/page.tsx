@@ -102,7 +102,7 @@ export default function ProjectsPage() {
       }
 
       const res = await get('/projects', params)
-      if (res.code === 200 || res.data) {
+      if (res.code === 1000 || res.data) {
         const data = res.data
         if (data?.list) {
           setProjects(data.list)
@@ -125,7 +125,7 @@ export default function ProjectsPage() {
   const fetchCategories = useCallback(async () => {
     try {
       const res = await get('/project-cates')
-      if (res.code === 200 || res.data) {
+      if (res.code === 1000 || res.data) {
         setCategories(res.data || [])
       }
     } catch (error) {
