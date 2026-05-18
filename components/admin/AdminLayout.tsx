@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Layout, Menu, Avatar, Dropdown, theme, Typography } from 'antd'
+import { Layout, Menu, Avatar, Dropdown, theme, Typography, ConfigProvider } from 'antd'
 import {
   DashboardOutlined,
   UserOutlined,
@@ -69,7 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ]
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: '100vh', background: '#f5f6fa' }}>
       <Sider
         trigger={null}
         collapsible
@@ -82,25 +82,50 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           left: 0,
           top: 0,
           bottom: 0,
-          background: themeToken.colorBgContainer,
-          borderRight: `1px solid ${themeToken.colorBorderSecondary}`,
+          background: '#fff',
+          borderRight: '1px solid #e8eaed',
+          boxShadow: '2px 0 8px rgba(0,0,0,0.03)',
         }}
       >
+        {/* Logo 区域 */}
         <div
           style={{
             height: 64,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            borderBottom: `1px solid ${themeToken.colorBorderSecondary}`,
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            padding: collapsed ? 0 : '0 24px',
+            borderBottom: '1px solid #f0f0f0',
             cursor: 'pointer',
+            gap: 10,
+            background: '#fff',
           }}
           onClick={() => router.push('/admin/dashboard')}
         >
-          <Text strong style={{ fontSize: collapsed ? 16 : 20 }}>
-            {collapsed ? 'Admin' : '管理后台'}
-          </Text>
+          <div style={{
+            width: collapsed ? 32 : 36,
+            height: collapsed ? 32 : 36,
+            borderRadius: 10,
+            background: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            fontSize: collapsed ? 15 : 18,
+            fontWeight: 800,
+            flexShrink: 0,
+            boxShadow: '0 4px 12px rgba(249,115,22,0.3)',
+          }}>
+            Y
+          </div>
+          {!collapsed && (
+            <Text strong style={{ fontSize: 17, letterSpacing: -0.5 }}>
+              管理后台
+            </Text>
+          )}
         </div>
+
+        {/* 菜单 */}
         <Menu
           mode="inline"
           selectedKeys={[pathname]}
@@ -109,37 +134,83 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             key: item.key,
           }))}
           onClick={({ key }) => router.push(key)}
-          style={{ borderRight: 0, marginTop: 8 }}
+          style={{
+            borderRight: 0,
+            marginTop: 12,
+            background: 'transparent',
+            fontSize: 14,
+          }}
         />
       </Sider>
-      <Layout style={{ marginLeft: collapsed ? 80 : 240, transition: 'margin-left 0.2s' }}>
+
+      <Layout style={{ marginLeft: collapsed ? 80 : 240, transition: 'margin-left 0.2s', background: '#f5f6fa' }}>
+        {/* 顶栏 */}
         <Header
           style={{
             padding: '0 24px',
-            background: themeToken.colorBgContainer,
+            background: '#fff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: `1px solid ${themeToken.colorBorderSecondary}`,
+            borderBottom: '1px solid #e8eaed',
             position: 'sticky',
             top: 0,
             zIndex: 1,
+            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
           }}
         >
           <div
-            style={{ cursor: 'pointer', fontSize: 18 }}
+            style={{
+              cursor: 'pointer',
+              fontSize: 18,
+              width: 36,
+              height: 36,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 8,
+              transition: 'background 0.2s',
+            }}
             onClick={() => setCollapsed(!collapsed)}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f5')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           >
             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           </div>
+
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-            <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Avatar icon={<UserOutlined />} />
-              <Text>{user?.username || 'Admin'}</Text>
+            <div style={{
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '4px 12px 4px 4px',
+              borderRadius: 20,
+              transition: 'background 0.2s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f5')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              <Avatar
+                size={32}
+                icon={<UserOutlined />}
+                style={{
+                  background: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
+                }}
+              />
+              <Text style={{ fontWeight: 500, fontSize: 14 }}>{user?.username || 'Admin'}</Text>
             </div>
           </Dropdown>
         </Header>
-        <Content style={{ margin: 24, padding: 24, background: themeToken.colorBgContainer, borderRadius: 8 }}>
+
+        {/* 内容区 */}
+        <Content style={{
+          margin: 20,
+          padding: 24,
+          background: 'transparent',
+          borderRadius: 12,
+          minHeight: 'calc(100vh - 104px)',
+        }}>
           {children}
         </Content>
       </Layout>
