@@ -1,7 +1,7 @@
 import { Project } from '@/data/projects'
 import { Skill } from '@/data/skills'
 
-interface BackendProject {
+export interface BackendProject {
   id: number
   slug: string
   name_zh: string

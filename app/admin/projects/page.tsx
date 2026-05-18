@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import {
   Card,
   Table,
@@ -20,6 +20,8 @@ import {
   Popconfirm,
   Tooltip,
   Image,
+  Spin,
+  Empty,
 } from 'antd'
 import {
   PlusOutlined,
@@ -32,184 +34,114 @@ import {
   CopyOutlined,
   UpOutlined,
   DownOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
+import { get, post, put, del } from '@/lib/admin/api'
 
 const { TextArea } = Input
 const { Option } = Select
 
 interface ProjectItem {
-  id: string
-  nameZh: string
-  nameEn: string
+  id: number | string
   slug: string
-  categoryId: string
-  categoryName: string
+  name_zh: string
+  name_en: string
   thumbnail?: string
-  tags: string[]
-  externalUrl?: string
-  viewCount: number
-  status: boolean
-  sortOrder: number
-  createdAt: string
-  contentZh?: string
-  contentEn?: string
+  content_zh?: string
+  content_en?: string
+  tags: string
+  external_url?: string
+  view_count: number
+  cate_id: number | string
+  status: number
+  sort_num: number
+  deleted_at?: string
+  created_at: string
+  updated_at?: string
 }
 
-const CATEGORIES = [
-  { key: 'web', label: 'Web应用' },
-  { key: 'mobile', label: '移动应用' },
-  { key: 'ai', label: 'AI项目' },
-  { key: 'tool', label: '工具软件' },
-]
-
-const MOCK_PROJECTS: ProjectItem[] = [
-  {
-    id: '1',
-    nameZh: 'AI智能客服系统',
-    nameEn: 'AI Customer Service System',
-    slug: 'ai-customer-service',
-    categoryId: 'ai',
-    categoryName: 'AI项目',
-    thumbnail: 'https://via.placeholder.com/400x225/1890ff/ffffff?text=AI+客服',
-    tags: ['React', 'Node.js', 'NLP', 'WebSocket'],
-    externalUrl: 'https://example.com/ai-service',
-    viewCount: 1523,
-    status: true,
-    sortOrder: 1,
-    createdAt: '2025-05-10T08:00:00Z',
-    contentZh: '基于自然语言处理的智能客服系统...',
-    contentEn: 'An intelligent customer service system based on NLP...',
-  },
-  {
-    id: '2',
-    nameZh: '电商平台管理后台',
-    nameEn: 'E-commerce Admin Panel',
-    slug: 'ecommerce-admin',
-    categoryId: 'web',
-    categoryName: 'Web应用',
-    thumbnail: 'https://via.placeholder.com/400x225/52c41a/ffffff?text=电商+后台',
-    tags: ['Vue', 'TypeScript', 'Element UI'],
-    externalUrl: 'https://example.com/ecommerce-admin',
-    viewCount: 2341,
-    status: true,
-    sortOrder: 2,
-    createdAt: '2025-05-08T10:30:00Z',
-    contentZh: '功能完善的电商管理后台系统...',
-    contentEn: 'A comprehensive e-commerce admin panel...',
-  },
-  {
-    id: '3',
-    nameZh: '移动端健身APP',
-    nameEn: 'Fitness Mobile App',
-    slug: 'fitness-app',
-    categoryId: 'mobile',
-    categoryName: '移动应用',
-    thumbnail: 'https://via.placeholder.com/400x225/fa8c16/ffffff?text=健身+APP',
-    tags: ['React Native', 'Redux', 'Firebase'],
-    externalUrl: '',
-    viewCount: 987,
-    status: true,
-    sortOrder: 3,
-    createdAt: '2025-05-05T14:20:00Z',
-    contentZh: '跨平台健身追踪应用...',
-    contentEn: 'A cross-platform fitness tracking app...',
-  },
-  {
-    id: '4',
-    nameZh: '代码质量检测工具',
-    nameEn: 'Code Quality Checker',
-    slug: 'code-quality-tool',
-    categoryId: 'tool',
-    categoryName: '工具软件',
-    thumbnail: 'https://via.placeholder.com/400x225/722ed1/ffffff?text=代码+工具',
-    tags: ['Python', 'AST', 'CLI'],
-    externalUrl: 'https://github.com/example/code-checker',
-    viewCount: 654,
-    status: false,
-    sortOrder: 4,
-    createdAt: '2025-05-01T09:15:00Z',
-    contentZh: '自动化代码质量分析工具...',
-    contentEn: 'An automated code quality analysis tool...',
-  },
-  {
-    id: '5',
-    nameZh: '数据可视化大屏',
-    nameEn: 'Data Visualization Dashboard',
-    slug: 'data-dashboard',
-    categoryId: 'web',
-    categoryName: 'Web应用',
-    thumbnail: 'https://via.placeholder.com/400x225/eb2f96/ffffff?text=数据+大屏',
-    tags: ['ECharts', 'D3.js', 'WebSocket'],
-    externalUrl: 'https://example.com/data-dashboard',
-    viewCount: 1876,
-    status: true,
-    sortOrder: 5,
-    createdAt: '2025-04-28T16:45:00Z',
-    contentZh: '实时数据可视化展示平台...',
-    contentEn: 'A real-time data visualization platform...',
-  },
-  {
-    id: '6',
-    nameZh: '在线协作白板',
-    nameEn: 'Collaborative Whiteboard',
-    slug: 'collab-whiteboard',
-    categoryId: 'web',
-    categoryName: 'Web应用',
-    thumbnail: 'https://via.placeholder.com/400x225/13c2c2/ffffff?text=协作+白板',
-    tags: ['Canvas', 'Socket.io', 'CRDT'],
-    externalUrl: 'https://example.com/whiteboard',
-    viewCount: 1234,
-    status: true,
-    sortOrder: 6,
-    createdAt: '2025-04-25T11:30:00Z',
-    contentZh: '多人实时协作绘图工具...',
-    contentEn: 'A real-time collaborative drawing tool...',
-  },
-]
+interface ProjectCate {
+  id: number | string
+  cate_name: string
+  sort_num: number
+}
 
 export default function ProjectsPage() {
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table')
   const [searchKeyword, setSearchKeyword] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [sortBy, setSortBy] = useState('createdAt')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [drawerVisible, setDrawerVisible] = useState(false)
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null)
   const [form] = Form.useForm()
+  const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [projects, setProjects] = useState<ProjectItem[]>([])
+  const [categories, setCategories] = useState<ProjectCate[]>([])
+  const [total, setTotal] = useState(0)
 
-  const filteredProjects = MOCK_PROJECTS.filter(project => {
-    const matchSearch = !searchKeyword ||
-      project.nameZh.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-      project.nameEn.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-      project.tags.some(tag => tag.toLowerCase().includes(searchKeyword.toLowerCase()))
-    const matchCategory = categoryFilter === 'all' || project.categoryId === categoryFilter
-    const matchStatus = statusFilter === 'all' ||
-      (statusFilter === 'published' && project.status) ||
-      (statusFilter === 'unpublished' && !project.status)
+  const fetchProjects = useCallback(async () => {
+    try {
+      setLoading(true)
+      const params: Record<string, any> = {
+        page: currentPage,
+        pageSize: pageSize,
+      }
+      if (categoryFilter !== 'all') {
+        params.cateId = categoryFilter
+      }
+      if (statusFilter !== 'all') {
+        params.status = statusFilter === 'published' ? 1 : 0
+      }
+      if (searchKeyword) {
+        params.keyword = searchKeyword
+      }
 
-    return matchSearch && matchCategory && matchStatus
-  })
-
-  const sortedProjects = [...filteredProjects].sort((a, b) => {
-    switch (sortBy) {
-      case 'viewCount':
-        return b.viewCount - a.viewCount
-      case 'sortOrder':
-        return a.sortOrder - b.sortOrder
-      case 'createdAt':
-      default:
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      const res = await get('/projects', params)
+      if (res.code === 200 || res.data) {
+        const data = res.data
+        if (data?.list) {
+          setProjects(data.list)
+          setTotal(data.total || data.list.length)
+        } else if (Array.isArray(data)) {
+          setProjects(data)
+          setTotal(data.length)
+        } else {
+          setProjects([])
+          setTotal(0)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch projects:', error)
+    } finally {
+      setLoading(false)
     }
-  })
+  }, [currentPage, pageSize, categoryFilter, statusFilter, searchKeyword])
 
-  const paginatedProjects = sortedProjects.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  )
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await get('/project-cates')
+      if (res.code === 200 || res.data) {
+        setCategories(res.data || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchProjects()
+    fetchCategories()
+  }, [fetchProjects, fetchCategories])
+
+  const getCategoryName = (cateId: number | string) => {
+    const cate = categories.find(c => c.id === cateId)
+    return cate?.cate_name || String(cateId)
+  }
 
   const handleCopyUrl = (url: string) => {
     navigator.clipboard.writeText(url)
@@ -228,30 +160,84 @@ export default function ProjectsPage() {
 
   const handleEdit = (project: ProjectItem) => {
     setEditingProject(project)
-    form.setFieldsValue(project)
+    form.setFieldsValue({
+      ...project,
+      nameZh: project.name_zh,
+      nameEn: project.name_en,
+      categoryId: project.cate_id,
+      categoryName: getCategoryName(project.cate_id),
+      tags: project.tags ? project.tags.split(',').filter(Boolean) : [],
+      externalUrl: project.external_url,
+      viewCount: project.view_count,
+      sortOrder: project.sort_num,
+      status: project.status === 1,
+      contentZh: project.content_zh,
+      contentEn: project.content_en,
+    })
     setDrawerVisible(true)
   }
 
-  const handleDelete = (id: string) => {
-    message.success('删除成功')
+  const handleDelete = async (id: number | string) => {
+    try {
+      await del(`/projects/${id}`)
+      message.success('删除成功')
+      fetchProjects()
+    } catch (error) {
+      message.error('删除失败')
+    }
   }
 
-  const handleToggleStatus = (id: string) => {
-    message.success('状态已更新')
+  const handleToggleStatus = async (id: number | string) => {
+    try {
+      const project = projects.find(p => p.id === id)
+      const newStatus = project?.status === 1 ? 0 : 1
+      await put(`/projects/${id}`, { status: newStatus })
+      message.success('状态已更新')
+      fetchProjects()
+    } catch (error) {
+      message.error('状态更新失败')
+    }
   }
+
+  const convertToApiFormat = (values: Record<string, any>) => ({
+    slug: values.slug,
+    cate_id: values.categoryId || values.cate_id,
+    name_zh: values.nameZh,
+    name_en: values.nameEn,
+    thumbnail: values.thumbnail || '',
+    content_zh: values.contentZh || '',
+    content_en: values.contentEn || '',
+    tags: Array.isArray(values.tags) ? values.tags.join(',') : (values.tags || ''),
+    external_url: values.externalUrl || values.external_url || '',
+    sort_num: values.sortOrder || values.sort_num || 0,
+    status: values.status ? 1 : 0,
+  })
 
   const handleDrawerOk = async () => {
     try {
-      await form.validateFields()
+      const values = await form.validateFields()
+      setSubmitting(true)
+
+      const payload = convertToApiFormat(values)
+
       if (editingProject) {
+        await put(`/projects/${editingProject.id}`, payload)
         message.success('更新成功')
       } else {
+        await post('/projects', payload)
         message.success('创建成功')
       }
       setDrawerVisible(false)
       form.resetFields()
-    } catch (error) {
-      console.error('Validation failed:', error)
+      fetchProjects()
+    } catch (error: any) {
+      if (error?.errorFields) {
+        return
+      }
+      console.error('Submit failed:', error)
+      message.error(editingProject ? '更新失败' : '创建失败')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -290,42 +276,44 @@ export default function ProjectsPage() {
     },
     {
       title: '名称',
-      dataIndex: 'nameZh',
-      key: 'nameZh',
+      dataIndex: 'name_zh',
+      key: 'name_zh',
       width: 200,
-      sorter: (a, b) => a.nameZh.localeCompare(b.nameZh),
       render: (name: string, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>{name}</div>
-          <div style={{ fontSize: 12, color: '#999' }}>{record.nameEn}</div>
+          <div style={{ fontSize: 12, color: '#999' }}>{record.name_en}</div>
         </div>
       ),
     },
     {
       title: '分类',
-      dataIndex: 'categoryName',
-      key: 'categoryName',
+      dataIndex: 'cate_id',
+      key: 'cate_id',
       width: 100,
-      render: (name: string) => <Tag color="blue">{name}</Tag>,
+      render: (cateId: number | string) => <Tag color="blue">{getCategoryName(cateId)}</Tag>,
     },
     {
       title: '标签',
       dataIndex: 'tags',
       key: 'tags',
       width: 200,
-      render: (tags: string[]) => (
-        <>
-          {tags.slice(0, 3).map(tag => (
-            <Tag key={tag}>{tag}</Tag>
-          ))}
-          {tags.length > 3 && <Tag>+{tags.length - 3}</Tag>}
-        </>
-      ),
+      render: (tags: string) => {
+        const tagList = tags ? tags.split(',').filter(Boolean) : []
+        return (
+          <>
+            {tagList.slice(0, 3).map((tag, index) => (
+              <Tag key={index}>{tag.trim()}</Tag>
+            ))}
+            {tagList.length > 3 && <Tag>+{tagList.length - 3}</Tag>}
+          </>
+        )
+      },
     },
     {
       title: '外部链接',
-      dataIndex: 'externalUrl',
-      key: 'externalUrl',
+      dataIndex: 'external_url',
+      key: 'external_url',
       width: 150,
       render: (url: string) =>
         url ? (
@@ -345,38 +333,35 @@ export default function ProjectsPage() {
     },
     {
       title: '浏览量',
-      dataIndex: 'viewCount',
-      key: 'viewCount',
+      dataIndex: 'view_count',
+      key: 'view_count',
       width: 80,
-      sorter: (a, b) => a.viewCount - b.viewCount,
-      render: (count: number) => count.toLocaleString(),
+      render: (count: number) => count?.toLocaleString() || '0',
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
       width: 80,
-      render: (status: boolean) => (
+      render: (status: number) => (
         <Badge
-          status={status ? 'success' : 'default'}
-          text={status ? '上架' : '下架'}
+          status={status === 1 ? 'success' : 'default'}
+          text={status === 1 ? '上架' : '下架'}
         />
       ),
     },
     {
       title: '排序',
-      dataIndex: 'sortOrder',
-      key: 'sortOrder',
+      dataIndex: 'sort_num',
+      key: 'sort_num',
       width: 80,
-      sorter: (a, b) => a.sortOrder - b.sortOrder,
     },
     {
       title: '创建时间',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
+      dataIndex: 'created_at',
+      key: 'created_at',
       width: 160,
-      sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
+      render: (date: string) => date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-',
     },
     {
       title: '操作',
@@ -393,16 +378,9 @@ export default function ProjectsPage() {
           >
             编辑
           </Button>
-          <Button
-            type="link"
-            size="small"
-            icon={<EyeOutlined />}
-          >
-            查看
-          </Button>
           <Popconfirm
             title="确认操作"
-            description={`确定要${record.status ? '下架' : '上架'}吗？`}
+            description={`确定要${record.status === 1 ? '下架' : '上架'}吗？`}
             onConfirm={() => handleToggleStatus(record.id)}
             okText="确定"
             cancelText="取消"
@@ -410,7 +388,7 @@ export default function ProjectsPage() {
             <Button
               type="link"
               size="small"
-              icon={record.status ? <DownOutlined /> : <UpOutlined />}
+              icon={record.status === 1 ? <DownOutlined /> : <UpOutlined />}
             />
           </Popconfirm>
           <Popconfirm
@@ -454,36 +432,26 @@ export default function ProjectsPage() {
           <Select
             placeholder="分类筛选"
             value={categoryFilter}
-            onChange={setCategoryFilter}
+            onChange={(value) => { setCategoryFilter(value); setCurrentPage(1) }}
             style={{ width: 140 }}
             allowClear
           >
             <Option value="all">全部分类</Option>
-            {CATEGORIES.map(cat => (
-              <Option key={cat.key} value={cat.key}>
-                {cat.label}
+            {categories.map(cat => (
+              <Option key={cat.id} value={String(cat.id)}>
+                {cat.cate_name}
               </Option>
             ))}
           </Select>
           <Select
             placeholder="状态筛选"
             value={statusFilter}
-            onChange={setStatusFilter}
+            onChange={(value) => { setStatusFilter(value); setCurrentPage(1) }}
             style={{ width: 120 }}
           >
             <Option value="all">全部状态</Option>
             <Option value="published">上架</Option>
             <Option value="unpublished">下架</Option>
-          </Select>
-          <Select
-            placeholder="排序方式"
-            value={sortBy}
-            onChange={setSortBy}
-            style={{ width: 140 }}
-          >
-            <Option value="createdAt">创建时间</Option>
-            <Option value="viewCount">浏览量</Option>
-            <Option value="sortOrder">排序</Option>
           </Select>
         </Space>
 
@@ -500,132 +468,148 @@ export default function ProjectsPage() {
               onClick={() => setViewMode('card')}
             />
           </Button.Group>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => fetchProjects()}
+          >
+            刷新
+          </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
             新建项目
           </Button>
         </Space>
       </div>
 
-      {viewMode === 'table' ? (
-        <>
-          <Table
-            columns={columns}
-            dataSource={paginatedProjects}
-            rowKey="id"
-            pagination={false}
-            scroll={{ x: 1400 }}
-            size="middle"
-          />
-          <div style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            marginTop: 16,
-          }}>
-            <Pagination
-              current={currentPage}
-              pageSize={pageSize}
-              total={sortedProjects.length}
-              showSizeChanger
-              showQuickJumper
-              showTotal={(total) => `共 ${total} 条`}
-              onChange={(page, size) => {
-                setCurrentPage(page)
-                setPageSize(size)
-              }}
-              pageSizeOptions={['10', '20', '50']}
+      <Spin spinning={loading}>
+        {viewMode === 'table' ? (
+          <>
+            <Table
+              columns={columns}
+              dataSource={projects}
+              rowKey="id"
+              pagination={false}
+              scroll={{ x: 1400 }}
+              size="middle"
             />
-          </div>
-        </>
-      ) : (
-        <>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 16,
-            marginBottom: 24,
-          }}>
-            {paginatedProjects.map(project => (
-              <Card
-                key={project.id}
-                hoverable
-                cover={
-                  project.thumbnail ? (
-                    <img
-                      alt={project.nameZh}
-                      src={project.thumbnail}
-                      style={{ height: 180, objectFit: 'cover' }}
-                    />
-                  ) : (
-                    <div style={{
-                      height: 180,
-                      background: '#f0f0f0',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#999',
-                    }}>
-                      无封面图
-                    </div>
-                  )
-                }
-                actions={[
-                  <EditOutlined key="edit" onClick={() => handleEdit(project)} />,
-                  <EyeOutlined key="view" />,
-                  <Badge
-                    key="status"
-                    status={project.status ? 'success' : 'default'}
-                    text={project.status ? '上架' : '下架'}
-                  />,
-                  <Popconfirm
-                    key="delete"
-                    title="删除确认"
-                    description="确定要删除吗？"
-                    onConfirm={() => handleDelete(project.id)}
-                  >
-                    <DeleteOutlined style={{ color: '#ff4d4f' }} />
-                  </Popconfirm>,
-                ]}
-              >
-                <Card.Meta
-                  title={project.nameZh}
-                  description={
-                    <div>
-                      <div style={{ marginBottom: 8, color: '#666', fontSize: 13 }}>
-                        {project.nameEn}
-                      </div>
-                      <div style={{ marginBottom: 8 }}>
-                        {project.tags.slice(0, 3).map(tag => (
-                          <Tag key={tag}>{tag}</Tag>
-                        ))}
-                        {project.tags.length > 3 &&
-                          <Tag>+{project.tags.length - 3}</Tag>}
-                      </div>
-                      <div style={{ color: '#999', fontSize: 12 }}>
-                        <EyeOutlined /> {project.viewCount.toLocaleString()} 次浏览
-                      </div>
-                    </div>
-                  }
+            {total > 0 && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                marginTop: 16,
+              }}>
+                <Pagination
+                  current={currentPage}
+                  pageSize={pageSize}
+                  total={total}
+                  showSizeChanger
+                  showQuickJumper
+                  showTotal={(total) => `共 ${total} 条`}
+                  onChange={(page, size) => {
+                    setCurrentPage(page)
+                    setPageSize(size)
+                  }}
+                  pageSizeOptions={['10', '20', '50']}
                 />
-              </Card>
-            ))}
-          </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 16,
+              marginBottom: 24,
+            }}>
+              {projects.map(project => (
+                <Card
+                  key={project.id}
+                  hoverable
+                  cover={
+                    project.thumbnail ? (
+                      <img
+                        alt={project.name_zh}
+                        src={project.thumbnail}
+                        style={{ height: 180, objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <div style={{
+                        height: 180,
+                        background: '#f0f0f0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#999',
+                      }}>
+                        无封面图
+                      </div>
+                    )
+                  }
+                  actions={[
+                    <EditOutlined key="edit" onClick={() => handleEdit(project)} />,
+                    <Badge
+                      key="status"
+                      status={project.status === 1 ? 'success' : 'default'}
+                      text={project.status === 1 ? '上架' : '下架'}
+                    />,
+                    <Popconfirm
+                      key="delete"
+                      title="删除确认"
+                      description="确定要删除吗？"
+                      onConfirm={() => handleDelete(project.id)}
+                    >
+                      <DeleteOutlined style={{ color: '#ff4d4f' }} />
+                    </Popconfirm>,
+                  ]}
+                >
+                  <Card.Meta
+                    title={project.name_zh}
+                    description={
+                      <div>
+                        <div style={{ marginBottom: 8, color: '#666', fontSize: 13 }}>
+                          {project.name_en}
+                        </div>
+                        <div style={{ marginBottom: 8 }}>
+                          <Tag color="blue">{getCategoryName(project.cate_id)}</Tag>
+                        </div>
+                        <div style={{ marginBottom: 8 }}>
+                          {(project.tags ? project.tags.split(',').filter(Boolean) : []).slice(0, 3).map((tag, index) => (
+                            <Tag key={index}>{tag.trim()}</Tag>
+                          ))}
+                        </div>
+                        <div style={{ color: '#999', fontSize: 12 }}>
+                          <EyeOutlined /> {project.view_count?.toLocaleString() || '0'} 次浏览
+                        </div>
+                      </div>
+                    }
+                  />
+                </Card>
+              ))}
+            </div>
 
-          <Pagination
-            current={currentPage}
-            pageSize={pageSize}
-            total={sortedProjects.length}
-            showSizeChanger
-            showQuickJumper
-            showTotal={(total) => `共 ${total} 条`}
-            onChange={(page, size) => {
-              setCurrentPage(page)
-              setPageSize(size)
-            }}
-            pageSizeOptions={['10', '20', '50']}
-            style={{ textAlign: 'right' }}
-          />
-        </>
-      )}
+            {!loading && projects.length === 0 && (
+              <Empty description="暂无项目数据" style={{ padding: '60px 0' }} />
+            )}
+
+            {total > 0 && (
+              <Pagination
+                current={currentPage}
+                pageSize={pageSize}
+                total={total}
+                showSizeChanger
+                showQuickJumper
+                showTotal={(total) => `共 ${total} 条`}
+                onChange={(page, size) => {
+                  setCurrentPage(page)
+                  setPageSize(size)
+                }}
+                pageSizeOptions={['10', '20', '50']}
+                style={{ textAlign: 'right' }}
+              />
+            )}
+          </>
+        )}
+      </Spin>
 
       <Modal
         title={editingProject ? '编辑项目' : '新建项目'}
@@ -634,6 +618,7 @@ export default function ProjectsPage() {
         onCancel={() => setDrawerVisible(false)}
         width={720}
         destroyOnClose
+        confirmLoading={submitting}
         okText="保存"
         cancelText="取消"
       >
@@ -690,9 +675,9 @@ export default function ProjectsPage() {
             rules={[{ required: true, message: '请选择分类' }]}
           >
             <Select placeholder="请选择分类">
-              {CATEGORIES.map(cat => (
-                <Option key={cat.key} value={cat.key}>
-                  {cat.label}
+              {categories.map(cat => (
+                <Option key={cat.id} value={cat.id}>
+                  {cat.cate_name}
                 </Option>
               ))}
             </Select>

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Card,
   Tabs,
@@ -11,6 +11,9 @@ import {
   message,
   Modal,
   Typography,
+  Spin,
+  Alert,
+  Divider,
 } from 'antd'
 import {
   LockOutlined,
@@ -18,36 +21,63 @@ import {
   CloudDownloadOutlined,
   CloudUploadOutlined,
   SaveOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons'
+import { get, put } from '@/lib/admin/api'
 
-const { Title } = Typography
+const { Title, Text } = Typography
 const { TextArea } = Input
-const { TabPane } = Tabs
+
+interface SiteSettings {
+  site_title?: string
+  site_description?: string
+  copyright?: string
+  favicon?: string
+  icp_number?: string
+  ga_id?: string
+}
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('password')
+  const [activeTab, setActiveTab] = useState('site')
   const [passwordForm] = Form.useForm()
   const [siteForm] = Form.useForm()
   const [loading, setLoading] = useState<string | null>(null)
+  const [pageLoading, setPageLoading] = useState(true)
   const [restoreModalVisible, setRestoreModalVisible] = useState(false)
+  const [currentSettings, setCurrentSettings] = useState<SiteSettings>({})
+
+  useEffect(() => {
+    loadSiteSettings()
+  }, [])
+
+  const loadSiteSettings = async () => {
+    try {
+      setPageLoading(true)
+      const res = await get('/settings/site')
+      const data = res.data as SiteSettings
+      setCurrentSettings(data)
+      siteForm.setFieldsValue({
+        siteTitle: data.site_title || '',
+        siteDescription: data.site_description || '',
+        copyright: data.copyright || '',
+        favicon: data.favicon || '',
+        icpNumber: data.icp_number || '',
+        gaId: data.ga_id || '',
+      })
+      message.success('站点设置加载成功')
+    } catch (error) {
+      console.error('加载失败:', error)
+      message.error('加载站点设置失败')
+    } finally {
+      setPageLoading(false)
+    }
+  }
 
   const handlePasswordChange = async () => {
     try {
       const values = await passwordForm.validateFields()
-      setLoading('password')
 
-      if (values.oldPassword === values.newPassword) {
-        message.error('新密码不能与旧密码相同')
-        setLoading(null)
-        return
-      }
-
-      setTimeout(() => {
-        message.success('密码修改成功，请重新登录')
-        setLoading(null)
-        passwordForm.resetFields()
-        window.location.href = '/admin/login'
-      }, 1000)
+      message.warning('密码修改功能暂未开放，请联系管理员')
     } catch (error) {
       console.error('Validation failed:', error)
     }
@@ -58,12 +88,29 @@ export default function SettingsPage() {
       await siteForm.validateFields()
       setLoading('site')
 
-      setTimeout(() => {
-        message.success('站点设置保存成功')
-        setLoading(null)
-      }, 1000)
-    } catch (error) {
-      console.error('Validation failed:', error)
+      const values = siteForm.getFieldsValue()
+      const payload: SiteSettings = {
+        site_title: values.siteTitle,
+        site_description: values.siteDescription,
+        copyright: values.copyright,
+        favicon: values.favicon,
+        icp_number: values.icpNumber,
+        ga_id: values.gaId,
+      }
+
+      await put('/settings/site', payload)
+
+      setCurrentSettings(payload)
+      message.success('站点设置保存成功')
+    } catch (error: any) {
+      if (error?.errorFields) {
+        console.error('Validation failed:', error)
+        return
+      }
+      console.error('保存失败:', error)
+      message.error(error.response?.data?.message || '保存失败，请重试')
+    } finally {
+      setLoading(null)
     }
   }
 
@@ -75,13 +122,8 @@ export default function SettingsPage() {
       const backupData = {
         version: '1.0.0',
         timestamp: new Date().toISOString(),
-        data: {
-          skills: [],
-          projects: [],
-          stats: {},
-          contact: {},
-          settings: {},
-        },
+        type: 'site_settings_export',
+        data: currentSettings,
       }
 
       const blob = new Blob([JSON.stringify(backupData, null, 2)], {
@@ -90,26 +132,28 @@ export default function SettingsPage() {
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `backup_${new Date().toISOString().slice(0, 10)}.sql`
+      link.download = `site_settings_${new Date().toISOString().slice(0, 10)}.json`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
 
       setLoading(null)
-      message.success('备份文件已下载')
-    }, 1500)
+      message.success('配置导出成功')
+    }, 500)
   }
 
   const handleRestore = () => {
-    setLoading('restore')
-    message.loading('正在恢复数据...')
+    message.warning('数据恢复功能暂未开放，请使用导入配置功能')
+    setRestoreModalVisible(false)
+  }
 
-    setTimeout(() => {
-      setLoading(null)
-      setRestoreModalVisible(false)
-      message.success('数据恢复成功')
-    }, 2000)
+  if (pageLoading) {
+    return (
+      <div style={{ textAlign: 'center', padding: 100 }}>
+        <Spin size="large" tip="加载中..." />
+      </div>
+    )
   }
 
   return (
@@ -118,7 +162,120 @@ export default function SettingsPage() {
 
       <Card>
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane
+          <Tabs.TabPane
+            tab={
+              <span>
+                <SettingOutlined />
+                站点设置
+              </span>
+            }
+            key="site"
+          >
+            <div style={{ maxWidth: 700 }}>
+              <Alert
+                message="基本信息"
+                description="配置网站的基本信息，包括标题、描述等核心内容"
+                type="info"
+                showIcon
+                icon={<InfoCircleOutlined />}
+                style={{ marginBottom: 24 }}
+              />
+
+              <Form
+                form={siteForm}
+                layout="vertical"
+                onFinish={handleSiteSettingsSave}
+              >
+                <Card title="基本配置" size="small" style={{ marginBottom: 16 }}>
+                  <Form.Item
+                    name="siteTitle"
+                    label="站点标题"
+                    rules={[
+                      { required: true, message: '请输入站点标题' },
+                      { max: 50, message: '最多50个字符' },
+                    ]}
+                  >
+                    <Input placeholder="请输入站点标题" maxLength={50} showCount />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="siteDescription"
+                    label="站点描述"
+                  >
+                    <TextArea
+                      rows={3}
+                      placeholder="请输入站点描述（用于SEO）"
+                      maxLength={200}
+                      showCount
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="copyright"
+                    label="版权信息"
+                  >
+                    <Input placeholder="© 2026 Your Name" maxLength={100} />
+                  </Form.Item>
+                </Card>
+
+                <Divider>SEO 与高级选项</Divider>
+
+                <Card title="SEO 配置" size="small" style={{ marginBottom: 16 }}>
+                  <Form.Item
+                    name="favicon"
+                    label="网站图标 (Favicon)"
+                  >
+                    <Upload
+                      listType="picture"
+                      maxCount={1}
+                      accept=".ico,.png,.jpg,.svg"
+                      beforeUpload={(file) => {
+                        const isLt100KB = file.size / 1024 < 100
+                        if (!isLt100KB) {
+                          message.error('图标文件不能超过100KB!')
+                          return false
+                        }
+                        return false
+                      }}
+                    >
+                      <Button icon={<CloudUploadOutlined />}>选择图标文件</Button>
+                    </Upload>
+                    <div style={{ color: '#999', fontSize: 12, marginTop: 4 }}>
+                      支持 ICO/PNG/JPG/SVG 格式，最大100KB
+                    </div>
+                  </Form.Item>
+
+                  <Form.Item
+                    name="icpNumber"
+                    label="ICP备案号"
+                  >
+                    <Input placeholder="请输入ICP备案号" maxLength={20} />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="gaId"
+                    label="Google Analytics ID"
+                  >
+                    <Input placeholder="如: G-XXXXXXXXXX" maxLength={50} />
+                  </Form.Item>
+                </Card>
+
+                <Form.Item style={{ marginTop: 24 }}>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading === 'site'}
+                    icon={<SaveOutlined />}
+                    size="large"
+                  >
+                    保存站点设置
+                  </Button>
+                </Form.Item>
+              </Form>
+            </div>
+          </Tabs.TabPane>
+
+          <Tabs.TabPane
             tab={
               <span>
                 <LockOutlined />
@@ -128,6 +285,15 @@ export default function SettingsPage() {
             key="password"
           >
             <div style={{ maxWidth: 500 }}>
+              <Alert
+                message="功能暂未开放"
+                description="密码修改功能正在开发中，暂时无法使用。如需修改密码，请联系系统管理员。"
+                type="warning"
+                showIcon
+                icon={<LockOutlined />}
+                style={{ marginBottom: 24 }}
+              />
+
               <Form
                 form={passwordForm}
                 layout="vertical"
@@ -145,6 +311,7 @@ export default function SettingsPage() {
                     prefix={<LockOutlined />}
                     placeholder="请输入当前密码"
                     size="large"
+                    disabled
                   />
                 </Form.Item>
 
@@ -164,6 +331,7 @@ export default function SettingsPage() {
                     prefix={<LockOutlined />}
                     placeholder="请输入新密码（大小写字母+数字，8-32位）"
                     size="large"
+                    disabled
                   />
                 </Form.Item>
 
@@ -188,6 +356,7 @@ export default function SettingsPage() {
                     prefix={<LockOutlined />}
                     placeholder="请再次输入新密码"
                     size="large"
+                    disabled
                   />
                 </Form.Item>
 
@@ -199,137 +368,34 @@ export default function SettingsPage() {
                     icon={<SaveOutlined />}
                     block
                     size="large"
+                    disabled
                   >
-                    修改密码
+                    修改密码（暂未开放）
                   </Button>
                 </Form.Item>
 
                 <div style={{ color: '#999', fontSize: 12, marginTop: 12 }}>
+                  <p>⚠️ 此功能当前处于开发阶段</p>
                   <p>修改密码后将自动退出登录</p>
                   <p>请确保您记得新密码</p>
                 </div>
               </Form>
             </div>
-          </TabPane>
+          </Tabs.TabPane>
 
-          <TabPane
-            tab={
-              <span>
-                <SettingOutlined />
-                站点设置
-              </span>
-            }
-            key="site"
-          >
-            <div style={{ maxWidth: 600 }}>
-              <Form
-                form={siteForm}
-                layout="vertical"
-                initialValues={{
-                  siteTitle: 'AI PM Portfolio',
-                  siteDescription: '专业的AI产品经理个人作品展示平台',
-                  copyright: '© 2026 AI PM',
-                  icpCode: '',
-                  gaTrackingId: '',
-                }}
-                onFinish={handleSiteSettingsSave}
-              >
-                <Form.Item
-                  name="siteTitle"
-                  label="站点标题"
-                  rules={[
-                    { required: true, message: '请输入站点标题' },
-                    { max: 50, message: '最多50个字符' },
-                  ]}
-                >
-                  <Input placeholder="请输入站点标题" maxLength={50} showCount />
-                </Form.Item>
-
-                <Form.Item
-                  name="siteDescription"
-                  label="站点描述"
-                >
-                  <TextArea
-                    rows={3}
-                    placeholder="请输入站点描述"
-                    maxLength={200}
-                    showCount
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  name="copyright"
-                  label="版权信息"
-                >
-                  <Input placeholder="© 2026 AI PM" maxLength={100} />
-                </Form.Item>
-
-                <Form.Item
-                  name="favicon"
-                  label="网站图标"
-                >
-                  <Upload
-                    listType="picture"
-                    maxCount={1}
-                    accept=".ico,.png,.jpg,.svg"
-                    beforeUpload={(file) => {
-                      const isLt100KB = file.size / 1024 < 100
-                      if (!isLt100KB) {
-                        message.error('图标文件不能超过100KB!')
-                        return false
-                      }
-                      return false
-                    }}
-                  >
-                    <Button icon={<CloudUploadOutlined />}>选择图标文件</Button>
-                  </Upload>
-                  <div style={{ color: '#999', fontSize: 12, marginTop: 4 }}>
-                    支持 ICO/PNG/JPG/SVG 格式，最大100KB
-                  </div>
-                </Form.Item>
-
-                <Form.Item
-                  name="icpCode"
-                  label="ICP备案号"
-                >
-                  <Input placeholder="请输入ICP备案号" maxLength={20} />
-                </Form.Item>
-
-                <Form.Item
-                  name="gaTrackingId"
-                  label="Google Analytics ID"
-                >
-                  <Input placeholder="如: G-XXXXXXXXXX" maxLength={50} />
-                </Form.Item>
-
-                <Form.Item>
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={loading === 'site'}
-                    icon={<SaveOutlined />}
-                    size="large"
-                  >
-                    保存设置
-                  </Button>
-                </Form.Item>
-              </Form>
-            </div>
-          </TabPane>
-
-          <TabPane
+          <Tabs.TabPane
             tab={
               <span>
                 <CloudDownloadOutlined />
-                数据备份
+                数据管理
               </span>
             }
             key="backup"
           >
             <div style={{ maxWidth: 600 }}>
-              <Card title="数据备份" style={{ marginBottom: 24 }} size="small">
+              <Card title="导出配置" style={{ marginBottom: 24 }} size="small">
                 <p style={{ color: '#666', marginBottom: 16 }}>
-                  定期备份您的数据，以防意外丢失。备份文件将包含所有配置和数据。
+                  将当前站点设置导出为 JSON 文件，可用于备份或迁移配置。
                 </p>
                 <Button
                   type="primary"
@@ -338,45 +404,71 @@ export default function SettingsPage() {
                   loading={loading === 'backup'}
                   size="large"
                 >
-                  立即备份
+                  导出配置文件
                 </Button>
               </Card>
 
-              <Card title="数据恢复" size="small">
+              <Card title="导入配置" size="small">
+                <Alert
+                  message="功能说明"
+                  description="当前版本支持查看导出的配置文件格式。完整的导入功能将在后续版本中提供。"
+                  type="info"
+                  showIcon
+                  style={{ marginBottom: 16 }}
+                />
                 <p style={{ color: '#666', marginBottom: 16 }}>
-                  从备份文件中恢复数据。注意：此操作将覆盖当前所有数据！
+                  从之前导出的 JSON 配置文件中恢复设置。
                 </p>
                 <Upload
-                  accept=".sql,.json"
+                  accept=".json"
                   maxCount={1}
                   beforeUpload={(file) => {
-                    const isSQL = file.name.endsWith('.sql') || file.name.endsWith('.json')
-                    const isLt50MB = file.size / 1024 / 1024 < 50
+                    const isJSON = file.name.endsWith('.json')
+                    const isLt5MB = file.size / 1024 / 1024 < 5
 
-                    if (!isSQL) {
-                      message.error('只能上传 .sql 或 .json 文件!')
+                    if (!isJSON) {
+                      message.error('只能上传 .json 文件!')
                       return false
                     }
 
-                    if (!isLt50MB) {
-                      message.error('文件大小不能超过50MB!')
+                    if (!isLt5MB) {
+                      message.error('文件大小不能超过5MB!')
                       return false
                     }
 
-                    setRestoreModalVisible(true)
+                    const reader = new FileReader()
+                    reader.onload = (e) => {
+                      try {
+                        const content = e.target?.result as string
+                        const data = JSON.parse(content)
+                        Modal.info({
+                          title: '配置文件预览',
+                          content: (
+                            <pre style={{ maxHeight: 400, overflow: 'auto', fontSize: 12 }}>
+                              {JSON.stringify(data, null, 2)}
+                            </pre>
+                          ),
+                          width: 600,
+                        })
+                      } catch (err) {
+                        message.error('无效的 JSON 文件格式')
+                      }
+                    }
+                    reader.readAsText(file)
+
                     return false
                   }}
                 >
                   <Button icon={<CloudUploadOutlined />}>
-                    选择文件恢复
+                    选择并预览文件
                   </Button>
                 </Upload>
                 <div style={{ color: '#999', fontSize: 12, marginTop: 4 }}>
-                  仅支持 .sql/.json 文件，最大50MB
+                  仅支持 .json 文件，最大5MB
                 </div>
               </Card>
             </div>
-          </TabPane>
+          </Tabs.TabPane>
         </Tabs>
       </Card>
 
@@ -394,13 +486,12 @@ export default function SettingsPage() {
           <strong>此操作不可逆！</strong>
         </div>
         <ul style={{ paddingLeft: 20, lineHeight: 2, color: '#666' }}>
-          <li>当前所有数据将被完全替换</li>
-          <li>建议在恢复前先创建一个备份</li>
-          <li>恢复过程可能需要几分钟时间</li>
-          <li>恢复完成后系统可能需要重启</li>
+          <li>当前所有配置将被完全替换</li>
+          <li>建议在恢复前先导出当前配置作为备份</li>
+          <li>恢复过程可能需要几秒钟时间</li>
         </ul>
         <p style={{ marginTop: 16, fontWeight: 500 }}>
-          您确定要继续执行数据恢复操作吗？
+          您确定要继续执行配置恢复操作吗？
         </p>
       </Modal>
     </div>

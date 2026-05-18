@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import {
   Card,
   Input,
@@ -18,6 +18,8 @@ import {
   Progress,
   Space,
   Popconfirm,
+  Spin,
+  Empty,
 } from 'antd'
 import {
   PlusOutlined,
@@ -26,6 +28,7 @@ import {
   UpOutlined,
   DownOutlined,
   SearchOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons'
 import {
   DndContext,
@@ -44,42 +47,37 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { get, post, put, del } from '@/lib/admin/api'
 
 const { TextArea } = Input
 
 interface SkillItem {
-  id: string
+  id: number | string
   name: string
-  categoryId: string
+  cate_id: number | string
   level: number
   description: string
-  status: boolean
-  sortOrder: number
+  status: number
+  sort_num: number
+  tags?: string
+  icon_url?: string
+  created_at?: string
+  updated_at?: string
 }
 
-const CATEGORIES = [
-  { key: 'ai', label: 'AI能力' },
-  { key: 'product', label: '产品能力' },
-  { key: 'tech', label: '技术技能' },
-  { key: 'soft', label: '软技能' },
-]
+interface SkillCate {
+  id: number | string
+  cate_name: string
+  cate_icon?: string
+  sort_num: number
+}
 
-const MOCK_SKILLS: SkillItem[] = [
-  { id: '1', name: '机器学习', categoryId: 'ai', level: 85, description: '精通机器学习算法', status: true, sortOrder: 1 },
-  { id: '2', name: '自然语言处理', categoryId: 'ai', level: 78, description: 'NLP技术应用', status: true, sortOrder: 2 },
-  { id: '3', name: '产品规划', categoryId: 'product', level: 92, description: '产品全生命周期管理', status: true, sortOrder: 3 },
-  { id: '4', name: '用户研究', categoryId: 'product', level: 88, description: '用户调研与分析', status: true, sortOrder: 4 },
-  { id: '5', name: 'React', categoryId: 'tech', level: 90, description: '前端框架开发', status: true, sortOrder: 5 },
-  { id: '6', name: 'TypeScript', categoryId: 'tech', level: 85, description: '类型安全开发', status: true, sortOrder: 6 },
-  { id: '7', name: '沟通协调', categoryId: 'soft', level: 95, description: '跨团队协作能力', status: true, sortOrder: 7 },
-  { id: '8', name: '项目管理', categoryId: 'soft', level: 88, description: '敏捷项目管理', status: false, sortOrder: 8 },
-]
-
-function SortableSkillCard({ skill, onEdit, onDelete, onToggleStatus }: {
+function SortableSkillCard({ skill, categories, onEdit, onDelete, onToggleStatus }: {
   skill: SkillItem
+  categories: SkillCate[]
   onEdit: (skill: SkillItem) => void
-  onDelete: (id: string) => void
-  onToggleStatus: (id: string) => void
+  onDelete: (id: number | string) => void
+  onToggleStatus: (id: number | string) => void
 }) {
   const {
     attributes,
@@ -104,8 +102,9 @@ function SortableSkillCard({ skill, onEdit, onDelete, onToggleStatus }: {
     return '#1890ff'
   }
 
-  const getCategoryLabel = (categoryId: string) => {
-    return CATEGORIES.find(c => c.key === categoryId)?.label || categoryId
+  const getCategoryLabel = (cateId: number | string) => {
+    const cate = categories.find(c => c.id === cateId)
+    return cate?.cate_name || String(cateId)
   }
 
   return (
@@ -118,8 +117,8 @@ function SortableSkillCard({ skill, onEdit, onDelete, onToggleStatus }: {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
           <h4 style={{ margin: 0, fontSize: 16 }}>{skill.name}</h4>
           <Badge
-            status={skill.status ? 'success' : 'default'}
-            text={skill.status ? '上架' : '下架'}
+            status={skill.status === 1 ? 'success' : 'default'}
+            text={skill.status === 1 ? '上架' : '下架'}
           />
         </div>
 
@@ -133,7 +132,7 @@ function SortableSkillCard({ skill, onEdit, onDelete, onToggleStatus }: {
         </div>
 
         <div style={{ marginBottom: 12 }}>
-          <Tag color="blue">{getCategoryLabel(skill.categoryId)}</Tag>
+          <Tag color="blue">{getCategoryLabel(skill.cate_id)}</Tag>
         </div>
 
         {skill.description && (
@@ -151,17 +150,17 @@ function SortableSkillCard({ skill, onEdit, onDelete, onToggleStatus }: {
           </Button>
           <Popconfirm
             title="确认操作"
-            description={`确定要${skill.status ? '下架' : '上架'}该技能吗？`}
+            description={`确定要${skill.status === 1 ? '下架' : '上架'}该技能吗？`}
             onConfirm={() => onToggleStatus(skill.id)}
             okText="确定"
             cancelText="取消"
           >
             <Button
               type="link"
-              icon={skill.status ? <DownOutlined /> : <UpOutlined />}
+              icon={skill.status === 1 ? <DownOutlined /> : <UpOutlined />}
               size="small"
             >
-              {skill.status ? '下架' : '上架'}
+              {skill.status === 1 ? '下架' : '上架'}
             </Button>
           </Popconfirm>
           <Popconfirm
@@ -189,9 +188,12 @@ function SortableSkillCard({ skill, onEdit, onDelete, onToggleStatus }: {
 export default function SkillsPage() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchKeyword, setSearchKeyword] = useState('')
-  const [skills, setSkills] = useState<SkillItem[]>(MOCK_SKILLS)
+  const [skills, setSkills] = useState<SkillItem[]>([])
+  const [categories, setCategories] = useState<SkillCate[]>([])
+  const [loading, setLoading] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [editingSkill, setEditingSkill] = useState<SkillItem | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   const [form] = Form.useForm()
 
   const sensors = useSensors(
@@ -201,15 +203,45 @@ export default function SkillsPage() {
     })
   )
 
+  const fetchSkills = useCallback(async () => {
+    try {
+      setLoading(true)
+      const res = await get('/skills', { page: 1, pageSize: 100 })
+      if (res.code === 200 || res.data) {
+        setSkills(res.data?.list || res.data || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch skills:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await get('/skills/skill-cates')
+      if (res.code === 200 || res.data) {
+        setCategories(res.data || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchSkills()
+    fetchCategories()
+  }, [fetchSkills, fetchCategories])
+
   const filteredSkills = skills.filter(skill => {
-    const matchCategory = selectedCategory === 'all' || skill.categoryId === selectedCategory
+    const matchCategory = selectedCategory === 'all' || String(skill.cate_id) === selectedCategory
     const matchSearch = !searchKeyword ||
       skill.name.toLowerCase().includes(searchKeyword.toLowerCase()) ||
       skill.description?.toLowerCase().includes(searchKeyword.toLowerCase())
     return matchCategory && matchSearch
   })
 
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event
     if (over && active.id !== over.id) {
       setSkills((items) => {
@@ -217,64 +249,111 @@ export default function SkillsPage() {
         const newIndex = items.findIndex((i) => i.id === over.id)
         const newItems = arrayMove(items, oldIndex, newIndex).map((item, index) => ({
           ...item,
-          sortOrder: index + 1,
+          sort_num: index + 1,
         }))
-        message.success('排序已更新')
         return newItems
       })
+
+      try {
+        const newSkills = [...skills]
+        const oldIndex = newSkills.findIndex((i) => i.id === active.id)
+        const newIndex = newSkills.findIndex((i) => i.id === over.id)
+        const reorderedSkills = arrayMove(newSkills, oldIndex, newIndex).map((item, index) => ({
+          ...item,
+          sort_num: index + 1,
+        }))
+
+        await Promise.all(
+          reorderedSkills.map(skill =>
+            put(`/skills/${skill.id}`, { sort_num: skill.sort_num })
+          )
+        )
+        message.success('排序已更新')
+        fetchSkills()
+      } catch (error) {
+        message.error('排序更新失败')
+        fetchSkills()
+      }
     }
-  }, [])
+  }, [skills, fetchSkills])
 
   const handleAdd = () => {
     setEditingSkill(null)
     form.resetFields()
     form.setFieldsValue({
       level: 50,
-      status: true,
-      sortOrder: 0,
+      status: 1,
+      sort_num: 0,
     })
     setModalVisible(true)
   }
 
   const handleEdit = (skill: SkillItem) => {
     setEditingSkill(skill)
-    form.setFieldsValue(skill)
+    form.setFieldsValue({
+      ...skill,
+      categoryId: skill.cate_id,
+      sortOrder: skill.sort_num,
+      status: skill.status === 1,
+    })
     setModalVisible(true)
   }
 
-  const handleDelete = (id: string) => {
-    setSkills(skills.filter(s => s.id !== id))
-    message.success('删除成功')
+  const handleDelete = async (id: number | string) => {
+    try {
+      await del(`/skills/${id}`)
+      message.success('删除成功')
+      fetchSkills()
+    } catch (error) {
+      message.error('删除失败')
+    }
   }
 
-  const handleToggleStatus = (id: string) => {
-    setSkills(skills.map(s =>
-      s.id === id ? { ...s, status: !s.status } : s
-    ))
-    message.success('状态已更新')
+  const handleToggleStatus = async (id: number | string) => {
+    try {
+      const skill = skills.find(s => s.id === id)
+      const newStatus = skill?.status === 1 ? 0 : 1
+      await put(`/skills/${id}`, { status: newStatus })
+      message.success('状态已更新')
+      fetchSkills()
+    } catch (error) {
+      message.error('状态更新失败')
+    }
   }
 
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields()
+      setSubmitting(true)
+
+      const payload = {
+        name: values.name,
+        cate_id: values.categoryId || values.cate_id,
+        level: values.level,
+        description: values.description || '',
+        tags: values.tags || '',
+        sort_num: values.sortOrder || values.sort_num || 0,
+        status: values.status ? 1 : 0,
+      }
+
       if (editingSkill) {
-        setSkills(skills.map(s =>
-          s.id === editingSkill.id ? { ...s, ...values } : s
-        ))
+        await put(`/skills/${editingSkill.id}`, payload)
         message.success('更新成功')
       } else {
-        const newSkill: SkillItem = {
-          ...values,
-          id: Date.now().toString(),
-          sortOrder: skills.length + 1,
-        }
-        setSkills([...skills, newSkill])
+        await post('/skills', payload)
         message.success('添加成功')
       }
       setModalVisible(false)
       form.resetFields()
-    } catch (error) {
-      console.error('Validation failed:', error)
+      fetchSkills()
+    } catch (error: any) {
+      if (error?.errorFields) {
+        return
+      }
+      console.error('Submit failed:', error)
+      message.error(editingSkill ? '更新失败' : '添加失败')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -289,7 +368,7 @@ export default function SkillsPage() {
 
   const menuItems = [
     { key: 'all', label: '全部技能' },
-    ...CATEGORIES.map(cat => ({ key: cat.key, label: cat.label })),
+    ...categories.map(cat => ({ key: String(cat.id), label: cat.cate_name })),
   ]
 
   return (
@@ -314,44 +393,52 @@ export default function SkillsPage() {
             style={{ width: 300 }}
             allowClear
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            新增技能
-          </Button>
+          <Space>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={() => { fetchSkills(); fetchCategories() }}
+            >
+              刷新
+            </Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+              新增技能
+            </Button>
+          </Space>
         </div>
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={filteredSkills.map(s => s.id)}
-            strategy={verticalListSortingStrategy}
+        <Spin spinning={loading}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
           >
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: 16,
-            }}>
-              {filteredSkills.map((skill) => (
-                <SortableSkillCard
-                  key={skill.id}
-                  skill={skill}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onToggleStatus={handleToggleStatus}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+            <SortableContext
+              items={filteredSkills.map(s => s.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: 16,
+              }}>
+                {filteredSkills.map((skill) => (
+                  <SortableSkillCard
+                    key={skill.id}
+                    skill={skill}
+                    categories={categories}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onToggleStatus={handleToggleStatus}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
 
-        {filteredSkills.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: '#999' }}
-          >
-            暂无数据
-          </div>
-        )}
+          {!loading && filteredSkills.length === 0 && (
+            <Empty description="暂无技能数据" style={{ padding: '60px 0' }} />
+          )}
+        </Spin>
       </div>
 
       <Modal
@@ -361,6 +448,9 @@ export default function SkillsPage() {
         onCancel={() => setModalVisible(false)}
         width={600}
         destroyOnClose
+        confirmLoading={submitting}
+        okText="保存"
+        cancelText="取消"
       >
         <Form
           form={form}
@@ -368,7 +458,7 @@ export default function SkillsPage() {
           initialValues={{
             level: 50,
             status: true,
-            sortOrder: 0,
+            sort_num: 0,
           }}
         >
           <Form.Item
@@ -388,9 +478,9 @@ export default function SkillsPage() {
             rules={[{ required: true, message: '请选择分类' }]}
           >
             <Select placeholder="请选择分类">
-              {CATEGORIES.map(cat => (
-                <Select.Option key={cat.key} value={cat.key}>
-                  {cat.label}
+              {categories.map(cat => (
+                <Select.Option key={cat.id} value={cat.id}>
+                  {cat.cate_name}
                 </Select.Option>
               ))}
             </Select>
@@ -422,6 +512,13 @@ export default function SkillsPage() {
               maxLength={200}
               showCount
             />
+          </Form.Item>
+
+          <Form.Item
+            name="tags"
+            label="标签"
+          >
+            <Input placeholder="多个标签用逗号分隔" />
           </Form.Item>
 
           <Form.Item

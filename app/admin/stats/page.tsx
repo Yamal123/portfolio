@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Card, Row, Col, InputNumber, Button, Typography, message } from 'antd'
-import { EditOutlined, CheckOutlined } from '@ant-design/icons'
+import React, { useState, useEffect } from 'react'
+import { Card, Row, Col, InputNumber, Button, Typography, message, Spin } from 'antd'
+import { EditOutlined, CheckOutlined, ReloadOutlined } from '@ant-design/icons'
+import { get, put } from '@/lib/admin/api'
 
 const { Title, Text } = Typography
 
@@ -17,11 +18,23 @@ interface StatItem {
   precision: number
 }
 
-const INITIAL_STATS: StatItem[] = [
+interface StatsData {
+  project_count?: number
+  total_skills?: number
+  years_of_experience?: number
+  success_rate?: number
+  completed_projects?: number
+  client_satisfaction?: number
+  efficiency_gain?: number
+  active_skills?: number
+  total_views?: number
+  total_visits?: number
+}
+
+const DEFAULT_STATS_CONFIG: Omit<StatItem, 'value'>[] = [
   {
-    key: 'yearsOfExperience',
+    key: 'years_of_experience',
     label: '从业年限',
-    value: 8,
     unit: '年',
     min: 0,
     max: 50,
@@ -29,19 +42,17 @@ const INITIAL_STATS: StatItem[] = [
     precision: 0,
   },
   {
-    key: 'projectCount',
+    key: 'project_count',
     label: '项目数量',
-    value: 128,
     unit: '个',
     min: 0,
-    max: 999,
+    max: 9999,
     step: 1,
     precision: 0,
   },
   {
-    key: 'successRate',
+    key: 'success_rate',
     label: '成功率',
-    value: 95.5,
     unit: '%',
     min: 0,
     max: 100,
@@ -49,9 +60,8 @@ const INITIAL_STATS: StatItem[] = [
     precision: 1,
   },
   {
-    key: 'efficiencyGain',
+    key: 'efficiency_gain',
     label: '效率提升',
-    value: 45.8,
     unit: '%',
     min: 0,
     max: 999,
@@ -60,9 +70,25 @@ const INITIAL_STATS: StatItem[] = [
   },
 ]
 
-function EditableStatCard({ stat, onSave }: {
+function toStatItems(data: StatsData): StatItem[] {
+  return DEFAULT_STATS_CONFIG.map(config => ({
+    ...config,
+    value: (data as any)[config.key] ?? 0,
+  }))
+}
+
+function toBackendData(stats: StatItem[]): Record<string, any> {
+  const result: Record<string, any> = {}
+  stats.forEach(stat => {
+    result[stat.key] = stat.value
+  })
+  return result
+}
+
+function EditableStatCard({ stat, onSave, saving }: {
   stat: StatItem
   onSave: (key: string, value: number) => void
+  saving: boolean
 }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(stat.value as number)
@@ -140,6 +166,7 @@ function EditableStatCard({ stat, onSave }: {
                 icon={<CheckOutlined />}
                 onClick={handleSave}
                 size="small"
+                loading={saving}
               >
                 保存
               </Button>
@@ -218,25 +245,79 @@ function EditableStatCard({ stat, onSave }: {
 }
 
 export default function StatsPage() {
-  const [stats, setStats] = useState<StatItem[]>(INITIAL_STATS)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [stats, setStats] = useState<StatItem[]>([])
 
-  const handleSave = (key: string, value: number) => {
-    setStats(prev =>
-      prev.map(item =>
+  useEffect(() => {
+    loadStats()
+  }, [])
+
+  const loadStats = async () => {
+    try {
+      setLoading(true)
+      const res = await get('/stats')
+      const data = res.data as StatsData
+      setStats(toStatItems(data))
+      message.success('履历数据加载成功')
+    } catch (error) {
+      console.error('加载失败:', error)
+      message.error('加载履历数据失败')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSave = async (key: string, value: number) => {
+    try {
+      setSaving(true)
+
+      const updatedStats = stats.map(item =>
         item.key === key ? { ...item, value } : item
       )
+
+      const payload = toBackendData(updatedStats)
+      await put('/stats', payload)
+
+      setStats(updatedStats)
+      message.success('数据已保存到服务器')
+    } catch (error: any) {
+      console.error('保存失败:', error)
+      message.error(error.response?.data?.message || '保存失败，请重试')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleRefresh = () => {
+    loadStats()
+  }
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: 100 }}>
+        <Spin size="large" tip="加载中..." />
+      </div>
     )
-    message.success('数据已更新')
   }
 
   return (
     <div>
-      <Title level={4} style={{ marginBottom: 24 }}>履历数据管理</Title>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <Title level={4} style={{ margin: 0 }}>履历数据管理</Title>
+        <Button
+          icon={<ReloadOutlined />}
+          onClick={handleRefresh}
+          loading={loading}
+        >
+          刷新数据
+        </Button>
+      </div>
 
       <Row gutter={[24, 24]}>
         {stats.map((stat) => (
           <Col xs={24} sm={12} lg={6} key={stat.key}>
-            <EditableStatCard stat={stat} onSave={handleSave} />
+            <EditableStatCard stat={stat} onSave={handleSave} saving={saving} />
           </Col>
         ))}
       </Row>
@@ -246,7 +327,7 @@ export default function StatsPage() {
         <ul style={{ paddingLeft: 20, color: '#666', lineHeight: 2 }}>
           <li>点击数值区域或编辑按钮进入编辑模式</li>
           <li>编辑完成后按 Enter 或点击其他区域自动保存</li>
-          <li>所有修改会实时更新到前端展示页面</li>
+          <li>所有修改会实时同步到后端服务器</li>
           <li>请确保数据的准确性和合理性</li>
         </ul>
       </Card>
