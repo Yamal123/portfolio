@@ -7,5 +7,11 @@ export default function AdminRootLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <AuthProvider>{children}</AuthProvider>
+  return (
+    <AuthProvider>
+      <div className="admin-layout">
+        {children}
+      </div>
+    </AuthProvider>
+  )
 }

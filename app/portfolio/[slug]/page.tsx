@@ -7,9 +7,8 @@ import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
 import { ExternalLink, Calendar, Tag, Copy, Check, Loader2 } from "lucide-react"
 import { fetchAPI } from "@/lib/api/client"
-import { adaptProject } from "@/lib/api/adapter"
+import { adaptBackendProject } from "@/lib/api/adapter"
 import type { Project } from '@/data/projects'
-import type { BackendProject } from "@/lib/api/adapter"
 import PageNav from "@/components/page-nav"
 
 // 简单的Markdown渲染器
@@ -55,9 +54,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
 
   const { data: project, isLoading, error } = useSWR(
     slug ? `/api/public/projects?slug=${slug}` : null,
-    (url) => fetchAPI<BackendProject | null>(url).then(data => {
+    (url) => fetchAPI<any | null>(url).then(data => {
       if (data) {
-        return adaptProject(data)
+        return adaptBackendProject(data)
       }
       return null
     })
@@ -143,7 +142,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
               </button>
             </div>
             <div className="flex flex-wrap gap-2 mb-6">
-              {project.keywords.map((keyword, index) => (
+              {project.keywords.map((keyword: string, index: number) => (
                 <span
                   key={index}
                   className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${

@@ -26,3 +26,8 @@ export async function fetchAPI<T>(path: string, options?: RequestInit): Promise<
     throw error
   }
 }
+
+// 前台专用的 fetcher（用于 SWR）
+export async function publicFetcher<T>(url: string): Promise<T> {
+  return fetchAPI<T>(url)
+}

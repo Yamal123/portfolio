@@ -31,7 +31,7 @@ export default function PortfolioPage() {
     return projects.filter(project =>
       project.name[language === "zh" ? "zh" : "en"].toLowerCase().includes(query) ||
       project.type[language === "zh" ? "zh" : "en"].toLowerCase().includes(query) ||
-      project.keywords.some(keyword => keyword.toLowerCase().includes(query)) ||
+      project.keywords.some((keyword: string) => keyword.toLowerCase().includes(query)) ||
       project.intro[language === "zh" ? "zh" : "en"].toLowerCase().includes(query)
     )
   }, [searchQuery, language, projects])
@@ -188,7 +188,7 @@ export default function PortfolioPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    {project.keywords.slice(0, 3).map((keyword, index) => (
+                    {project.keywords.slice(0, 3).map((keyword: string, index: number) => (
                       <span
                         key={index}
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${

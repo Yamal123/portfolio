@@ -51,3 +51,22 @@ body::-webkit-scrollbar-thumb:hover {
 .light-theme::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #fdba74, #fb923c);
 }
+
+.admin-layout {
+  background-color: #f5f6fa;
+  color: #1d2129;
+  min-height: 100vh;
+}
+
+.admin-layout ::-webkit-scrollbar-track {
+  background: #f1f2f3;
+}
+
+.admin-layout ::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 4px;
+}
+
+.admin-layout ::-webkit-scrollbar-thumb:hover {
+  background: #a8adc0;
+}
