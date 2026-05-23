@@ -21,6 +21,19 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
+  async rewrites() {
+    return [
+      // Map admin API calls to Next.js API routes
+      { source: '/auth/:path*', destination: '/api/auth/:path*' },
+      { source: '/stats', destination: '/api/stats' },
+      { source: '/analytics/:path*', destination: '/api/analytics/:path*' },
+      { source: '/settings', destination: '/api/management/settings' },
+      { source: '/profile', destination: '/api/management/profile' },
+      { source: '/projects/:path*', destination: '/api/management/projects/:path*' },
+      { source: '/contact', destination: '/api/management/contact' },
+      { source: '/skills/:path*', destination: '/api/management/skills/:path*' },
+    ]
+  },
 }
 
 export default nextConfig
