@@ -1,11 +1,8 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/contexts/language-context'
-import useSWR from 'swr'
-import { publicFetcher } from '@/lib/api/client'
-import { adaptProjects } from '@/lib/api/adapter'
 import { mockProjects } from '@/data/projects'
 import {
   ArrowUpRight,
@@ -16,8 +13,6 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { ProjectDetailView } from './project-detail-view'
 import { useTheme } from '@/contexts/theme-context'
 import type { Project } from '@/data/projects'
 
@@ -28,23 +23,8 @@ interface PortfolioSectionProps {
 export function PortfolioSection({ className }: PortfolioSectionProps) {
   const { language } = useLanguage()
   const { theme } = useTheme()
-  const [selectedProjectSlug, setSelectedProjectSlug] = useState<string | null>(null)
 
-  const { data: projects } = useSWR(
-    '/api/public/projects',
-    publicFetcher<any[]>
-  )
-
-  const displayProjects = useMemo(() => {
-    if (projects && projects.length > 0) {
-      return adaptProjects(projects)
-    }
-    return mockProjects
-  }, [projects])
-
-  const selectedProject = displayProjects.find(
-    (p) => p.slug === selectedProjectSlug
-  )
+  const displayProjects = mockProjects
 
   const t = {
     zh: {
@@ -66,13 +46,13 @@ export function PortfolioSection({ className }: PortfolioSectionProps) {
   }[language]
 
   return (
-    <section 
-      className={`py-16 sm:py-24 relative overflow-hidden ${className}`} 
+    <section
+      className={`py-16 sm:py-24 relative overflow-hidden ${className}`}
       id="portfolio"
       style={{ background: theme === "dark" ? "#000000" : "#ffffff" }}
     >
       <div className={`absolute top-0 left-0 w-full h-px ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`}></div>
-      
+
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 sm:mb-16">
           <p className={`text-sm sm:text-base font-medium tracking-wide mb-3 sm:mb-4 ${
@@ -94,14 +74,18 @@ export function PortfolioSection({ className }: PortfolioSectionProps) {
 
         <div className="grid md:grid-cols-2 gap-6">
           {displayProjects.map((project, index) => (
-            <ProjectCard
+            <Link
               key={project.slug}
-              project={project}
-              index={index}
-              onViewDetails={setSelectedProjectSlug}
-              theme={theme}
-              language={language}
-            />
+              href={`/portfolio/${project.slug}`}
+              className="block group"
+            >
+              <ProjectCard
+                project={project}
+                index={index}
+                theme={theme}
+                language={language}
+              />
+            </Link>
           ))}
         </div>
 
@@ -118,22 +102,6 @@ export function PortfolioSection({ className }: PortfolioSectionProps) {
             <ExternalLink className="w-5 h-5 ml-2" />
           </Link>
         </div>
-
-        <Dialog
-          open={!!selectedProject}
-          onOpenChange={(open) => {
-            if (!open) setSelectedProjectSlug(null)
-          }}
-        >
-          <DialogContent className="max-w-4xl h-[90vh] overflow-hidden p-0 bg-transparent border-0">
-            {selectedProject && (
-              <ProjectDetailView
-                project={selectedProject}
-                onClose={() => setSelectedProjectSlug(null)}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
       </div>
     </section>
   )
@@ -142,13 +110,11 @@ export function PortfolioSection({ className }: PortfolioSectionProps) {
 function ProjectCard({
   project,
   index,
-  onViewDetails,
   theme,
   language,
 }: {
   project: Project
   index: number
-  onViewDetails: (slug: string) => void
   theme: "dark" | "light"
   language: "zh" | "en"
 }) {
@@ -189,8 +155,8 @@ function ProjectCard({
             </div>
           )}
           <Badge className={`absolute top-3 sm:top-4 left-3 sm:left-4 ${
-            theme === "dark" 
-              ? "bg-gray-900/90 backdrop-blur-sm text-white border-gray-700" 
+            theme === "dark"
+              ? "bg-gray-900/90 backdrop-blur-sm text-white border-gray-700"
               : "bg-white/90 backdrop-blur-sm text-gray-900 border-gray-200"
           } shadow-md`}>
             {project.type[language]}
@@ -202,8 +168,8 @@ function ProjectCard({
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
               <span className="text-xl sm:text-2xl">{project.emoji}</span>
               <h3 className={`text-lg sm:text-xl font-bold transition-colors ${
-                theme === "dark" 
-                  ? "text-white group-hover:text-orange-400" 
+                theme === "dark"
+                  ? "text-white group-hover:text-orange-400"
                   : "text-gray-900 group-hover:text-orange-500"
               }`}>
                 {project.name[language]}
@@ -220,8 +186,8 @@ function ProjectCard({
                   key={tagIndex}
                   variant="outline"
                   className={`text-xs ${
-                    theme === "dark" 
-                      ? "bg-gray-800/50 text-gray-400 border-gray-700" 
+                    theme === "dark"
+                      ? "bg-gray-800/50 text-gray-400 border-gray-700"
                       : "bg-gray-50 text-gray-600 border-gray-200"
                   }`}
                 >
@@ -253,13 +219,13 @@ function ProjectCard({
               <span className="text-xs text-gray-500">{project.createdAt}</span>
               <div className="flex gap-2">
                 {project.externalUrl && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    asChild 
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    asChild
                     className={`h-7 px-2 sm:h-8 sm:px-3 ${
-                      theme === "dark" 
-                        ? "text-gray-400 hover:text-orange-400" 
+                      theme === "dark"
+                        ? "text-gray-400 hover:text-orange-400"
                         : "text-gray-500 hover:text-orange-500"
                     }`}
                   >
@@ -267,19 +233,16 @@ function ProjectCard({
                       href={project.externalUrl}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
                     </a>
                   </Button>
                 )}
-                <Button
-                  size="sm"
-                  className="h-7 px-3 sm:h-8 sm:px-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full transition-all duration-300 hover:scale-105"
-                  onClick={() => onViewDetails(project.slug)}
-                >
+                <span className={`h-7 px-3 sm:h-8 sm:px-4 inline-flex items-center gap-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full text-xs sm:text-sm font-medium transition-all duration-300 group-hover:scale-105`}>
                   {t.viewDetails}
-                  <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
-                </Button>
+                  <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4" />
+                </span>
               </div>
             </div>
           </div>

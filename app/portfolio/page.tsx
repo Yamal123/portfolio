@@ -3,15 +3,12 @@
 import { useState, useMemo } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import useSWR from "swr"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
-import { Search, ChevronLeft, ChevronRight, ExternalLink, Calendar, Tag, Github, Loader2, AlertCircle } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, ExternalLink, Calendar, Tag, Github } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import PageNav from "@/components/page-nav"
-import { fetchAPI } from "@/lib/api/client"
-import { adaptProjects } from "@/lib/api/adapter"
 import { mockProjects } from "@/data/projects"
 import type { Project } from "@/data/projects"
 
@@ -22,21 +19,7 @@ export default function PortfolioPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
 
-  const { data: projects, isLoading, error } = useSWR(
-    '/api/public/projects',
-    (url) => fetchAPI<any[]>(url).then(adaptProjects),
-    {
-      errorRetryCount: 2,
-      errorRetryInterval: 3000,
-      fallbackData: mockProjects,
-      suspense: false,
-    }
-  )
-
-  const displayProjects = useMemo(() => {
-    if (!projects || projects.length === 0) return mockProjects
-    return projects
-  }, [projects])
+  const displayProjects = mockProjects
 
   const filteredProjects = useMemo(() => {
     if (!displayProjects || !searchQuery) return displayProjects || []
@@ -75,8 +58,6 @@ export default function PortfolioPage() {
       description: "深耕跨境供应链与AI领域，用产品思维解决真实业务问题",
       search: "搜索项目...",
       viewGithub: "查看我的 GitHub",
-      loading: "加载中...",
-      error: "加载项目失败，请稍后重试",
       noProjects: "没有找到匹配的项目",
       back: "返回",
     },
@@ -87,8 +68,6 @@ export default function PortfolioPage() {
       description: "Deep expertise in cross-border supply chain and AI, solving real business problems with product thinking",
       search: "Search projects...",
       viewGithub: "View My GitHub",
-      loading: "Loading...",
-      error: "Failed to load projects, please try again later",
       noProjects: "No projects found",
       back: "Back",
     },
@@ -97,22 +76,8 @@ export default function PortfolioPage() {
   return (
     <main className={`min-h-screen ${theme === "dark" ? "bg-black" : "bg-white"}`}>
       <PageNav showBack backUrl="/" />
-      
-      {/* Error Banner */}
-      {error && (
-        <div className={`fixed top-20 left-0 right-0 z-40 px-4 py-3 ${
-          theme === "dark" ? "bg-amber-500/20 border-amber-500/50" : "bg-amber-50 border-amber-200"
-        } border-b`}>
-          <div className="max-w-6xl mx-auto flex items-center justify-center gap-2">
-            <AlertCircle className={`w-4 h-4 ${theme === "dark" ? "text-amber-400" : "text-amber-600"}`} />
-            <span className={`text-sm ${theme === "dark" ? "text-amber-300" : "text-amber-700"}`}>
-              {t.error}
-            </span>
-          </div>
-        </div>
-      )}
-      
-      <div className="pt-32 pb-24" style={{ marginTop: error ? '48px' : '0' }}>
+
+      <div className="pt-32 pb-24">
         <div className="max-w-6xl mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-12">
