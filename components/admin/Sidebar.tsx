@@ -11,6 +11,10 @@ import {
   Settings,
   LogOut,
   ChevronRight,
+  BarChart3,
+  FileText,
+  FolderOpen,
+  Server,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/admin/AuthContext'
 
@@ -50,6 +54,30 @@ const menuItems = [
     label: '系统设置',
     icon: Settings,
     path: '/admin/settings',
+  },
+  {
+    key: 'traffic',
+    label: '流量统计',
+    icon: BarChart3,
+    path: '/admin/traffic',
+  },
+  {
+    key: 'editor',
+    label: '内容编辑',
+    icon: FileText,
+    path: '/admin/editor',
+  },
+  {
+    key: 'files',
+    label: '文件管理',
+    icon: FolderOpen,
+    path: '/admin/files',
+  },
+  {
+    key: 'server',
+    label: '服务器状态',
+    icon: Server,
+    path: '/admin/server',
   },
 ]
 
