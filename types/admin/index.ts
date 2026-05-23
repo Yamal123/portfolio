@@ -66,6 +66,18 @@ export interface Project {
   deleted_at?: string | null
   created_at: string
   updated_at: string
+  type_zh?: string
+  type_en?: string
+  intro_zh?: string
+  intro_en?: string
+  problem_zh?: string
+  problem_en?: string
+  action_zh?: string
+  action_en?: string
+  result_zh?: string
+  result_en?: string
+  keywords?: string
+  emoji?: string
 }
 
 export interface UserProfile {

@@ -2,7 +2,7 @@
 
 import Navbar from "@/components/navbar"
 import HeroSection from "@/components/hero-section"
-import PortfolioSection from "@/components/portfolio-section"
+import { PortfolioSection } from "@/components/portfolio-section"
 import BlogSection from "@/components/blog-section"
 import AboutSection from "@/components/about-section"
 import Footer from "@/components/footer"

@@ -4,11 +4,13 @@ import { useState } from 'react'
 import useSWR, { mutate } from 'swr'
 import { AdminLayout } from '@/components/admin/AdminLayout'
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute'
+import { DataTable } from '@/components/admin/DataTable'
+import { PageHeader } from '@/components/admin/PageHeader'
 import { fetcher, post, put, del } from '@/lib/admin/fetcher'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -16,14 +18,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,7 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Plus, Edit, Trash2 } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Skill } from '@/types/admin'
 
@@ -119,111 +113,95 @@ function SkillsContent() {
     }
   }
 
+  const columns = [
+    {
+      key: 'name',
+      label: '技能名称',
+    },
+    {
+      key: 'level',
+      label: '熟练度',
+      render: (skill: Skill) => (
+        <div className="flex items-center gap-2">
+          <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
+              style={{ width: `${skill.level}%` }}
+            />
+          </div>
+          <span className="text-sm text-gray-600 font-medium">{skill.level}%</span>
+        </div>
+      ),
+    },
+    {
+      key: 'cate_id',
+      label: '分类',
+      render: (skill: Skill) => (
+        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-600">
+          分类 {skill.cate_id}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      label: '状态',
+      render: (skill: Skill) => (
+        <span
+          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+            skill.status === 1
+              ? 'bg-green-50 text-green-600'
+              : 'bg-gray-100 text-gray-600'
+          }`}
+        >
+          {skill.status === 1 ? (
+            <Check className="w-3 h-3 mr-1" />
+          ) : (
+            <X className="w-3 h-3 mr-1" />
+          )}
+          {skill.status === 1 ? '启用' : '禁用'}
+        </span>
+      ),
+    },
+    {
+      key: 'sort_num',
+      label: '排序',
+    },
+  ]
+
   return (
     <AdminLayout title="技能管理">
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <p className="text-slate-500">管理您的专业技能</p>
-          <Button onClick={handleAdd} className="bg-[#3370ff] hover:bg-[#2958cc]">
-            <Plus className="w-4 h-4 mr-2" />
-            添加技能
-          </Button>
-        </div>
+      <PageHeader
+        title="技能管理"
+        subtitle="管理您的专业技能"
+        actionLabel="添加技能"
+        onAction={handleAdd}
+      />
 
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>技能名称</TableHead>
-                  <TableHead>熟练度</TableHead>
-                  <TableHead>分类</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead>排序</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      加载中...
-                    </TableCell>
-                  </TableRow>
-                ) : skills?.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      暂无技能
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  skills?.map((skill) => (
-                    <TableRow key={skill.id}>
-                      <TableCell className="font-medium">{skill.name}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-[#3370ff] rounded-full"
-                              style={{ width: `${skill.level}%` }}
-                            />
-                          </div>
-                          <span className="text-sm text-slate-500">
-                            {skill.level}%
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>分类 {skill.cate_id}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            skill.status === 1
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-slate-100 text-slate-800'
-                          }`}
-                        >
-                          {skill.status === 1 ? '启用' : '禁用'}
-                        </span>
-                      </TableCell>
-                      <TableCell>{skill.sort_num}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(skill)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => handleDelete(skill)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+      <Card className="shadow-sm border border-gray-200 rounded-xl overflow-hidden">
+        <CardContent className="p-0">
+          <DataTable<Skill>
+            data={skills || []}
+            columns={columns}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            isLoading={isLoading}
+            emptyText="暂无技能"
+          />
+        </CardContent>
+      </Card>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingSkill ? '编辑技能' : '添加技能'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-t-xl -mx-6 -mt-6">
+            <DialogTitle className="text-lg font-bold">
+              {editingSkill ? '编辑技能' : '添加技能'}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  技能名称
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  技能名称 <span className="text-red-500">*</span>
                 </label>
                 <Input
                   value={formData.name}
@@ -231,11 +209,12 @@ function SkillsContent() {
                     setFormData({ ...formData, name: e.target.value })
                   }
                   required
+                  className="h-10 rounded-lg"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  熟练度 (0-100)
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  熟练度 (0-100) <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="number"
@@ -249,33 +228,48 @@ function SkillsContent() {
                     })
                   }
                   required
+                  className="h-10 rounded-lg"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  图标 URL
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">图标 URL</label>
                 <Input
                   value={formData.icon_url}
                   onChange={(e) =>
                     setFormData({ ...formData, icon_url: e.target.value })
                   }
+                  className="h-10 rounded-lg"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  描述
-                </label>
-                <Textarea
-                  value={formData.description}
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">分类 ID</label>
+                <Input
+                  type="number"
+                  value={formData.cate_id}
                   onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
+                    setFormData({
+                      ...formData,
+                      cate_id: parseInt(e.target.value) || 1,
+                    })
                   }
-                  rows={3}
+                  className="h-10 rounded-lg"
                 />
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">描述</label>
+              <Textarea
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                rows={3}
+                className="rounded-lg resize-none"
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                   标签 (逗号分隔)
                 </label>
                 <Input
@@ -283,97 +277,83 @@ function SkillsContent() {
                   onChange={(e) =>
                     setFormData({ ...formData, tags: e.target.value })
                   }
+                  className="h-10 rounded-lg"
                 />
               </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    分类 ID
-                  </label>
-                  <Input
-                    type="number"
-                    value={formData.cate_id}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        cate_id: parseInt(e.target.value) || 1,
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    排序
-                  </label>
-                  <Input
-                    type="number"
-                    value={formData.sort_num}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        sort_num: parseInt(e.target.value) || 0,
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    状态
-                  </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        status: parseInt(e.target.value),
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3370ff]"
-                  >
-                    <option value={1}>启用</option>
-                    <option value={0}>禁用</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">排序</label>
+                <Input
+                  type="number"
+                  value={formData.sort_num}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      sort_num: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  className="h-10 rounded-lg"
+                />
               </div>
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setIsDialogOpen(false)}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">状态</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      status: parseInt(e.target.value),
+                    })
+                  }
+                  className="w-full h-10 px-3 rounded-lg border border-gray-200 bg-white text-gray-700 focus:border-blue-400 focus:ring-blue-500/20 focus:outline-none"
                 >
-                  取消
-                </Button>
-                <Button type="submit" className="bg-[#3370ff] hover:bg-[#2958cc]">
-                  保存
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-
-        <AlertDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>确认删除</AlertDialogTitle>
-              <AlertDialogDescription>
-                您确定要删除技能 "{deletingSkill?.name}" 吗？此操作无法撤销。
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>取消</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={confirmDelete}
-                className="bg-red-600 hover:bg-red-700"
+                  <option value={1}>启用</option>
+                  <option value={0}>禁用</option>
+                </select>
+              </div>
+            </div>
+            <DialogFooter className="pt-4 border-t border-gray-100 gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                className="h-10 px-6 rounded-lg"
               >
-                删除
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+                取消
+              </Button>
+              <Button
+                type="submit"
+                className="h-10 px-6 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+              >
+                <Check className="w-4 h-4 mr-2" />
+                {editingSkill ? '更新技能' : '创建技能'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent className="rounded-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-semibold text-gray-900">确认删除</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600">
+              您确定要删除技能 "{deletingSkill?.name}" 吗？此操作无法撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-3">
+            <AlertDialogCancel className="h-10 px-6 rounded-lg">取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="h-10 px-6 rounded-lg bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+            >
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   )
 }

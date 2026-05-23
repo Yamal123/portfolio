@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { TOKEN_KEY } from '@/lib/admin/constants'
+import { TOKEN_KEY } from '@/lib/api/config'
 import type { User } from '@/types/admin'
 
 interface AuthContextType {

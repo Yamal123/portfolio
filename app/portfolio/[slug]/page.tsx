@@ -5,22 +5,23 @@ import Link from "next/link"
 import useSWR from "swr"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
-import { ExternalLink, Calendar, Tag, Copy, Check, Loader2 } from "lucide-react"
+import { ExternalLink, Calendar, Tag, Copy, Check, Loader2, ArrowLeft } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { fetchAPI } from "@/lib/api/client"
 import { adaptBackendProject } from "@/lib/api/adapter"
+import { mockProjects } from "@/data/projects"
 import type { Project } from '@/data/projects'
 import PageNav from "@/components/page-nav"
 
-// 简单的Markdown渲染器
 const MarkdownRenderer = ({ content, theme }: { content: string, theme: string }) => {
   const renderContent = content.split('\n').map((line, index) => {
-    const orangeColor = theme === "dark" ? "text-orange-400" : "text-orange-500"
+    const blueColor = theme === "dark" ? "text-blue-400" : "text-blue-600"
     if (line.startsWith('### ')) {
-      return <h3 key={index} className={`text-xl font-bold mt-6 mb-3 ${orangeColor}`}>{line.slice(4)}</h3>
+      return <h3 key={index} className={`text-xl font-bold mt-6 mb-3 ${blueColor}`}>{line.slice(4)}</h3>
     } else if (line.startsWith('## ')) {
-      return <h2 key={index} className={`text-2xl font-bold mt-8 mb-4 ${orangeColor}`}>{line.slice(3)}</h2>
+      return <h2 key={index} className={`text-2xl font-bold mt-8 mb-4 ${blueColor}`}>{line.slice(3)}</h2>
     } else if (line.startsWith('# ')) {
-      return <h1 key={index} className={`text-3xl font-bold mt-10 mb-6 ${orangeColor}`}>{line.slice(2)}</h1>
+      return <h1 key={index} className={`text-3xl font-bold mt-10 mb-6 ${blueColor}`}>{line.slice(2)}</h1>
     } else if (line.startsWith('- **')) {
       return (
         <li key={index} className="ml-6 my-2 list-disc">
@@ -36,6 +37,7 @@ const MarkdownRenderer = ({ content, theme }: { content: string, theme: string }
     } else {
       let formattedLine = line
       formattedLine = formattedLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      formattedLine = formattedLine.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-sm font-mono">$1</code>')
       return <p key={index} className="my-3 leading-relaxed" dangerouslySetInnerHTML={{__html: formattedLine}} />
     }
   })
@@ -52,14 +54,22 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const { theme } = useTheme()
   const [copied, setCopied] = useState(false)
 
+  const fallbackProject = slug ? mockProjects.find(p => p.slug === slug) || null : null
+
   const { data: project, isLoading, error } = useSWR(
     slug ? `/api/public/projects?slug=${slug}` : null,
     (url) => fetchAPI<any | null>(url).then(data => {
       if (data) {
         return adaptBackendProject(data)
       }
-      return null
-    })
+      return fallbackProject
+    }),
+    {
+      errorRetryCount: 2,
+      errorRetryInterval: 3000,
+      fallbackData: fallbackProject,
+      suspense: false,
+    }
   )
 
   const handleCopyLink = () => {
@@ -81,14 +91,41 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     }
   }
 
-  if (isLoading) {
+  const t = {
+    zh: {
+      title: "作品详情",
+      notFound: "作品未找到",
+      back: "返回作品列表",
+      copyLink: "复制链接",
+      copied: "已复制",
+      viewGithub: "查看 GitHub 仓库",
+      loading: "加载中...",
+      problem: "问题",
+      action: "行动",
+      result: "成果",
+    },
+    en: {
+      title: "Project Detail",
+      notFound: "Project not found",
+      back: "Back to portfolio",
+      copyLink: "Copy link",
+      copied: "Copied!",
+      viewGithub: "View on GitHub",
+      loading: "Loading...",
+      problem: "Challenge",
+      action: "Action",
+      result: "Result",
+    },
+  }[language]
+
+  if (isLoading && !error) {
     return (
       <main className={`min-h-screen ${theme === "dark" ? "bg-black" : "bg-white"}`}>
         <PageNav showBack backUrl="/portfolio" />
         <div className="max-w-4xl mx-auto px-6 pt-32 pb-24 text-center">
-          <Loader2 className={`w-8 h-8 animate-spin mx-auto ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`} />
+          <Loader2 className={`w-8 h-8 animate-spin mx-auto ${theme === "dark" ? "text-blue-400" : "text-blue-500"}`} />
           <p className={`mt-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-            {language === "zh" ? "加载中..." : "Loading..."}
+            {t.loading}
           </p>
         </div>
       </main>
@@ -100,11 +137,13 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
       <main className={`min-h-screen ${theme === "dark" ? "bg-black" : "bg-white"}`}>
         <PageNav showBack backUrl="/portfolio" />
         <div className="max-w-4xl mx-auto px-6 pt-32 pb-24 text-center">
+          <div className="text-6xl mb-4">🔍</div>
           <h1 className={`text-2xl font-bold mb-4 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-            {language === "zh" ? "作品未找到" : "Project not found"}
+            {t.notFound}
           </h1>
-          <Link href="/portfolio" className={`${theme === "dark" ? "text-orange-400" : "text-orange-500"} hover:underline`}>
-            {language === "zh" ? "返回作品列表" : "Back to portfolio"}
+          <Link href="/portfolio" className={`inline-flex items-center gap-2 ${theme === "dark" ? "text-blue-400" : "text-blue-600"} hover:underline`}>
+            <ArrowLeft className="w-4 h-4" />
+            {t.back}
           </Link>
         </div>
       </main>
@@ -117,17 +156,19 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
       
       <div className="pt-32 pb-24">
         <article className="max-w-4xl mx-auto px-6">
-          {/* 作品标题区 */}
+          {/* Header */}
           <header className="mb-12">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
               <span className="text-5xl">{project.emoji}</span>
-              <span className="px-3 py-1 bg-orange-500/90 text-white text-sm font-semibold rounded-full">
+              <span className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-semibold rounded-full">
                 {project.type[language === "zh" ? "zh" : "en"]}
               </span>
             </div>
+            
             <h1 className={`text-3xl md:text-4xl font-bold mb-4 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
               {project.name[language === "zh" ? "zh" : "en"]}
             </h1>
+            
             <div className="flex flex-wrap items-center gap-4 mb-6">
               <span className={`flex items-center gap-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
                 <Calendar className="w-4 h-4" />
@@ -135,12 +176,13 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
               </span>
               <button
                 onClick={handleCopyLink}
-                className={`flex items-center gap-1 ${theme === "dark" ? "text-gray-400 hover:text-orange-400" : "text-gray-600 hover:text-orange-500"} transition-colors`}
+                className={`flex items-center gap-1 ${theme === "dark" ? "text-gray-400 hover:text-blue-400" : "text-gray-600 hover:text-blue-600"} transition-colors`}
               >
                 {copied ? <Check className={`w-4 h-4 ${theme === "dark" ? "text-green-400" : "text-green-500"}`} /> : <Copy className="w-4 h-4" />}
-                <span>{copied ? (language === "zh" ? "已复制" : "Copied!") : (language === "zh" ? "复制链接" : "Copy link")}</span>
+                <span>{copied ? t.copied : t.copyLink}</span>
               </button>
             </div>
+            
             <div className="flex flex-wrap gap-2 mb-6">
               {project.keywords.map((keyword: string, index: number) => (
                 <span
@@ -154,12 +196,52 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                 </span>
               ))}
             </div>
+            
             <p className={`text-lg italic ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
               {project.intro[language === "zh" ? "zh" : "en"]}
             </p>
           </header>
 
-          {/* 作品内容区 */}
+          {/* Problem/Action/Result */}
+          <div className="grid md:grid-cols-3 gap-4 mb-12">
+            <div className={`p-6 rounded-2xl ${theme === "dark" ? "bg-gray-900/50 border border-gray-800" : "bg-white border border-gray-200"}`}>
+              <div className="flex items-center gap-2 mb-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${theme === "dark" ? "bg-amber-500/20" : "bg-amber-50"}`}>
+                  <span className="text-lg">🎯</span>
+                </div>
+                <span className={`font-semibold ${theme === "dark" ? "text-amber-400" : "text-amber-600"}`}>{t.problem}</span>
+              </div>
+              <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                {project.problem[language === "zh" ? "zh" : "en"]}
+              </p>
+            </div>
+            
+            <div className={`p-6 rounded-2xl ${theme === "dark" ? "bg-gray-900/50 border border-gray-800" : "bg-white border border-gray-200"}`}>
+              <div className="flex items-center gap-2 mb-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${theme === "dark" ? "bg-blue-500/20" : "bg-blue-50"}`}>
+                  <span className="text-lg">🚀</span>
+                </div>
+                <span className={`font-semibold ${theme === "dark" ? "text-blue-400" : "text-blue-600"}`}>{t.action}</span>
+              </div>
+              <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                {project.action[language === "zh" ? "zh" : "en"]}
+              </p>
+            </div>
+            
+            <div className={`p-6 rounded-2xl ${theme === "dark" ? "bg-gray-900/50 border border-gray-800" : "bg-white border border-gray-200"}`}>
+              <div className="flex items-center gap-2 mb-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${theme === "dark" ? "bg-green-500/20" : "bg-green-50"}`}>
+                  <span className="text-lg">✨</span>
+                </div>
+                <span className={`font-semibold ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>{t.result}</span>
+              </div>
+              <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                {project.result[language === "zh" ? "zh" : "en"]}
+              </p>
+            </div>
+          </div>
+
+          {/* Content */}
           <div className={`prose max-w-none ${theme === "dark" ? "text-gray-300" : "text-gray-800"}`}>
             <MarkdownRenderer 
               content={project.content[language === "zh" ? "zh" : "en"]} 
@@ -167,21 +249,24 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
             />
           </div>
 
-          {/* GitHub 链接 */}
+          {/* Footer */}
           <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
-            <a
-              href="https://github.com/Yamal123/portfolio"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
-                theme === "dark"
-                  ? "bg-gray-800 text-white hover:bg-orange-500"
-                  : "bg-gray-100 text-gray-900 hover:bg-orange-500 hover:text-white"
-              }`}
-            >
-              <ExternalLink className="w-5 h-5" />
-              <span>{language === "zh" ? "查看 GitHub 仓库" : "View on GitHub"}</span>
-            </a>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <Link href="/portfolio" className={`inline-flex items-center gap-2 ${theme === "dark" ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-900"} transition-colors`}>
+                <ArrowLeft className="w-4 h-4" />
+                {t.back}
+              </Link>
+              
+              <a
+                href="https://github.com/Yamal123/portfolio"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl"
+              >
+                <ExternalLink className="w-5 h-5" />
+                <span>{t.viewGithub}</span>
+              </a>
+            </div>
           </div>
         </article>
       </div>

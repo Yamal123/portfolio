@@ -1,4 +1,4 @@
-import { API_BASE_URL, TOKEN_KEY } from './constants'
+import { API_CONFIG, TOKEN_KEY } from '@/lib/api/config'
 import type { ApiResponse } from '@/types/admin'
 
 export async function fetcher<T = any>(
@@ -8,28 +8,44 @@ export async function fetcher<T = any>(
   const token =
     typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null
 
-  const response = await fetch(`${API_BASE_URL}${url}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options?.headers,
-    },
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => {
+    controller.abort()
+  }, API_CONFIG.timeout)
 
-  const data: ApiResponse<T> = await response.json()
+  try {
+    const response = await fetch(`${API_CONFIG.adminBaseUrl}${url}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options?.headers,
+      },
+    })
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem(TOKEN_KEY)
-        window.location.href = '/admin/login?redirect=' + encodeURIComponent(window.location.pathname)
+    clearTimeout(timeoutId)
+
+    const data: ApiResponse<T> = await response.json()
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(TOKEN_KEY)
+          window.location.href = '/admin/login?redirect=' + encodeURIComponent(window.location.pathname)
+        }
       }
+      throw new Error(data.message || '请求失败')
     }
-    throw new Error(data.message || '请求失败')
-  }
 
-  return data.data
+    return data.data
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timeout')
+    }
+    throw error
+  }
 }
 
 export async function post<T = any>(url: string, data?: any): Promise<T> {

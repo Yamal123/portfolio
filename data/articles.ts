@@ -1,14 +1,8 @@
-export interface Article {
-  id: number
-  slug: string
-  title: { zh: string; en: string }
-  createdAt: string
-  intro: { zh: string; en: string }
-  keywords: string[]
-  content: { zh: string; en: string }
-}
+import { agentLoopArticle } from './articles/agent-loop-article'
+export type { Article } from '@/types/article'
 
 export const articlesData: Article[] = [
+  agentLoopArticle,
   {
     id: 1,
     slug: "rag-in-action",
@@ -992,5 +986,5 @@ What can platform bring:
 
 Experience summary of platform construction.`
     }
-  }
+  },
 ]

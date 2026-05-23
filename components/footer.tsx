@@ -3,6 +3,7 @@ import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
 import { useState, useEffect } from "react"
 import { Send, Loader2, X } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface ToastProps {
   message: string
@@ -85,7 +86,13 @@ IP地址: ${clientInfo.ip}
 发送时间: ${new Date().toLocaleString('zh-CN')}
       `.trim()
 
-      const response = await fetch('https://open.feishu.cn/open-apis/bot/v2/hook/68f2a726-8bc7-4c48-af48-3fc499a563f5', {
+      const webhookUrl = process.env.NEXT_PUBLIC_FEISHU_WEBHOOK_URL || ''
+      if (!webhookUrl) {
+        setToast({ message: language === "zh" ? "消息服务未配置，请联系管理员" : "Message service not configured, please contact admin", type: 'error' })
+        setIsSubmitting(false)
+        return
+      }
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -226,13 +233,13 @@ IP地址: ${clientInfo.ip}
                     {formData.message.length}/1000
                   </span>
                 </div>
-                <button
+                <Button
                   type="submit"
                   disabled={isSubmitting}
                   className={`w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${
                     isSubmitting
                       ? "bg-gray-500 cursor-not-allowed opacity-70"
-                      : "bg-orange-500 hover:bg-orange-600 hover:scale-[1.02] active:scale-[0.98]"
+                      : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 hover:scale-105"
                   } text-white`}
                 >
                   {isSubmitting ? (
@@ -246,7 +253,7 @@ IP地址: ${clientInfo.ip}
                       {language === "zh" ? "发送消息" : "Send Message"}
                     </>
                   )}
-                </button>
+                </Button>
               </form>
             </div>
           </div>

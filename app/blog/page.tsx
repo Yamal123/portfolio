@@ -8,7 +8,8 @@ import { ExternalLink, Calendar, Tag, Search, ChevronLeft, ChevronRight } from "
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import PageNav from "@/components/page-nav"
-import { articlesData, type Article } from "@/data/articles"
+import { articlesData } from "@/data/articles"
+import type { Article } from "@/types/article"
 
 export default function BlogListPage() {
   const { language } = useLanguage()

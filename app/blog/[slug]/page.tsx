@@ -5,40 +5,10 @@ import Link from "next/link"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
 import { ExternalLink, Calendar, Tag, Copy, Check } from "lucide-react"
-import { articlesData, type Article } from "@/data/articles"
+import { articlesData } from "@/data/articles"
+import type { Article } from "@/types/article"
 import PageNav from "@/components/page-nav"
-
-// 简单的Markdown渲染器
-const MarkdownRenderer = ({ content, theme }: { content: string, theme: string }) => {
-  const renderContent = content.split('\n').map((line, index) => {
-    const orangeColor = theme === "dark" ? "text-orange-400" : "text-orange-500"
-    if (line.startsWith('### ')) {
-      return <h3 key={index} className={`text-xl font-bold mt-6 mb-3 ${orangeColor}`}>{line.slice(4)}</h3>
-    } else if (line.startsWith('## ')) {
-      return <h2 key={index} className={`text-2xl font-bold mt-8 mb-4 ${orangeColor}`}>{line.slice(3)}</h2>
-    } else if (line.startsWith('# ')) {
-      return <h1 key={index} className={`text-3xl font-bold mt-10 mb-6 ${orangeColor}`}>{line.slice(2)}</h1>
-    } else if (line.startsWith('- **')) {
-      return (
-        <li key={index} className="ml-6 my-2 list-disc">
-          <strong>{line.slice(3, line.indexOf('**', 3))}</strong>{line.slice(line.indexOf('**', 3) + 2)}
-        </li>
-      )
-    } else if (line.startsWith('- ')) {
-      return <li key={index} className="ml-6 my-2 list-disc">{line.slice(2)}</li>
-    } else if (line.match(/^\d+\. /)) {
-      return <li key={index} className="ml-6 my-2 list-decimal">{line.replace(/^\d+\. /, '')}</li>
-    } else if (line.trim() === '') {
-      return <br key={index} />
-    } else {
-      let formattedLine = line
-      // 粗体
-      formattedLine = formattedLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      return <p key={index} className="my-3 leading-relaxed" dangerouslySetInnerHTML={{__html: formattedLine}} />
-    }
-  })
-  return <div>{renderContent}</div>
-}
+import { ArticleMarkdown } from "@/components/article-markdown"
 
 interface ArticleDetailPageProps {
   params: { slug: string }
@@ -131,9 +101,9 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
 
           {/* 文章内容区 */}
           <div className={`prose max-w-none ${theme === "dark" ? "text-gray-300" : "text-gray-800"}`}>
-            <MarkdownRenderer 
-              content={article.content[language === "zh" ? "zh" : "en"]} 
-              theme={theme} 
+            <ArticleMarkdown
+              content={article.content[language === "zh" ? "zh" : "en"]}
+              theme={theme}
             />
           </div>
         </article>

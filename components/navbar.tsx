@@ -3,7 +3,9 @@
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { Menu, X, Sun, Moon } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export default function Navbar() {
   const { language, setLanguage } = useLanguage()
@@ -20,16 +22,20 @@ export default function Navbar() {
   }, [])
 
   const navItems = [
-    { id: "home", label: language === "zh" ? "首页" : "Home" },
-    { id: "portfolio", label: language === "zh" ? "作品集" : "Portfolio" },
-    { id: "blog", label: language === "zh" ? "方法论" : "Methodology" },
-    { id: "about", label: language === "zh" ? "关于我" : "About" },
+    { id: "home", label: language === "zh" ? "首页" : "Home", href: null },
+    { id: "portfolio", label: language === "zh" ? "作品集" : "Portfolio", href: "/portfolio" },
+    { id: "blog", label: language === "zh" ? "方法论" : "Methodology", href: "/blog" },
+    { id: "about", label: language === "zh" ? "关于我" : "About", href: null },
   ]
 
   const handleNavClick = (id: string) => {
     const element = document.getElementById(id)
     if (element) {
-      element.scrollIntoView({ behavior: "smooth" })
+      const offsetTop = element.offsetTop - 80
+      window.scrollTo({
+        top: offsetTop,
+        behavior: "smooth"
+      })
       setMobileMenuOpen(false)
     }
   }
@@ -58,37 +64,56 @@ export default function Navbar() {
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
             {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item.id)}
-                className={`${
-                  theme === "dark" ? "text-white/70 hover:text-orange-400" : "text-gray-600 hover:text-orange-500"
-                } transition-colors duration-300 font-medium`}
-              >
-                {item.label}
-              </button>
+              item.href ? (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className={`${
+                    theme === "dark" ? "text-white/70 hover:text-orange-400" : "text-gray-600 hover:text-orange-500"
+                  } transition-colors duration-300 font-medium`}
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavClick(item.id)}
+                  className={`${
+                    theme === "dark" ? "text-white/70 hover:text-orange-400" : "text-gray-600 hover:text-orange-500"
+                  } transition-colors duration-300 font-medium`}
+                >
+                  {item.label}
+                </button>
+              )
             ))}
           </div>
 
-          {/* Theme Toggle Button */}
-          <button
-            onClick={toggleTheme}
-            className={`p-2.5 rounded-full transition-all duration-300 ${
-              theme === "dark" 
-                ? "bg-gray-800 text-orange-400 hover:bg-gray-700"
-                : "bg-orange-100 text-gray-700 hover:bg-orange-200"
-            }`}
-          >
-            {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            {/* Theme Toggle Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className={`w-10 h-10 rounded-full transition-all duration-300 ${
+                theme === "dark" 
+                  ? "bg-gray-800 text-orange-400 hover:bg-gray-700"
+                  : "bg-orange-100 text-gray-700 hover:bg-orange-200"
+              }`}
+            >
+              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={`md:hidden p-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className={`md:hidden ${theme === "dark" ? "text-white" : "text-gray-900"}`}
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -99,17 +124,32 @@ export default function Navbar() {
         }`}>
           <div className="max-w-6xl mx-auto px-6 py-6 space-y-4">
             {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item.id)}
-                className={`block w-full text-left ${
-                  theme === "dark" 
-                    ? "text-white/70 hover:text-orange-400" 
-                    : "text-gray-600 hover:text-orange-500"
-                } transition-colors duration-300 py-2 font-medium`}
-              >
-                {item.label}
-              </button>
+              item.href ? (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block w-full text-left ${
+                    theme === "dark" 
+                      ? "text-white/70 hover:text-orange-400" 
+                      : "text-gray-600 hover:text-orange-500"
+                  } transition-colors duration-300 py-2 font-medium`}
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavClick(item.id)}
+                  className={`block w-full text-left ${
+                    theme === "dark" 
+                      ? "text-white/70 hover:text-orange-400" 
+                      : "text-gray-600 hover:text-orange-500"
+                  } transition-colors duration-300 py-2 font-medium`}
+                >
+                  {item.label}
+                </button>
+              )
             ))}
           </div>
         </div>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" role="img" aria-label="PM ѕЎU">
+  <rect width="720" height="300" rx="16" fill="#fafafa"/>
+  <text x="360" y="36" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#111827">ѕЎ Agent §БPM ЫоU</text>
+  <g font-family="system-ui,sans-serif" font-size="14" fill="#374151">
+    <circle cx="56" cy="80" r="14" fill="#f97316"/><text x="56" y="85" text-anchor="middle" fill="#fff" font-weight="700">1</text>
+    <text x="88" y="85">‚U<strong>е</strong>Їѓ“e¶‹цеwФЮ	</text>
+    <circle cx="56" cy="130" r="14" fill="#f97316"/><text x="56" y="135" text-anchor="middle" fill="#fff" font-weight="700">2</text>
+    <text x="88" y="135">‚U<strong>іV</strong>Дс¦Human-in-the-loop	</text>
+    <circle cx="56" cy="180" r="14" fill="#f97316"/><text x="56" y="185" text-anchor="middle" fill="#fff" font-weight="700">3</text>
+    <text x="88" y="185">‚U<strong>LЁ</strong>еwиЊCPBIЎЎ	</text>
+    <circle cx="56" cy="230" r="14" fill="#f97316"/><text x="56" y="235" text-anchor="middle" fill="#fff" font-weight="700">4</text>
+    <text x="88" y="235">‚U<strong>Ќе</strong>vЊБУњНХЮЪи!Њ	</text>
+    <rect x="48" y="258" width="624" height="28" rx="6" fill="#ffedd5"/>
+    <text x="360" y="277" text-anchor="middle" font-size="12" fill="#9a3412">нЇЛ &gt; !‹Вp  H;¶:ЌҐe LLM</text>
+  </g>
+</svg>

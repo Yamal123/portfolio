@@ -3,14 +3,16 @@
 import Image from "next/image"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
-import { ArrowRight, Sparkles } from "lucide-react"
+import { ArrowRight, ArrowUpRight, Sparkles, Github, Linkedin, MessageCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { useState, useEffect, useRef } from "react"
 
 const keywordEmojis: Record<string, string> = {
   "产品设计": "🎨",
   "技术探索": "🔬",
   "供应链": "📦",
-  "AI Agent": "�",
+  "AI Agent": "🤖",
   "摄影": "📷",
   "旅行": "✈️",
   "美食": "🍜",
@@ -330,99 +332,80 @@ export default function HeroSection() {
 
             <div 
               data-index="3"
-              className={`flex flex-col sm:flex-row gap-3 sm:gap-4 transition-all duration-700 ${visibleSections.includes(3) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+              className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-3 transition-all duration-700 ${visibleSections.includes(3) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
             >
-              <button
+              <Button
                 onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}
-                className="px-6 sm:px-8 py-3 sm:py-4 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 text-sm sm:text-base"
+                className={cn(
+                  "group h-11 sm:h-12 px-6 sm:px-7 rounded-xl font-medium text-sm sm:text-base",
+                  "bg-orange-500 text-white border-0 shadow-md shadow-orange-500/20",
+                  "hover:bg-orange-600 hover:shadow-lg hover:shadow-orange-500/30",
+                  "active:scale-[0.98] transition-all duration-200"
+                )}
               >
                 {language === "zh" ? "联系我" : "Contact Me"}
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-              <button
+                <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => document.getElementById("portfolio")?.scrollIntoView({ behavior: "smooth" })}
-                className={`px-6 sm:px-8 py-3 sm:py-4 border rounded-full font-semibold transition-all duration-300 text-sm sm:text-base ${theme === "dark" ? "border-gray-700 text-white hover:border-orange-400 hover:text-orange-400" : "border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-500"}`}
+                className={cn(
+                  "group h-11 sm:h-12 px-6 sm:px-7 rounded-xl font-medium text-sm sm:text-base",
+                  "shadow-sm active:scale-[0.98] transition-all duration-200",
+                  theme === "dark"
+                    ? "border-gray-700/90 bg-gray-900/30 text-gray-100 hover:border-orange-500/50 hover:bg-orange-500/10 hover:text-orange-300"
+                    : "border-gray-200/90 bg-white/70 text-gray-800 backdrop-blur-sm hover:border-orange-300 hover:bg-orange-50/80 hover:text-orange-600"
+                )}
               >
                 {language === "zh" ? "查看作品集" : "View Portfolio"}
-              </button>
+                <ArrowUpRight className="w-4 h-4 opacity-70 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </Button>
             </div>
 
             <div 
               data-index="4"
-              className={`flex flex-wrap gap-4 transition-all duration-700 ${visibleSections.includes(4) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+              className={`flex flex-wrap gap-3 transition-all duration-700 ${visibleSections.includes(4) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
             >
-              <a
-                href="https://github.com/Yamal123"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${theme === "dark" ? "bg-gray-800 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"}`}
-                aria-label="GitHub"
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className={`w-11 h-11 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg ${theme === "dark" ? "bg-gray-800 hover:bg-orange-500 text-gray-300 hover:text-white" : "bg-gray-100 hover:bg-orange-500 text-gray-600 hover:text-white"}`}
               >
-                <Image 
-                  src="/images/githubb.svg" 
-                  alt="GitHub" 
-                  width={24} 
-                  height={24} 
-                  className={`w-6 h-6 ${theme === "dark" ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`}
-                />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                  GitHub
-                </div>
-              </a>
-              <a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${theme === "dark" ? "bg-gray-800 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"}`}
-                aria-label="LinkedIn"
+                <a href="https://github.com/Yamal123" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                  <Github className="w-5 h-5" />
+                </a>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className={`w-11 h-11 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg ${theme === "dark" ? "bg-gray-800 hover:bg-orange-500 text-gray-300 hover:text-white" : "bg-gray-100 hover:bg-orange-500 text-gray-600 hover:text-white"}`}
               >
-                <Image 
-                  src="/icons/linkedin.svg" 
-                  alt="LinkedIn" 
-                  width={24} 
-                  height={24} 
-                  className={`w-6 h-6 ${theme === "dark" ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`}
-                />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                  LinkedIn
-                </div>
-              </a>
-              <a
-                href="https://zhihu.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${theme === "dark" ? "bg-gray-800 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"}`}
-                aria-label="Zhihu"
+                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                  <Linkedin className="w-5 h-5" />
+                </a>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className={`w-11 h-11 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg ${theme === "dark" ? "bg-gray-800 hover:bg-orange-500 text-gray-300 hover:text-white" : "bg-gray-100 hover:bg-orange-500 text-gray-600 hover:text-white"}`}
               >
-                <Image 
-                  src="/images/知乎.svg" 
-                  alt="Zhihu" 
-                  width={24} 
-                  height={24} 
-                  className={`w-6 h-6 ${theme === "dark" ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`}
-                />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                  {language === "zh" ? "知乎" : "Zhihu"}
-                </div>
-              </a>
-              <a
-                href="https://medium.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`group relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${theme === "dark" ? "bg-gray-800 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"}`}
-                aria-label="Medium"
+                <a href="https://zhihu.com" target="_blank" rel="noopener noreferrer" aria-label="Zhihu">
+                  <MessageCircle className="w-5 h-5" />
+                </a>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className={`w-11 h-11 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg ${theme === "dark" ? "bg-gray-800 hover:bg-orange-500 text-gray-300 hover:text-white" : "bg-gray-100 hover:bg-orange-500 text-gray-600 hover:text-white"}`}
               >
-                <Image 
-                  src="/icons/medium.svg" 
-                  alt="Medium" 
-                  width={24} 
-                  height={24} 
-                  className={`w-6 h-6 ${theme === "dark" ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`}
-                />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                  Medium
-                </div>
-              </a>
+                <a href="https://medium.com" target="_blank" rel="noopener noreferrer" aria-label="Medium">
+                  <Sparkles className="w-5 h-5" />
+                </a>
+              </Button>
             </div>
           </div>
 

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-label="Agent ÛB¶„">
+  <rect width="720" height="320" rx="16" fill="#fafafa"/>
+  <text x="360" y="36" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#111827">§ÁÏÆÒAgent ÛB¶„</text>
+  <g font-family="system-ui,sans-serif">
+    <rect x="40" y="56" width="640" height="52" rx="10" fill="#fff7ed" stroke="#fdba74"/>
+    <text x="60" y="88" font-size="14" font-weight="700" fill="#ea580c">åB</text>
+    <text x="140" y="88" font-size="13" fill="#374151">(7“e · ûß¶ · è API · åwgLÓœ</text>
+    <rect x="40" y="120" width="640" height="52" rx="10" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="60" y="152" font-size="14" font-weight="700" fill="#2563eb">³VB</text>
+    <text x="140" y="152" font-size="13" fill="#374151">îã · û¡Æã · ReAct / Planning · Reflection</text>
+    <rect x="40" y="184" width="640" height="52" rx="10" fill="#f0fdf4" stroke="#86efac"/>
+    <text x="60" y="216" font-size="14" font-weight="700" fill="#16a34a">L¨B</text>
+    <text x="140" y="216" font-size="13" fill="#374151">Function Calling · Tool Registry · MCP · Browser Agent</text>
+    <rect x="40" y="248" width="640" height="52" rx="10" fill="#f5f3ff" stroke="#c4b5fd"/>
+    <text x="60" y="280" font-size="14" font-weight="700" fill="#7c3aed">°ÆB</text>
+    <text x="140" y="280" font-size="13" fill="#374151">í
+‡ · O} · û¡ÏŒ · Context Engineering</text>
+  </g>
+</svg>

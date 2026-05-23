@@ -36,3 +36,5 @@ export const skillCategories = {
   technical: { zh: "技术技能", en: "Technical Skills" },
   soft: { zh: "软技能", en: "Soft Skills" },
 }
+
+export const mockSkills = skillsData

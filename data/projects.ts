@@ -13,6 +13,8 @@ export interface Project {
   result: { zh: string; en: string }
   tags: string[]
   content: { zh: string; en: string }
+  externalUrl?: string
+  view_count: number
 }
 
 export const projectsData: Project[] = [
@@ -42,6 +44,7 @@ export const projectsData: Project[] = [
       en: "Successfully showcased personal brand, good traffic and user feedback" 
     },
     tags: ["Next.js", "React", "TypeScript", "Tailwind CSS"],
+    view_count: 1234,
     content: {
       zh: `# AI 产品经理作品集
 
@@ -140,3 +143,5 @@ This is a modern personal portfolio website, designed for AI Product Managers.
     }
   }
 ]
+
+export const mockProjects = projectsData

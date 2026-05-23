@@ -4,6 +4,7 @@ import { Space_Grotesk } from "next/font/google"
 import "./globals.css"
 import { LanguageProvider } from "@/contexts/language-context"
 import { ThemeProvider } from "@/contexts/theme-context"
+import { ChatbotWrapper } from "@/components/chatbot"
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -148,6 +149,7 @@ export default function RootLayout({
         <ThemeProvider>
           <LanguageProvider>{children}</LanguageProvider>
         </ThemeProvider>
+        <ChatbotWrapper />
       </body>
     </html>
   )

@@ -1,4 +1,6 @@
 const crypto = require('crypto')
+const path = require('path')
+const fs = require('fs')
 const initialData = require('../data/initialData')
 const config = require('../config')
 
@@ -9,7 +11,8 @@ function formatDate(date) {
 
 class DataService {
   constructor() {
-    this.data = JSON.parse(JSON.stringify(initialData))
+    this.dataFilePath = path.join(__dirname, '..', 'data', 'persisted-data.json')
+    this.data = this.loadData() || JSON.parse(JSON.stringify(initialData))
     this.idCounters = {
       adminUsers: 1,
       siteConfig: 6,
@@ -23,8 +26,34 @@ class DataService {
       visitStats: 0,
       adminLogs: 0
     }
-    
+
     this.initializeCounters()
+  }
+
+  loadData() {
+    try {
+      if (fs.existsSync(this.dataFilePath)) {
+        const raw = fs.readFileSync(this.dataFilePath, 'utf-8')
+        const parsed = JSON.parse(raw)
+        console.log(`[DataService] Loaded persisted data from ${this.dataFilePath}`)
+        return parsed
+      }
+    } catch (err) {
+      console.warn('[DataService] Failed to load persisted data, using defaults:', err.message)
+    }
+    return null
+  }
+
+  saveData() {
+    try {
+      const dir = path.dirname(this.dataFilePath)
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true })
+      }
+      fs.writeFileSync(this.dataFilePath, JSON.stringify(this.data, null, 2), 'utf-8')
+    } catch (err) {
+      console.error('[DataService] Failed to persist data:', err.message)
+    }
   }
 
   initializeCounters() {
@@ -54,6 +83,7 @@ class DataService {
       created_at: formatDate(new Date())
     }
     this.data.adminLogs.unshift(log)
+    this.saveData()
     return log
   }
 
@@ -96,6 +126,7 @@ class DataService {
   updateProfile(data) {
     if (this.data.userProfile.length > 0) {
       Object.assign(this.data.userProfile[0], data, { updated_at: formatDate(new Date()) })
+      this.saveData()
       return this.data.userProfile[0]
     }
     return null
@@ -137,6 +168,7 @@ class DataService {
       updated_at: formatDate(new Date())
     }
     this.data.skills.push(skill)
+    this.saveData()
     return skill
   }
 
@@ -144,6 +176,7 @@ class DataService {
     const skill = this.data.skills.find(s => s.id === Number(id))
     if (skill) {
       Object.assign(skill, data, { updated_at: formatDate(new Date()) })
+      this.saveData()
     }
     return skill
   }
@@ -151,6 +184,7 @@ class DataService {
   deleteSkill(id) {
     const index = this.data.skills.findIndex(s => s.id === Number(id))
     if (index !== -1) {
+      this.saveData()
       return this.data.skills.splice(index, 1)[0]
     }
     return null
@@ -218,6 +252,7 @@ class DataService {
       updated_at: formatDate(new Date())
     }
     this.data.projects.push(project)
+    this.saveData()
     return project
   }
 
@@ -225,6 +260,7 @@ class DataService {
     const project = this.data.projects.find(p => p.id === Number(id))
     if (project) {
       Object.assign(project, data, { updated_at: formatDate(new Date()) })
+      this.saveData()
     }
     return project
   }
@@ -234,6 +270,7 @@ class DataService {
     if (project) {
       project.deleted_at = formatDate(new Date())
       project.updated_at = formatDate(new Date())
+      this.saveData()
     }
     return project
   }
@@ -271,6 +308,7 @@ class DataService {
   updateContact(data) {
     if (this.data.contactInfo.length > 0) {
       Object.assign(this.data.contactInfo[0], data, { updated_at: formatDate(new Date()) })
+      this.saveData()
       return this.data.contactInfo[0]
     }
     return null
@@ -303,6 +341,7 @@ class DataService {
         }
       })
     }
+    this.saveData()
     return this.getSiteConfig()
   }
 
@@ -398,6 +437,7 @@ class DataService {
       created_at: formatDate(new Date())
     }
     this.data.visitStats.push(visit)
+    this.saveData()
     return visit
   }
 
@@ -405,6 +445,7 @@ class DataService {
     const project = this.data.projects.find(p => p.slug === slug)
     if (project) {
       project.view_count = (project.view_count || 0) + 1
+      this.saveData()
     }
     return project
   }

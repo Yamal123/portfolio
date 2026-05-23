@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 200" role="img" aria-label="Agent ÌØ">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <path d="M0,0 L9,3 L0,6 Z" fill="#f97316"/>
+    </marker>
+  </defs>
+  <rect width="720" height="200" rx="16" fill="#fff7ed"/>
+  <g font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#1f2937">
+    <rect x="24" y="72" width="120" height="56" rx="12" fill="#fff" stroke="#fdba74" stroke-width="2"/>
+    <text x="84" y="105" text-anchor="middle">Â</text>
+    <text x="84" y="122" text-anchor="middle" font-size="11" fill="#6b7280">Perception</text>
+    <rect x="192" y="72" width="120" height="56" rx="12" fill="#fff" stroke="#fdba74" stroke-width="2"/>
+    <text x="252" y="105" text-anchor="middle">$≠</text>
+    <text x="252" y="122" text-anchor="middle" font-size="11" fill="#6b7280">Reasoning</text>
+    <rect x="360" y="72" width="120" height="56" rx="12" fill="#fff" stroke="#fdba74" stroke-width="2"/>
+    <text x="420" y="105" text-anchor="middle">L®</text>
+    <text x="420" y="122" text-anchor="middle" font-size="11" fill="#6b7280">Action</text>
+    <rect x="528" y="72" width="168" height="56" rx="12" fill="#ffedd5" stroke="#f97316" stroke-width="2"/>
+    <text x="612" y="105" text-anchor="middle">çÂ / Õà</text>
+    <text x="612" y="122" text-anchor="middle" font-size="11" fill="#6b7280">Feedback Loop</text>
+    <line x1="144" y1="100" x2="192" y2="100" stroke="#f97316" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="312" y1="100" x2="360" y2="100" stroke="#f97316" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="480" y1="100" x2="528" y2="100" stroke="#f97316" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M612 128 Q612 168 84 168 Q24 168 24 128" fill="none" stroke="#f97316" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+  </g>
+  <text x="360" y="36" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#ea580c">Agent 8√–L:6ÌØ^U!ÓT</text>
+</svg>

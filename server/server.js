@@ -120,10 +120,6 @@ app.listen(PORT, () => {
   ╠════════════════════════════════════════╣
   ║  Server running on: http://localhost:${PORT}  ║
   ║  API Base URL: http://localhost:${PORT}/api   ║
-  ╠════════════════════════════════════════╣
-  ║  Default Account:                      ║
-  ║    Username: admin                     ║
-  ║    Password: Admin@2026                ║
   ╚════════════════════════════════════════╝
   `)
 })

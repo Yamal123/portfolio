@@ -88,103 +88,76 @@ const translations = {
   },
   en: {
     // Navbar
-    "nav.home": "Inicio",
-    "nav.about": "Bio",
-    "nav.portfolio": "Portafolio",
-    "nav.podcast": "Podcast",
-    "nav.articles": "Artículos",
-    "nav.talks": "Charlas",
-    "nav.streaming": "Streaming",
-    "nav.celo": "Celo",
-    "nav.contact": "Contacto",
+    "nav.home": "Home",
+    "nav.about": "About",
+    "nav.portfolio": "Portfolio",
+    "nav.experience": "Experience",
+    "nav.skills": "Skills",
+    "nav.contact": "Contact",
 
     // Hero Section
-    "hero.greeting": "Bienvenido a mi **portfolio personal**",
-    "hero.title": "Programo con IA y hago crecer productos que la gente ama",
-    "hero.card1": "Experto en diseño de productos escalables y marketing.",
-    "hero.card2": "Apasionado por Web3, IA y sostenibilidad.",
-    "hero.card3": "Trabajo remoto en más de 15 países como nómada digital.",
-    "hero.card4": "Ayudé a más de 40 empresas con soluciones impactantes.",
-
-    // Trusted By Section
-    "trustedBy.title": "Confían en mí",
-    "trustedBy.subtitle":
-      "Empresas y organizaciones que han confiado en mi experiencia para impulsar su transformación digital y estrategias de crecimiento.",
-
-    // Portfolio Section
-    "portfolio.title": "Portfolio",
-    "portfolio.subtitle":
-      "Casos de estudio y proyectos de diseño que muestran soluciones centradas en el usuario para productos digitales",
+    "hero.greeting": "Welcome to My Portfolio",
+    "hero.title": "Redefining Product Boundaries with AI",
+    "hero.subtitle": "AI Product Manager | Supply Chain Expert | LLM Application Specialist",
+    "hero.card1": "88% AI Resolution Rate",
+    "hero.card2": "30% Reduction in Manual Inquiries",
+    "hero.card3": "45% Faster Customer Service Queries",
+    "hero.card4": "45% Shorter Delivery Cycles",
 
     // About Section
-    "about.title": "ACERCA DE MÍ",
+    "about.title": "About Me",
     "about.bio1":
-      "Arturo Grande (Salta, 1995) es *diseñador multimedia*, *emprendedor* y *entusiasta de la tecnología*. Se desempeñó como *Director Nacional de Marketing* en *AIESEC* en Argentina y España, y es fundador y profesor en *[DESAFIA]*, un programa que acompaña a emprendedores en la creación y escalado de *productos digitales* con proyección global.",
+      "Yu Meng, 2 years of hands-on AI Product Management experience, with deep understanding of LLM, RAG, and Agent technologies.",
     "about.bio2":
-      "Ha participado como orador en *eventos de UX y tecnología*, co-organizó *SAIAConf*, y dicta clases en los programas de posgrado en *Negocios Digitales (UCEMA)* y *CriptoEconomía (UNCUYO)*. Ha liderado *estrategias de producto y marketing* en *empresas fintech*, impulsando *innovacion digital* y *crecimiento escalable* en LATAM.",
+      "Led enterprise-grade LLM applications from 0 to 1 based on Dify, with proven experience in AI customer service, intelligent assistants, and ticket automation.",
     "about.bio3":
-      "Es *Embajador de v0* y *Celo Argentina*, impulsando la adopción de herramientas de desarrollo y *tecnologías Web3* en la región. Es graduado de la *[Polkadot Blockchain Academy X]* y fue seleccionado como *Scholar* en el track de *Organizadores de la Comunidad Ethereum ARG* de *[Devconnect]* 2025.",
-    "about.links.title": "Enlaces",
-    "about.cta": "CONTACTAR",
+      "Skilled in data-driven product iteration with international product perspective (Middle East, Latin America), capable of building replicable overseas AI product solutions.",
+    "about.cta": "Contact Me",
 
-    // Companies Section
-    "companies.eluter.title": "Más sobre Eluter",
-    "companies.eluter.description":
-      "**Eluter** es una **plataforma fintech** que simplifica los **pagos globales** y el **intercambio de divisas** para empresas en Argentina. Permite a las empresas enviar, recibir y convertir **ARS, USD, EUR y stablecoins** con **velocidad, transparencia y cumplimiento**, ayudando a **importadores, exportadores y empresas de e-commerce** a crecer internacionalmente.",
-    "companies.eluter.button": "Más información",
-    "companies.desafia.title": "Más sobre DESAFIA",
-    "companies.desafia.description":
-      "**DESAFIA** es una **plataforma educativa** fundada por **Arturo Grande** que ayuda a **emprendedores y profesionales** a crear y escalar **productos digitales**. Con un enfoque práctico en **estrategia, diseño, producto, marketing y finanzas**, DESAFIA entrena a la próxima generación de **builders en LATAM** para lanzar y hacer crecer sus **startups globalmente**.",
-    "companies.desafia.button": "Más información",
+    // Experience Section
+    "experience.title": "Experience",
+    "experience.jitu.title": "J&T Express",
+    "experience.jitu.role1": "AI Customer Service PM",
+    "experience.jitu.desc1": "Dify-based AI Agent system, 88% AI resolution rate, 40% improvement in ticket processing",
+    "experience.jitu.role2": "Supply Chain PM & PMO",
+    "experience.jitu.desc2": "Led Middle East business system adaptation, supporting business scale-up",
+    "experience.lanjing.title": "Zhejiang Lanjing Tech",
+    "experience.lanjing.role": "Supply Chain PM",
+    "experience.lanjing.desc": "WMS/TMS/OMS systems from 0 to 1, fisheries blockchain electronic manifest",
+    "experience.wewei.title": "Hangzhou Weiwei Computer",
+    "experience.wewei.role": "AI Product Manager",
+    "experience.wewei.desc": "NLP text proofreading SaaS, short video public opinion monitoring platform",
 
-    // Talks Section
-    "talks.title": "Charlas y Talleres",
-    "talks.description":
-      "Soy un **speaker internacional**, brindando charlas prácticas y talleres sobre **Diseño UX, Marketing, Sostenibilidad**, y **tecnologías exponenciales** como **crypto, blockchain e Inteligencia Artificial**. Mi enfoque combina **teoría y experiencia práctica** para empoderar **emprendedores y profesionales** en la **era digital**.",
-    "talks.cta": "SOLICITAR CHARLA/TALLER",
-    "talks.argentina": "Argentina",
-    "talks.international": "Internacional",
+    // Portfolio Section
+    "portfolio.title": "Case Studies",
+    "portfolio.subtitle": "Real-world AI product implementation cases",
+    "portfolio.tuzhixing.title": "Tuzhixing Smart Assistant",
+    "portfolio.tuzhixing.desc": "Brazil market, Dify+GPT-4o based, 88% Q&A accuracy, 300+ daily calls",
+    "portfolio.jitu.title": "J&T AI Customer Service",
+    "portfolio.jitu.desc": "Multi-Agent collaboration system, ticket automation, 40% efficiency improvement",
+    "portfolio.middleeast.title": "Middle East Logistics System",
+    "portfolio.middleeast.desc": "Adapted for UAE, Saudi Arabia, Kuwait, solving address, compliance and customs challenges",
+    "portfolio.haihaoyouni.title": "Haihao You Ni Public Platform",
+    "portfolio.haihaoyouni.desc": "Marine ecological governance digitization, selected as Zhejiang best practice",
 
-    // Blog Section
-    "blog.title": "Artículos y Casos de Estudio",
-    "blog.subtitle":
-      "Insights sobre diseño, tecnología y estrategia de negocio desde proyectos reales y trabajo con clientes",
-    "blog.readMore": "Leer en Medium",
-    "blog.noArticles": "No se encontraron artículos. ¡Vuelve pronto!",
-    "blog.viewAll": "Ver Últimos 10 Artículos",
+    // Skills Section
+    "skills.title": "Skills",
+    "skills.aiPlatforms": "AI Platforms",
+    "skills.agentTech": "Agent Technology",
+    "skills.data": "Data Capabilities",
+    "skills.design": "Design Tools",
+    "skills.aiTools": "AI Tools",
 
     // Footer
-    "footer.portfolio": "PORTAFOLIO",
-    "footer.portfolio.design": "Diseño de Productos",
-    "footer.about": "ACERCA DE MÍ",
-    "footer.about.bio": "Biografía Corta",
-    "footer.about.talks": "Charlas y Talleres",
-    "footer.about.articles": "Artículos",
-    "footer.connect": "CONECTEMOS",
-    "footer.connect.project": "¿Tienes un proyecto en mente?",
-    "footer.connect.touch": "Ponte en contacto",
-    "footer.made": "HECHO POR",
-
-    // Podcast Section
-    "podcast.title": "Artu Grande Podcast",
-    "podcast.description1":
-      "Un espacio de **charlas auténticas** con las mentes que están moldeando el futuro de la **tecnología, la IA, blockchain** y la **cultura digital**.",
-    "podcast.description2":
-      "Desde **Salta, Argentina**, Artu Grande comparte **conversaciones profundas y cercanas** con **fundadores, creadores e innovadores** que construyen **productos globales** desde cualquier lugar.",
-    "podcast.description3":
-      "Con la calidez de un **mate** y la mirada puesta en lo que viene, este podcast busca **inspirar, educar** y **abrir oportunidades** para **comunidades emergentes**.",
-    "podcast.stats": "El podcast cuenta con más de **275.000 reproducciones** y está disponible en **X, YouTube y Spotify**.",
-    "podcast.latestEpisodes": "Últimos Episodios",
-
-    // Streaming Section
-    "streaming.title": "Transmisión en Vivo",
-    "streaming.backHome": "Volver al Inicio",
-    "streaming.description":
-      "Acompáñame en vivo para discusiones sobre diseño, tecnología y emprendimiento. Sígueme mientras comparto insights, trabajo en proyectos y me conecto con la comunidad.",
-    "streaming.joinWhatsApp": "Únete al Grupo de WhatsApp",
-
-    // Celo Section
-    "celo.backHome": "Volver al Inicio",
+    "footer.portfolio": "Portfolio",
+    "footer.about": "About",
+    "footer.experience": "Experience",
+    "footer.connect": "Get in Touch",
+    "footer.connect.project": "Have a project idea?",
+    "footer.connect.touch": "Contact me",
+    "footer.made": "Built with ❤️ and AI",
+    "footer.phone": "Phone",
+    "footer.email": "Email",
   },
 }
 

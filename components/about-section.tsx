@@ -5,6 +5,7 @@ import Image from "next/image"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
 import { Mail, Linkedin, MessageCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export default function AboutSection() {
   const { language } = useLanguage()
@@ -17,17 +18,6 @@ export default function AboutSection() {
     { value: "10+", label: language === "zh" ? "成功项目" : "Projects" },
     { value: "88%", label: language === "zh" ? "解决率" : "Resolution Rate" },
     { value: "40%", label: language === "zh" ? "效率提升" : "Efficiency Gain" },
-  ]
-
-  const skills = [
-    { name: "AI Agent", level: 95 },
-    { name: "RAG", level: 90 },
-    { name: "LLM", level: 88 },
-    { name: "意图识别", level: 85 },
-    { name: "跨境供应链", level: 92 },
-    { name: "产品设计", level: 88 },
-    { name: "数据分析", level: 82 },
-    { name: "项目管理", level: 85 },
   ]
 
   return (
@@ -60,6 +50,7 @@ export default function AboutSection() {
                 fill
                 className="object-cover"
                 priority
+                quality={80}
               />
             </div>
           </div>
@@ -96,95 +87,69 @@ export default function AboutSection() {
           </div>
         </div>
 
-        <div className="mb-16 sm:mb-20">
-          <h3 className={`text-xl sm:text-2xl font-bold mb-6 sm:mb-8 text-center ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-            {language === "zh" ? "技能标签" : "Skills"}
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-            {skills.map((skill, index) => (
-              <div 
-                key={index}
-                className={`p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
-                  theme === "dark"
-                    ? "bg-gray-900/50 border border-gray-800 hover:border-orange-500/30"
-                    : "bg-white border border-gray-200 hover:border-orange-300"
-                }`}
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <span className={`font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                    {skill.name}
-                  </span>
-                  <span className={`text-sm ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`}>{skill.level}%</span>
-                </div>
-                <div className={`h-1.5 rounded-full overflow-hidden ${
-                  theme === "dark" ? "bg-gray-800" : "bg-gray-200"
-                }`}>
-                  <div 
-                    className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full transition-all duration-500"
-                    style={{ width: `${skill.level}%` }}
-                  ></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
         <div>
           <h3 className={`text-2xl font-bold mb-8 text-center ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
             {language === "zh" ? "联系方式" : "Contact"}
           </h3>
           <div className="flex flex-wrap justify-center gap-4">
-            <a
-              href="mailto:yumeng@aipmym.com"
-              className={`group relative w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 ${
-                theme === "dark" ? "bg-gray-900 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className={`w-14 h-14 rounded-2xl transition-all duration-300 hover:scale-105 ${
+                theme === "dark" ? "bg-gray-900 hover:bg-orange-500 text-gray-400 hover:text-white" : "bg-gray-100 hover:bg-orange-500 text-gray-600 hover:text-white"
               }`}
               onMouseEnter={() => setHoveredContact("email")}
               onMouseLeave={() => setHoveredContact(null)}
             >
-              <Mail className={`w-6 h-6 ${theme === "dark" ? "text-gray-400 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`} />
-              {hoveredContact === "email" && (
-                <div className={`absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 text-xs rounded-lg whitespace-nowrap shadow-lg ${theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-800 text-white"}`}>
-                  yumeng@aipmym.com
-                </div>
-              )}
-            </a>
+              <a href="mailto:yumeng@aipmym.com">
+                <Mail className="w-6 h-6" />
+              </a>
+            </Button>
+            {hoveredContact === "email" && (
+              <div className={`absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 text-xs rounded-lg whitespace-nowrap shadow-lg ${theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-800 text-white"}`}>
+                yumeng@aipmym.com
+              </div>
+            )}
 
-            <a
-              href="https://linkedin.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`group relative w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 ${
-                theme === "dark" ? "bg-gray-900 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className={`w-14 h-14 rounded-2xl transition-all duration-300 hover:scale-105 ${
+                theme === "dark" ? "bg-gray-900 hover:bg-orange-500 text-gray-400 hover:text-white" : "bg-gray-100 hover:bg-orange-500 text-gray-600 hover:text-white"
               }`}
               onMouseEnter={() => setHoveredContact("linkedin")}
               onMouseLeave={() => setHoveredContact(null)}
             >
-              <Linkedin className={`w-6 h-6 ${theme === "dark" ? "text-gray-400 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`} />
-              {hoveredContact === "linkedin" && (
-                <div className={`absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 text-xs rounded-lg whitespace-nowrap shadow-lg ${theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-800 text-white"}`}>
-                  LinkedIn
-                </div>
-              )}
-            </a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
+                <Linkedin className="w-6 h-6" />
+              </a>
+            </Button>
+            {hoveredContact === "linkedin" && (
+              <div className={`absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 text-xs rounded-lg whitespace-nowrap shadow-lg ${theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-800 text-white"}`}>
+                LinkedIn
+              </div>
+            )}
 
             <div className="relative">
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowQRCode(!showQRCode)}
-                className={`group relative w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 ${
-                  theme === "dark" ? "bg-gray-900 hover:bg-orange-500" : "bg-gray-100 hover:bg-orange-500"
+                className={`w-14 h-14 rounded-2xl transition-all duration-300 hover:scale-105 ${
+                  theme === "dark" ? "bg-gray-900 hover:bg-orange-500 text-gray-400 hover:text-white" : "bg-gray-100 hover:bg-orange-500 text-gray-600 hover:text-white"
                 }`}
                 onMouseEnter={() => setHoveredContact("wechat")}
                 onMouseLeave={() => setHoveredContact(null)}
               >
-                <MessageCircle className={`w-6 h-6 ${theme === "dark" ? "text-gray-400 group-hover:text-white" : "text-gray-600 group-hover:text-white"}`} />
-                {hoveredContact === "wechat" && !showQRCode && (
-                  <div className={`absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 text-xs rounded-lg whitespace-nowrap shadow-lg ${theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-800 text-white"}`}>
-                    {language === "zh" ? "微信" : "WeChat"}
-                  </div>
-                )}
-              </button>
-
+                <MessageCircle className="w-6 h-6" />
+              </Button>
+              {hoveredContact === "wechat" && !showQRCode && (
+                <div className={`absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 text-xs rounded-lg whitespace-nowrap shadow-lg ${theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-800 text-white"}`}>
+                  {language === "zh" ? "微信" : "WeChat"}
+                </div>
+              )}
               {showQRCode && (
                 <div className="absolute -bottom-48 left-1/2 -translate-x-1/2 bg-white p-3 rounded-xl shadow-2xl border border-gray-200 z-50">
                   <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center">
