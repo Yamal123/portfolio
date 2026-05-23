@@ -159,6 +159,11 @@ export interface AnalyticsOverview {
   today_pv: number
   total_uv: number
   total_pv: number
+  week_uv: number
+  week_pv: number
+  total_projects: number
+  total_skills: number
+  top_projects: Array<{ slug: string; views: number }>
   avg_duration: number
   bounce_rate: number
 }

@@ -25,7 +25,7 @@ export async function fetchAPI<T>(path: string, options?: RequestInit): Promise<
     }
     
     const result = await response.json()
-    if (result.code !== 1000) {
+    if (result.code !== 1000 && result.code !== 0) {
       throw new Error(result.message || 'API Error')
     }
     

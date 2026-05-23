@@ -16,14 +16,9 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
-  PieChart,
-  Pie,
-  Cell,
 } from 'recharts'
 import { Eye, Users, TrendingUp, Globe } from 'lucide-react'
 import type { AnalyticsOverview, AnalyticsTrendItem } from '@/types/admin'
-
-const COLORS = ['#3370ff', '#f97316', '#22c55e', '#a855f7', '#ec4899']
 
 function TrafficContent() {
   const { data: analytics } = useSWR<AnalyticsOverview>('/analytics/overview', fetcher)

@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { AdminLayout } from '@/components/admin/AdminLayout'
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { FileEdit, BookOpen, Save, Eye, Code, ExternalLink } from 'lucide-react'
 import { articlesData } from '@/data/articles'
 import type { Article } from '@/types/article'
