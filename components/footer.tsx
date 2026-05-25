@@ -1,4 +1,5 @@
 "use client"
+import Link from "next/link"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
 import { useState, useEffect } from "react"
@@ -269,6 +270,9 @@ IP地址: ${clientInfo.ip}
             <p className="text-sm text-gray-500">
               © {new Date().getFullYear()} Yu Meng. All rights reserved.
             </p>
+            <Link href="/admin/login" className="inline-block mt-3 text-xs text-gray-400 hover:text-gray-300 transition-colors">
+              后台系统
+            </Link>
           </div>
         </div>
       </footer>
