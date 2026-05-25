@@ -9,11 +9,17 @@ import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Settings, Wrench, MessageSquare, Brain, Save, Plus, Trash2, CheckCircle, Loader2 } from 'lucide-react'
+import { Settings, Wrench, MessageSquare, Brain, Save, Plus, Trash2, Loader2 } from 'lucide-react'
 import useSWR from 'swr'
 
+// Provider presets
+const PROVIDERS = {
+  deepseek: { name: 'DeepSeek', baseUrl: 'https://api.deepseek.com/v1', models: ['deepseek-chat', 'deepseek-reasoner'] },
+  openai: { name: 'OpenAI', baseUrl: 'https://api.openai.com/v1', models: ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'] },
+  custom: { name: '自定义', baseUrl: '', models: [] },
+}
+
 function AgentContent() {
-  // Load config from API
   const { data: remoteConfig, mutate } = useSWR('/management/agent/config', async () => {
     const res = await fetch('/api/management/agent/config')
     if (!res.ok) return null
@@ -23,83 +29,98 @@ function AgentContent() {
 
   const [config, setConfig] = useState<any>(null)
   const [saving, setSaving] = useState(false)
+  const [apiKey, setApiKey] = useState('')
+  const [showKey, setShowKey] = useState(false)
+  const [provider, setProvider] = useState('deepseek')
   const [tools, setTools] = useState<any[]>([])
-  const [memoryConfig, setMemoryConfig] = useState({
-    maxHistoryRounds: 10, persistHistory: true, enableLongTermMemory: false, sessionTimeout: 30,
-  })
+  const [memoryConfig, setMemoryConfig] = useState({ maxHistoryRounds: 10, persistHistory: true, enableLongTermMemory: false, sessionTimeout: 30 })
   const [conversations, setConversations] = useState<any[]>([])
 
-  // Load from remote config
+  // Load from remote
   useEffect(() => {
     if (remoteConfig) {
+      const prov = remoteConfig.provider || detectProvider(remoteConfig.baseUrl)
+      setProvider(prov)
       setConfig({
         mode: remoteConfig.mode || 'auto',
-        model: remoteConfig.model || 'gpt-4o-mini',
-        baseUrl: remoteConfig.baseUrl || 'https://api.openai.com/v1',
+        provider: prov,
+        model: remoteConfig.model || 'deepseek-chat',
+        baseUrl: remoteConfig.baseUrl || 'https://api.deepseek.com/v1',
         maxToolRounds: remoteConfig.maxToolRounds || 3,
         systemPrompt: remoteConfig.systemPrompt || '',
         welcomeMessage: remoteConfig.welcomeMessage || { zh: '', en: '' },
         quickQuestions: remoteConfig.quickQuestions || [],
       })
-      setTools(remoteConfig.tools || [
-        { name: 'search_projects', desc: '搜索项目作品', category: 'query', enabled: true },
-        { name: 'search_articles', desc: '检索方法论文章', category: 'query', enabled: true },
-        { name: 'list_skills', desc: '查询技能专长', category: 'query', enabled: true },
-        { name: 'get_contact', desc: '获取联系方式', category: 'query', enabled: true },
-        { name: 'get_site_info', desc: '站点导航信息', category: 'system', enabled: true },
-      ])
+      setTools(remoteConfig.tools || [])
     }
   }, [remoteConfig])
 
-  // Load conversations from localStorage
+  // Load conversations
   useEffect(() => {
     try {
-      const raw = localStorage.getItem('chat_history')
-      if (raw) {
-        const msgs = JSON.parse(raw)
-        // Group by rough session (every 6 messages = 1 session)
-        const sessions: any[] = []
-        for (let i = 0; i < msgs.length; i += 6) {
-          const group = msgs.slice(i, i + 6)
-          if (group.length > 0) {
+      const sessions: any[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key?.startsWith('agent_session_')) {
+          const raw = localStorage.getItem(key)
+          if (raw) {
+            const msgs = JSON.parse(raw)
+            const firstUser = msgs.find((m: any) => m.type === 'user')
             sessions.push({
-              id: i,
-              time: group[0]?.timestamp ? new Date(group[0].timestamp).toLocaleString('zh-CN') : '-',
-              rounds: Math.floor(group.length / 2),
-              preview: group[0]?.content?.slice(0, 60) || '-',
+              id: key.replace('agent_session_', ''),
+              time: firstUser?.timestamp ? new Date(firstUser.timestamp).toLocaleString('zh-CN') : '-',
+              rounds: Math.floor(msgs.length / 2),
+              preview: firstUser?.content?.slice(0, 60) || '(空)',
+              msgCount: msgs.length,
             })
           }
         }
-        setConversations(sessions)
       }
+      sessions.sort((a: any, b: any) => Number(b.id) - Number(a.id))
+      setConversations(sessions)
     } catch {}
   }, [])
+
+  function detectProvider(url: string) {
+    if (url?.includes('deepseek')) return 'deepseek'
+    if (url?.includes('openai')) return 'openai'
+    return 'custom'
+  }
+
+  const handleProviderChange = (prov: string) => {
+    setProvider(prov)
+    const preset = PROVIDERS[prov as keyof typeof PROVIDERS]
+    setConfig({
+      ...config,
+      provider: prov,
+      baseUrl: preset.baseUrl,
+      model: preset.models[0] || config.model,
+    })
+  }
+
+  const availableModels = provider === 'custom'
+    ? (config.model ? [config.model] : ['custom-model'])
+    : PROVIDERS[provider as keyof typeof PROVIDERS]?.models || []
 
   const saveConfig = async () => {
     if (!config) return
     setSaving(true)
     try {
+      const saveData = { ...config, provider, apiKey: apiKey || undefined }
       await fetch('/api/management/agent/config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...config, tools }),
+        body: JSON.stringify(saveData),
       })
       mutate()
-      toast.success('Agent 配置已保存，重启生效')
+      toast.success('Agent 配置已保存')
     } catch {
       toast.error('保存失败')
     }
     setSaving(false)
   }
 
-  const addTool = () => setTools([...tools, { name: '', desc: '', category: 'query', enabled: true }])
-  const removeTool = (idx: number) => setTools(tools.filter((_: any, i: number) => i !== idx))
-  const toggleTool = (idx: number) => setTools(tools.map((t: any, i: number) => i === idx ? { ...t, enabled: !t.enabled } : t))
-  const updateTool = (idx: number, field: string, value: any) => {
-    setTools(tools.map((t: any, i: number) => i === idx ? { ...t, [field]: value } : t))
-  }
-
-  if (!config) return <AdminLayout title="Agent"><div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-slate-300"/></div></AdminLayout>
+  if (!config) return <AdminLayout title="Agent"><div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-slate-300"/></div></AdminLayout>
 
   return (
     <AdminLayout title="Agent 管理">
@@ -111,108 +132,171 @@ function AgentContent() {
 
       <Tabs defaultValue="config" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="config"><Settings className="w-4 h-4 mr-1"/>配置</TabsTrigger>
-          <TabsTrigger value="tools"><Wrench className="w-4 h-4 mr-1"/>工具</TabsTrigger>
+          <TabsTrigger value="config"><Settings className="w-4 h-4 mr-1"/>模型配置</TabsTrigger>
+          <TabsTrigger value="tools"><Wrench className="w-4 h-4 mr-1"/>工具管理</TabsTrigger>
           <TabsTrigger value="history"><MessageSquare className="w-4 h-4 mr-1"/>对话历史</TabsTrigger>
           <TabsTrigger value="memory"><Brain className="w-4 h-4 mr-1"/>记忆设置</TabsTrigger>
         </TabsList>
 
+        {/* ===== Model Config ===== */}
         <TabsContent value="config">
-          <Card><CardHeader><CardTitle>Agent 运行配置</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+          <Card><CardHeader><CardTitle>模型配置</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-slate-600 mb-1 block">运行模式</label>
-                  <select className="w-full border rounded-lg p-2.5 text-sm" value={config.mode} onChange={e => setConfig({...config, mode: e.target.value})}>
-                    <option value="auto">auto（自动判断 LLM/Rules）</option>
-                    <option value="llm">llm（强制 LLM 模式）</option>
-                    <option value="rules">rules（规则模式，免费）</option>
+                  <label className="text-sm font-medium text-slate-700 mb-1.5 block">模型提供商</label>
+                  <select className="w-full border rounded-lg p-2.5 text-sm" value={provider}
+                    onChange={e => handleProviderChange(e.target.value)}>
+                    {Object.entries(PROVIDERS).map(([k, v]) => (
+                      <option key={k} value={k}>{v.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm text-slate-600 mb-1 block">默认模型</label>
-                  <select className="w-full border rounded-lg p-2.5 text-sm" value={config.model} onChange={e => setConfig({...config, model: e.target.value})}>
-                    <option value="gpt-4o-mini">gpt-4o-mini</option>
-                    <option value="gpt-4o">gpt-4o</option>
-                    <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-                    <option value="deepseek-chat">deepseek-chat</option>
-                    <option value="claude-3-haiku">claude-3-haiku</option>
+                  <label className="text-sm font-medium text-slate-700 mb-1.5 block">运行模式</label>
+                  <select className="w-full border rounded-lg p-2.5 text-sm" value={config.mode}
+                    onChange={e => setConfig({...config, mode: e.target.value})}>
+                    <option value="auto">auto（自动判断）</option>
+                    <option value="llm">llm（强制LLM）</option>
+                    <option value="rules">rules（规则/免费）</option>
                   </select>
                 </div>
               </div>
-              <div><label className="text-sm text-slate-600 mb-1 block">API Base URL</label><Input value={config.baseUrl} onChange={e => setConfig({...config, baseUrl: e.target.value})}/></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-sm text-slate-600 mb-1 block">最大工具轮次（1-10）</label><Input type="number" min={1} max={10} value={config.maxToolRounds} onChange={e => setConfig({...config, maxToolRounds: Number(e.target.value)})}/></div>
-              </div>
+
               <div>
-                <label className="text-sm text-slate-600 mb-1 block">System Prompt（同 Prompt 模板）</label>
-                <textarea className="w-full p-3 border rounded-lg text-sm h-40 font-mono" value={config.systemPrompt} onChange={e => setConfig({...config, systemPrompt: e.target.value})}/>
+                <label className="text-sm font-medium text-slate-700 mb-1.5 block">API Key</label>
+                <div className="flex gap-2">
+                  <Input type={showKey ? 'text' : 'password'} value={apiKey} placeholder="sk-..."
+                    onChange={e => setApiKey(e.target.value)}
+                    className="flex-1 font-mono text-sm"/>
+                  <Button variant="outline" size="sm" onClick={() => setShowKey(!showKey)}>
+                    {showKey ? '隐藏' : '显示'}
+                  </Button>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">仅当前会话有效，不会存储到文件。配置 OPENAI_API_KEY 环境变量可持久化。</p>
               </div>
+
               <div>
-                <label className="text-sm text-slate-600 mb-1 block">欢迎消息（中文）</label>
-                <textarea className="w-full p-3 border rounded-lg text-sm h-20" value={config.welcomeMessage?.zh} onChange={e => setConfig({...config, welcomeMessage: {...config.welcomeMessage, zh: e.target.value}})}/>
+                <label className="text-sm font-medium text-slate-700 mb-1.5 block">API 接口地址</label>
+                <Input value={config.baseUrl} onChange={e => setConfig({...config, baseUrl: e.target.value})} className="font-mono text-sm"/>
+                {provider !== 'custom' && (
+                  <p className="text-xs text-slate-400 mt-1">切换提供商时自动填充，也可手动修改</p>
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-1.5 block">模型</label>
+                {provider === 'custom' ? (
+                  <Input value={config.model} onChange={e => setConfig({...config, model: e.target.value})} placeholder="输入模型名称"/>
+                ) : (
+                  <select className="w-full border rounded-lg p-2.5 text-sm" value={config.model}
+                    onChange={e => setConfig({...config, model: e.target.value})}>
+                    {availableModels.map((m: string) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-1.5 block">最大工具轮次</label>
+                  <Input type="number" min={1} max={10} value={config.maxToolRounds}
+                    onChange={e => setConfig({...config, maxToolRounds: Number(e.target.value)})}/>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-1.5 block">System Prompt</label>
+                <textarea className="w-full p-3 border rounded-lg text-sm h-36 font-mono" value={config.systemPrompt}
+                  onChange={e => setConfig({...config, systemPrompt: e.target.value})}/>
               </div>
             </CardContent></Card>
         </TabsContent>
 
+        {/* ===== Tools ===== */}
         <TabsContent value="tools">
-          <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>工具管理</CardTitle><Button size="sm" variant="outline" onClick={addTool}><Plus className="w-4 h-4 mr-1"/>添加工具</Button></CardHeader>
+          <Card><CardHeader className="flex items-center justify-between flex-row"><CardTitle>工具管理</CardTitle>
+            <Button size="sm" variant="outline" onClick={() => setTools([...tools, { name: '', desc: '', category: 'query', enabled: true }])}>
+              <Plus className="w-4 h-4 mr-1"/>添加</Button>
+          </CardHeader>
             <CardContent><div className="space-y-2">
               {tools.map((t: any, i: number) => (
                 <div key={i} className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg flex-wrap">
-                  <input type="checkbox" checked={t.enabled} onChange={() => toggleTool(i)} className="w-4 h-4"/>
-                  <Input className="flex-1 min-w-[120px]" value={t.name} placeholder="名称" onChange={e => updateTool(i, 'name', e.target.value)}/>
-                  <Input className="flex-[2] min-w-[160px]" value={t.desc} placeholder="描述" onChange={e => updateTool(i, 'desc', e.target.value)}/>
-                  <select className="border rounded p-2 text-xs" value={t.category} onChange={e => updateTool(i, 'category', e.target.value)}>
+                  <input type="checkbox" checked={t.enabled} onChange={() => {
+                    const n = [...tools]; n[i] = {...n[i], enabled: !n[i].enabled}; setTools(n)
+                  }} className="w-4 h-4"/>
+                  <Input className="flex-1 min-w-[100px]" value={t.name} placeholder="名称"
+                    onChange={e => { const n=[...tools]; n[i]={...n[i],name:e.target.value}; setTools(n) }}/>
+                  <Input className="flex-[2] min-w-[140px]" value={t.desc} placeholder="描述"
+                    onChange={e => { const n=[...tools]; n[i]={...n[i],desc:e.target.value}; setTools(n) }}/>
+                  <select className="border rounded p-2 text-xs" value={t.category}
+                    onChange={e => { const n=[...tools]; n[i]={...n[i],category:e.target.value}; setTools(n) }}>
                     <option value="query">查询</option><option value="action">操作</option><option value="system">系统</option>
                   </select>
-                  <Button variant="ghost" size="sm" className="text-red-400" onClick={() => removeTool(i)}><Trash2 className="w-4 h-4"/></Button>
+                  <Button variant="ghost" size="sm" className="text-red-400"
+                    onClick={() => setTools(tools.filter((_:any, j:number) => j!==i))}>
+                    <Trash2 className="w-4 h-4"/></Button>
                 </div>
               ))}
             </div></CardContent></Card>
         </TabsContent>
 
+        {/* ===== History ===== */}
         <TabsContent value="history">
-          <Card><CardHeader><CardTitle>对话历史（localStorage）</CardTitle></CardHeader>
+          <Card><CardHeader><CardTitle>对话历史</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-2">
                 {conversations.map((c: any, i: number) => (
                   <div key={i} className="p-3 bg-slate-50 rounded-lg flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-slate-700 truncate">{c.preview}</p>
-                      <p className="text-xs text-slate-400">{c.time} · {c.rounds} 轮</p>
+                      <p className="text-xs text-slate-400">{c.time} · {c.msgCount}条 · {c.rounds}轮</p>
                     </div>
-                    <Badge variant="outline" className="text-xs flex-shrink-0">{c.rounds} 轮</Badge>
+                    <Badge variant="outline" className="text-xs">{c.rounds}轮</Badge>
                   </div>
                 ))}
                 {conversations.length === 0 && <p className="text-center text-slate-400 py-8">暂无对话记录</p>}
               </div>
               <div className="mt-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-600">
-                对话历史保存在浏览器 localStorage，清除浏览器数据会丢失。如需云端存储，可接入 Vercel KV。
+                对话保存在浏览器 localStorage。清除浏览器缓存会丢失历史记录。
               </div>
             </CardContent></Card>
         </TabsContent>
 
+        {/* ===== Memory ===== */}
         <TabsContent value="memory">
-          <Card><CardHeader><CardTitle>记忆与持久化设置</CardTitle></CardHeader>
+          <Card><CardHeader><CardTitle>记忆与持久化</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-sm text-slate-600 mb-1 block">最大历史轮数</label><Input type="number" value={memoryConfig.maxHistoryRounds} onChange={e => setMemoryConfig({...memoryConfig, maxHistoryRounds: Number(e.target.value)})}/><p className="text-xs text-slate-400 mt-1">超出自动截断</p></div>
-                <div><label className="text-sm text-slate-600 mb-1 block">会话超时（分钟）</label><Input type="number" value={memoryConfig.sessionTimeout} onChange={e => setMemoryConfig({...memoryConfig, sessionTimeout: Number(e.target.value)})}/><p className="text-xs text-slate-400 mt-1">超时清除上下文</p></div>
+                <div><label className="text-sm text-slate-600 mb-1 block">最大历史轮数</label>
+                  <Input type="number" value={memoryConfig.maxHistoryRounds}
+                    onChange={e => setMemoryConfig({...memoryConfig, maxHistoryRounds: Number(e.target.value)})}/>
+                  <p className="text-xs text-slate-400 mt-1">超出自动截断</p></div>
+                <div><label className="text-sm text-slate-600 mb-1 block">会话超时(分钟)</label>
+                  <Input type="number" value={memoryConfig.sessionTimeout}
+                    onChange={e => setMemoryConfig({...memoryConfig, sessionTimeout: Number(e.target.value)})}/>
+                  <p className="text-xs text-slate-400 mt-1">超时清除上下文</p></div>
               </div>
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={memoryConfig.persistHistory} onChange={e => setMemoryConfig({...memoryConfig, persistHistory: e.target.checked})} className="w-4 h-4"/>
-                  持久化对话历史（localStorage，保留最近 20 条消息）
+                  <input type="checkbox" checked={memoryConfig.persistHistory} className="w-4 h-4"
+                    onChange={e => setMemoryConfig({...memoryConfig, persistHistory: e.target.checked})}/>
+                  持久化对话历史（localStorage）
                 </label>
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={memoryConfig.enableLongTermMemory} onChange={e => setMemoryConfig({...memoryConfig, enableLongTermMemory: e.target.checked})} className="w-4 h-4"/>
-                  启用长期记忆（跨会话记住用户偏好）
+                  <input type="checkbox" checked={memoryConfig.enableLongTermMemory} className="w-4 h-4"
+                    onChange={e => setMemoryConfig({...memoryConfig, enableLongTermMemory: e.target.checked})}/>
+                  启用长期记忆（跨会话偏好）
                 </label>
               </div>
               <div className="flex gap-2">
-                <Button onClick={() => { localStorage.removeItem('chat_history'); toast.success('已清除全部对话历史') }} variant="outline" size="sm">清除对话历史</Button>
-                <Button onClick={() => toast.success('记忆设置已保存')} className="bg-orange-500 hover:bg-orange-600" size="sm"><Save className="w-4 h-4 mr-1"/>保存设置</Button>
+                <Button variant="outline" size="sm" onClick={() => {
+                  for (let i = localStorage.length-1; i>=0; i--) {
+                    const k = localStorage.key(i); if (k?.startsWith('agent_session_')) localStorage.removeItem(k)
+                  }
+                  setConversations([]); toast.success('已清除全部历史')
+                }}>清除对话历史</Button>
+                <Button size="sm" className="bg-orange-500 hover:bg-orange-600" onClick={() => toast.success('已保存')}>
+                  <Save className="w-4 h-4 mr-1"/>保存</Button>
               </div>
             </CardContent></Card>
         </TabsContent>

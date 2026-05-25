@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
+import { checkAuth } from '@/lib/auth/middleware'
 
 const CONFIG_PATH = path.join(process.cwd(), 'content', 'agent', 'config.json')
 
@@ -17,7 +18,10 @@ function writeConfig(data: any) {
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2), 'utf-8')
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const auth = checkAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   try {
     const config = readConfig()
     if (!config) return NextResponse.json({ code: 404, message: 'Config not found' }, { status: 404 })
@@ -28,8 +32,14 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const auth = checkAuth(request)
+  if (auth instanceof NextResponse) return auth
+
   try {
     const body = await request.json()
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ code: 400, message: '无效数据' }, { status: 400 })
+    }
     const existing = readConfig()
     const merged = { ...existing, ...body }
     writeConfig(merged)
