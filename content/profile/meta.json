@@ -1,0 +1,55 @@
+{
+  "nickname": "Yu Meng",
+  "avatar": "/images/profile-avatar.png",
+  "titleZh": "AI产品经理",
+  "titleEn": "AI Product Manager",
+  "bioZh": "拥有2年AI产品经理实战经验，深度理解LLM、RAG、Agent技术原理，主导过基于Dify的企业级大模型应用从0到1落地。具备国际化产品视野，有中东、拉美地区产品经验。",
+  "bioEn": "2 years of AI Product Manager experience, deep understanding of LLM, RAG, and Agent technologies. Led enterprise-grade AI applications from 0 to 1 based on Dify. International product perspective with Middle East and Latin America experience.",
+  "yearsOfExperience": 2,
+  "successRate": 88,
+  "efficiencyGain": 40,
+  "contact": {
+    "email": "yumeng@aipmym.com",
+    "phone": "",
+    "wechatId": "",
+    "wechatQrcode": "",
+    "linkedin": "https://linkedin.com",
+    "github": "https://github.com/Yamal123",
+    "zhihu": "https://zhihu.com",
+    "emailDisplayed": true,
+    "phoneDisplayed": false,
+    "wechatDisplayed": false
+  },
+  "skills": [
+    { "nameZh": "AI Agent 设计", "nameEn": "AI Agent Design", "level": 95, "category": "ai" },
+    { "nameZh": "RAG 技术", "nameEn": "RAG Technology", "level": 90, "category": "ai" },
+    { "nameZh": "需求分析", "nameEn": "Requirements Analysis", "level": 95, "category": "product" },
+    { "nameZh": "产品设计", "nameEn": "Product Design", "level": 90, "category": "product" },
+    { "nameZh": "React/Next.js", "nameEn": "React/Next.js", "level": 75, "category": "technical" },
+    { "nameZh": "跨团队协作", "nameEn": "Cross-team Collaboration", "level": 95, "category": "soft" }
+  ],
+  "experiences": [
+    {
+      "companyZh": "极兔速递",
+      "companyEn": "J&T Express",
+      "roleZh": "AI客服产品经理",
+      "roleEn": "AI Customer Service PM",
+      "period": "2023 - Present",
+      "locationZh": "上海",
+      "locationEn": "Shanghai",
+      "descriptionZh": "基于Dify的AI Agent系统，AI解决率88%，工单处理效率提升40%",
+      "descriptionEn": "Dify-based AI Agent system, 88% AI resolution rate, 40% efficiency improvement"
+    },
+    {
+      "companyZh": "浙江蓝景科技",
+      "companyEn": "Zhejiang Lanjing Tech",
+      "roleZh": "供应链产品经理",
+      "roleEn": "Supply Chain PM",
+      "period": "2021 - 2023",
+      "locationZh": "杭州",
+      "locationEn": "Hangzhou",
+      "descriptionZh": "WMS/TMS/OMS系统从0到1落地，渔业区块链电子联单",
+      "descriptionEn": "WMS/TMS/OMS systems from 0 to 1, fisheries blockchain electronic manifest"
+    }
+  ]
+}
