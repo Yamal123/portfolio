@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AdminLayout } from '@/components/admin/AdminLayout'
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,42 +9,106 @@ import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Bot, Settings, Wrench, MessageSquare, Brain, Save, Plus, Trash2, CheckCircle, Loader2 } from 'lucide-react'
+import { Settings, Wrench, MessageSquare, Brain, Save, Plus, Trash2, CheckCircle, Loader2 } from 'lucide-react'
+import useSWR from 'swr'
 
 function AgentContent() {
-  const [config, setConfig] = useState({
-    mode: 'auto', model: 'gpt-4o-mini', baseUrl: 'https://api.openai.com/v1',
-    maxToolRounds: 3, apiKey: '', siteName: 'PM 思钱想厚',
+  // Load config from API
+  const { data: remoteConfig, mutate } = useSWR('/management/agent/config', async () => {
+    const res = await fetch('/api/management/agent/config')
+    if (!res.ok) return null
+    const j = await res.json()
+    return j.data
   })
 
-  const [tools, setTools] = useState([
-    { name: 'search_projects', desc: '搜索项目作品', category: 'query', enabled: true },
-    { name: 'search_articles', desc: '检索方法论文章', category: 'query', enabled: true },
-    { name: 'list_skills', desc: '查询技能专长', category: 'query', enabled: true },
-    { name: 'get_contact', desc: '获取联系方式', category: 'query', enabled: true },
-    { name: 'get_site_info', desc: '站点导航信息', category: 'system', enabled: true },
-  ])
-
+  const [config, setConfig] = useState<any>(null)
+  const [saving, setSaving] = useState(false)
+  const [tools, setTools] = useState<any[]>([])
   const [memoryConfig, setMemoryConfig] = useState({
-    maxHistoryRounds: 10,
-    persistHistory: true,
-    enableLongTermMemory: false,
-    sessionTimeout: 30, // minutes
+    maxHistoryRounds: 10, persistHistory: true, enableLongTermMemory: false, sessionTimeout: 30,
   })
+  const [conversations, setConversations] = useState<any[]>([])
 
-  // Simulated conversation history
-  const conversations = [
-    { id: 1, user: '你能做什么？', bot: '我可以帮你查询项目、搜索文章、查看技能...', time: '2026-05-25 14:30', rounds: 3 },
-    { id: 2, user: '极兔的项目是什么？', bot: '极兔AI客服体系是一个Multi-Agent协作系统...', time: '2026-05-25 10:15', rounds: 5 },
-  ]
+  // Load from remote config
+  useEffect(() => {
+    if (remoteConfig) {
+      setConfig({
+        mode: remoteConfig.mode || 'auto',
+        model: remoteConfig.model || 'gpt-4o-mini',
+        baseUrl: remoteConfig.baseUrl || 'https://api.openai.com/v1',
+        maxToolRounds: remoteConfig.maxToolRounds || 3,
+        systemPrompt: remoteConfig.systemPrompt || '',
+        welcomeMessage: remoteConfig.welcomeMessage || { zh: '', en: '' },
+        quickQuestions: remoteConfig.quickQuestions || [],
+      })
+      setTools(remoteConfig.tools || [
+        { name: 'search_projects', desc: '搜索项目作品', category: 'query', enabled: true },
+        { name: 'search_articles', desc: '检索方法论文章', category: 'query', enabled: true },
+        { name: 'list_skills', desc: '查询技能专长', category: 'query', enabled: true },
+        { name: 'get_contact', desc: '获取联系方式', category: 'query', enabled: true },
+        { name: 'get_site_info', desc: '站点导航信息', category: 'system', enabled: true },
+      ])
+    }
+  }, [remoteConfig])
 
-  const saveConfig = () => toast.success('Agent 配置已保存（需重新部署生效）')
+  // Load conversations from localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('chat_history')
+      if (raw) {
+        const msgs = JSON.parse(raw)
+        // Group by rough session (every 6 messages = 1 session)
+        const sessions: any[] = []
+        for (let i = 0; i < msgs.length; i += 6) {
+          const group = msgs.slice(i, i + 6)
+          if (group.length > 0) {
+            sessions.push({
+              id: i,
+              time: group[0]?.timestamp ? new Date(group[0].timestamp).toLocaleString('zh-CN') : '-',
+              rounds: Math.floor(group.length / 2),
+              preview: group[0]?.content?.slice(0, 60) || '-',
+            })
+          }
+        }
+        setConversations(sessions)
+      }
+    } catch {}
+  }, [])
+
+  const saveConfig = async () => {
+    if (!config) return
+    setSaving(true)
+    try {
+      await fetch('/api/management/agent/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...config, tools }),
+      })
+      mutate()
+      toast.success('Agent 配置已保存，重启生效')
+    } catch {
+      toast.error('保存失败')
+    }
+    setSaving(false)
+  }
+
   const addTool = () => setTools([...tools, { name: '', desc: '', category: 'query', enabled: true }])
-  const removeTool = (idx: number) => setTools(tools.filter((_, i) => i !== idx))
-  const toggleTool = (idx: number) => setTools(tools.map((t, i) => i === idx ? { ...t, enabled: !t.enabled } : t))
+  const removeTool = (idx: number) => setTools(tools.filter((_: any, i: number) => i !== idx))
+  const toggleTool = (idx: number) => setTools(tools.map((t: any, i: number) => i === idx ? { ...t, enabled: !t.enabled } : t))
+  const updateTool = (idx: number, field: string, value: any) => {
+    setTools(tools.map((t: any, i: number) => i === idx ? { ...t, [field]: value } : t))
+  }
+
+  if (!config) return <AdminLayout title="Agent"><div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-slate-300"/></div></AdminLayout>
 
   return (
     <AdminLayout title="Agent 管理">
+      <div className="flex justify-end mb-4">
+        <Button onClick={saveConfig} disabled={saving} className="bg-orange-500 hover:bg-orange-600">
+          {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin"/> : <Save className="w-4 h-4 mr-1"/>}保存全部配置
+        </Button>
+      </div>
+
       <Tabs defaultValue="config" className="space-y-4">
         <TabsList>
           <TabsTrigger value="config"><Settings className="w-4 h-4 mr-1"/>配置</TabsTrigger>
@@ -53,48 +117,53 @@ function AgentContent() {
           <TabsTrigger value="memory"><Brain className="w-4 h-4 mr-1"/>记忆设置</TabsTrigger>
         </TabsList>
 
-        {/* Config */}
         <TabsContent value="config">
-          <Card><CardHeader><CardTitle>Agent 配置</CardTitle></CardHeader>
+          <Card><CardHeader><CardTitle>Agent 运行配置</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-sm text-slate-600 mb-1 block">运行模式</label>
+                <div>
+                  <label className="text-sm text-slate-600 mb-1 block">运行模式</label>
                   <select className="w-full border rounded-lg p-2.5 text-sm" value={config.mode} onChange={e => setConfig({...config, mode: e.target.value})}>
-                    <option value="auto">auto（自动判断）</option><option value="llm">llm（强制LLM）</option><option value="rules">rules（规则模式）</option>
-                  </select></div>
-                <div><label className="text-sm text-slate-600 mb-1 block">模型</label>
+                    <option value="auto">auto（自动判断 LLM/Rules）</option>
+                    <option value="llm">llm（强制 LLM 模式）</option>
+                    <option value="rules">rules（规则模式，免费）</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm text-slate-600 mb-1 block">默认模型</label>
                   <select className="w-full border rounded-lg p-2.5 text-sm" value={config.model} onChange={e => setConfig({...config, model: e.target.value})}>
-                    <option value="gpt-4o-mini">gpt-4o-mini</option><option value="gpt-4o">gpt-4o</option><option value="claude-3-haiku">claude-3-haiku</option><option value="deepseek-chat">deepseek-chat</option>
-                  </select></div>
+                    <option value="gpt-4o-mini">gpt-4o-mini</option>
+                    <option value="gpt-4o">gpt-4o</option>
+                    <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                    <option value="deepseek-chat">deepseek-chat</option>
+                    <option value="claude-3-haiku">claude-3-haiku</option>
+                  </select>
+                </div>
               </div>
-              <div><label className="text-sm text-slate-600 mb-1 block">API Key</label><Input type="password" value={config.apiKey} onChange={e => setConfig({...config, apiKey: e.target.value})} placeholder="sk-..."/></div>
               <div><label className="text-sm text-slate-600 mb-1 block">API Base URL</label><Input value={config.baseUrl} onChange={e => setConfig({...config, baseUrl: e.target.value})}/></div>
-              <div><label className="text-sm text-slate-600 mb-1 block">最大工具轮次</label><Input type="number" value={config.maxToolRounds} onChange={e => setConfig({...config, maxToolRounds: Number(e.target.value)})}/></div>
-              <div><label className="text-sm text-slate-600 mb-1 block">System Prompt</label>
-                <textarea className="w-full p-3 border rounded-lg text-sm h-32 font-mono" defaultValue={
-                  `你是 PM 思钱想厚的 AI 助手。你可以：
-- 搜索项目作品（search_projects）
-- 检索方法论文章（search_articles）
-- 查询技能专长（list_skills）
-- 获取联系方式（get_contact）
-- 提供站点导航（get_site_info）
-用友好、专业的语气回复。`
-                }/>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-sm text-slate-600 mb-1 block">最大工具轮次（1-10）</label><Input type="number" min={1} max={10} value={config.maxToolRounds} onChange={e => setConfig({...config, maxToolRounds: Number(e.target.value)})}/></div>
               </div>
-              <Button onClick={saveConfig} className="bg-orange-500 hover:bg-orange-600"><Save className="w-4 h-4 mr-1"/>保存配置</Button>
+              <div>
+                <label className="text-sm text-slate-600 mb-1 block">System Prompt（同 Prompt 模板）</label>
+                <textarea className="w-full p-3 border rounded-lg text-sm h-40 font-mono" value={config.systemPrompt} onChange={e => setConfig({...config, systemPrompt: e.target.value})}/>
+              </div>
+              <div>
+                <label className="text-sm text-slate-600 mb-1 block">欢迎消息（中文）</label>
+                <textarea className="w-full p-3 border rounded-lg text-sm h-20" value={config.welcomeMessage?.zh} onChange={e => setConfig({...config, welcomeMessage: {...config.welcomeMessage, zh: e.target.value}})}/>
+              </div>
             </CardContent></Card>
         </TabsContent>
 
-        {/* Tools */}
         <TabsContent value="tools">
           <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>工具管理</CardTitle><Button size="sm" variant="outline" onClick={addTool}><Plus className="w-4 h-4 mr-1"/>添加工具</Button></CardHeader>
             <CardContent><div className="space-y-2">
-              {tools.map((t, i) => (
-                <div key={i} className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg">
+              {tools.map((t: any, i: number) => (
+                <div key={i} className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg flex-wrap">
                   <input type="checkbox" checked={t.enabled} onChange={() => toggleTool(i)} className="w-4 h-4"/>
-                  <Input className="flex-1" value={t.name} placeholder="工具名称" onChange={e => { const n = [...tools]; n[i] = {...n[i], name: e.target.value}; setTools(n) }}/>
-                  <Input className="flex-2" value={t.desc} placeholder="描述" onChange={e => { const n = [...tools]; n[i] = {...n[i], desc: e.target.value}; setTools(n) }}/>
-                  <select className="border rounded p-2 text-xs" value={t.category} onChange={e => { const n = [...tools]; n[i] = {...n[i], category: e.target.value}; setTools(n) }}>
+                  <Input className="flex-1 min-w-[120px]" value={t.name} placeholder="名称" onChange={e => updateTool(i, 'name', e.target.value)}/>
+                  <Input className="flex-[2] min-w-[160px]" value={t.desc} placeholder="描述" onChange={e => updateTool(i, 'desc', e.target.value)}/>
+                  <select className="border rounded p-2 text-xs" value={t.category} onChange={e => updateTool(i, 'category', e.target.value)}>
                     <option value="query">查询</option><option value="action">操作</option><option value="system">系统</option>
                   </select>
                   <Button variant="ghost" size="sm" className="text-red-400" onClick={() => removeTool(i)}><Trash2 className="w-4 h-4"/></Button>
@@ -103,55 +172,48 @@ function AgentContent() {
             </div></CardContent></Card>
         </TabsContent>
 
-        {/* History */}
         <TabsContent value="history">
-          <Card><CardHeader><CardTitle>对话历史</CardTitle></CardHeader>
+          <Card><CardHeader><CardTitle>对话历史（localStorage）</CardTitle></CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {conversations.map(c => (
-                  <div key={c.id} className="p-4 bg-slate-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-slate-400">{c.time}</span>
-                      <Badge variant="outline" className="text-xs">{c.rounds} 轮</Badge>
+              <div className="space-y-2">
+                {conversations.map((c: any, i: number) => (
+                  <div key={i} className="p-3 bg-slate-50 rounded-lg flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-slate-700 truncate">{c.preview}</p>
+                      <p className="text-xs text-slate-400">{c.time} · {c.rounds} 轮</p>
                     </div>
-                    <div className="space-y-2 text-sm">
-                      <p className="text-blue-600">👤 {c.user}</p>
-                      <p className="text-slate-600">🤖 {c.bot}</p>
-                    </div>
+                    <Badge variant="outline" className="text-xs flex-shrink-0">{c.rounds} 轮</Badge>
                   </div>
                 ))}
                 {conversations.length === 0 && <p className="text-center text-slate-400 py-8">暂无对话记录</p>}
               </div>
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-600">
+                对话历史保存在浏览器 localStorage，清除浏览器数据会丢失。如需云端存储，可接入 Vercel KV。
+              </div>
             </CardContent></Card>
         </TabsContent>
 
-        {/* Memory */}
         <TabsContent value="memory">
-          <Card><CardHeader><CardTitle>记忆与保存设置</CardTitle></CardHeader>
+          <Card><CardHeader><CardTitle>记忆与持久化设置</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-slate-600 mb-1 block">最大历史轮数</label>
-                  <Input type="number" value={memoryConfig.maxHistoryRounds} onChange={e => setMemoryConfig({...memoryConfig, maxHistoryRounds: Number(e.target.value)})}/>
-                  <p className="text-xs text-slate-400 mt-1">超出后自动截断最早的对话</p>
-                </div>
-                <div>
-                  <label className="text-sm text-slate-600 mb-1 block">会话超时（分钟）</label>
-                  <Input type="number" value={memoryConfig.sessionTimeout} onChange={e => setMemoryConfig({...memoryConfig, sessionTimeout: Number(e.target.value)})}/>
-                  <p className="text-xs text-slate-400 mt-1">超时后清除对话上下文</p>
-                </div>
+                <div><label className="text-sm text-slate-600 mb-1 block">最大历史轮数</label><Input type="number" value={memoryConfig.maxHistoryRounds} onChange={e => setMemoryConfig({...memoryConfig, maxHistoryRounds: Number(e.target.value)})}/><p className="text-xs text-slate-400 mt-1">超出自动截断</p></div>
+                <div><label className="text-sm text-slate-600 mb-1 block">会话超时（分钟）</label><Input type="number" value={memoryConfig.sessionTimeout} onChange={e => setMemoryConfig({...memoryConfig, sessionTimeout: Number(e.target.value)})}/><p className="text-xs text-slate-400 mt-1">超时清除上下文</p></div>
               </div>
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={memoryConfig.persistHistory} onChange={e => setMemoryConfig({...memoryConfig, persistHistory: e.target.checked})}/>
-                  持久化对话历史（localStorage）
+                  <input type="checkbox" checked={memoryConfig.persistHistory} onChange={e => setMemoryConfig({...memoryConfig, persistHistory: e.target.checked})} className="w-4 h-4"/>
+                  持久化对话历史（localStorage，保留最近 20 条消息）
                 </label>
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={memoryConfig.enableLongTermMemory} onChange={e => setMemoryConfig({...memoryConfig, enableLongTermMemory: e.target.checked})}/>
-                  启用长期记忆（跨会话保留用户偏好）
+                  <input type="checkbox" checked={memoryConfig.enableLongTermMemory} onChange={e => setMemoryConfig({...memoryConfig, enableLongTermMemory: e.target.checked})} className="w-4 h-4"/>
+                  启用长期记忆（跨会话记住用户偏好）
                 </label>
               </div>
-              <Button onClick={() => toast.success('记忆设置已保存')} className="bg-orange-500 hover:bg-orange-600"><Save className="w-4 h-4 mr-1"/>保存设置</Button>
+              <div className="flex gap-2">
+                <Button onClick={() => { localStorage.removeItem('chat_history'); toast.success('已清除全部对话历史') }} variant="outline" size="sm">清除对话历史</Button>
+                <Button onClick={() => toast.success('记忆设置已保存')} className="bg-orange-500 hover:bg-orange-600" size="sm"><Save className="w-4 h-4 mr-1"/>保存设置</Button>
+              </div>
             </CardContent></Card>
         </TabsContent>
       </Tabs>

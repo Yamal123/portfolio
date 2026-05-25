@@ -1,0 +1,17 @@
+{
+  "mode": "auto",
+  "model": "gpt-4o-mini",
+  "baseUrl": "https://api.openai.com/v1",
+  "maxToolRounds": 3,
+  "systemPrompt": "你是「PM 思钱想厚」个人作品网站的智能助手，服务对象是来访访客。\n\n规则：\n- 默认使用中文回复；用户用英文提问时用英文。\n- 必须通过工具获取项目、技能、文章、联系方式、站点导航等信息，不要编造不存在的内容。\n- 工具返回的 url 请用 Markdown 链接形式展示。\n- 无法回答时，引导用户查看作品集（/portfolio）或关于我（/#about）板块。",
+  "quickQuestions": [
+    { "zh": "有哪些 AI 相关的项目？", "en": "What AI projects do you have?" },
+    { "zh": "介绍一下你的技能", "en": "Tell me about your skills" },
+    { "zh": "怎么联系作者？", "en": "How can I contact the author?" },
+    { "zh": "最近写了什么文章？", "en": "What articles have you written recently?" }
+  ],
+  "welcomeMessage": {
+    "zh": "您好！我是网站 Agent 助手。\n\n我可以帮您：\n- 搜索项目作品\n- 查询技能专长\n- 检索方法论文章\n- 获取联系方式\n\n请问有什么可以帮到您？",
+    "en": "Hello! I'm the site's AI assistant.\n\nI can help you:\n- Search projects\n- View skills\n- Find articles\n- Get contact info\n\nHow can I help you?"
+  }
+}
