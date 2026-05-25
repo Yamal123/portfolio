@@ -1,0 +1,11 @@
+{
+  "id": 14,
+  "slug": "traditional-industry-cs-agent",
+  "titleZh": "传统行业如何高效搭建客服Agent：从0到1的避坑指南",
+  "titleEn": "How Traditional Industries Can Efficiently Build Customer Service Agents: A Zero-to-One Guide",
+  "createdAt": "2026-05-25",
+  "introZh": "传统行业做AI客服，最大的坑不是技术选型，而是把Agent当ChatBot做。本文结合极兔AI客服从0到1的实战经验，拆解传统行业搭建客服Agent的五个关键决策和四个常见误区，给出一套可复制的落地路径。",
+  "introEn": "The biggest pitfall for traditional industries building AI customer service isn't technology selection—it's treating an Agent like a ChatBot. Drawing from J&T Express's zero-to-one AI customer service journey, this article breaks down five key decisions and four common misconceptions, offering a replicable implementation roadmap.",
+  "keywords": ["客服Agent", "传统行业", "AI落地", "Dify", "RAG", "Multi-Agent", "从0到1"],
+  "contentType": "markdown"
+}

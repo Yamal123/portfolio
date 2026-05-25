@@ -1,0 +1,11 @@
+{
+  "id": 13,
+  "slug": "agent-loop",
+  "titleZh": "Agent 如何实现「感知→判断→行动→再感知」闭环",
+  "titleEn": "How Agents Close the Loop: Perceive, Decide, Act, and Perceive Again",
+  "createdAt": "2026-05-21",
+  "introZh": "从产品经理视角拆解 Agent 的本质：不是更聪明的聊天机器人，而是具备闭环能力的任务执行系统。含架构图、ReAct 与落地清单。",
+  "introEn": "A PM-oriented breakdown of agents as closed-loop task systems—not smarter chatbots—with architecture diagrams, ReAct, and a practical checklist.",
+  "keywords": ["Agent", "AI产品经理", "ReAct", "MCP", "闭环", "Tool Calling"],
+  "contentType": "markdown"
+}

@@ -1,0 +1,23 @@
+{
+  "id": 1,
+  "slug": "ai-portfolio",
+  "titleZh": "AI 产品经理作品集",
+  "titleEn": "AI Product Manager Portfolio",
+  "thumbnail": "/images/portfolio/saiaconfportada.png",
+  "typeZh": "个人项目",
+  "typeEn": "Personal Project",
+  "introZh": "一个展示 AI 产品经理职业背景、项目经验和专业能力的现代化个人作品网站",
+  "introEn": "A modern personal portfolio website showcasing AI Product Manager career background",
+  "keywords": ["Next.js", "React", "TypeScript", "AI", "产品经理"],
+  "tags": ["Next.js", "React", "TypeScript", "Tailwind CSS"],
+  "emoji": "🌐",
+  "problemZh": "需要一个专业的在线作品集来展示 AI 产品经理的能力和项目经验",
+  "problemEn": "Need a professional online portfolio to showcase AI PM capabilities",
+  "actionZh": "使用 Next.js 14 构建现代化响应式作品网站，集成 AI 动画效果和双语切换功能",
+  "actionEn": "Built modern responsive portfolio website with Next.js 14, integrated AI animations",
+  "resultZh": "成功展示个人品牌，访问量和用户反馈良好",
+  "resultEn": "Successfully showcased personal brand, good traffic and user feedback",
+  "createdAt": "2026-05-15",
+  "contentType": "markdown",
+  "externalUrl": "https://www.aipmym.com"
+}

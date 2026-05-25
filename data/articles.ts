@@ -1,6 +1,4 @@
-import { agentLoopArticle } from './articles/agent-loop-article'
+import articlesGen from './articles.gen.json'
 export type { Article } from '@/types/article'
 
-export const articlesData = [
-  agentLoopArticle,
-]
+export const articlesData = articlesGen
