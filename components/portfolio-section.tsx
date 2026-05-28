@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useMemo } from 'react'
+import React from 'react'
 import Link from 'next/link'
+import useSWR from 'swr'
 import { useLanguage } from '@/contexts/language-context'
-import { mockProjects } from '@/data/projects'
+import { fetchAPI } from '@/lib/api/client'
 import {
   ArrowUpRight,
   ExternalLink,
@@ -24,7 +25,7 @@ export function PortfolioSection({ className }: PortfolioSectionProps) {
   const { language } = useLanguage()
   const { theme } = useTheme()
 
-  const displayProjects = mockProjects
+  const { data: displayProjects = [] } = useSWR<Project[]>('/api/public/projects', fetchAPI)
 
   const t = {
     zh: {

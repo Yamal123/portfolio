@@ -6,18 +6,21 @@ import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
 import { Mail, Linkedin, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import useSWR from "swr"
+import { fetchAPI } from "@/lib/api/client"
+import type { ProfileInput } from "@/lib/content/contracts"
 
 export default function AboutSection() {
   const { language } = useLanguage()
   const { theme } = useTheme()
   const [hoveredContact, setHoveredContact] = useState<string | null>(null)
   const [showQRCode, setShowQRCode] = useState(false)
+  const { data: profile } = useSWR<ProfileInput>('/api/public/profile', fetchAPI)
 
   const stats = [
-    { value: "2+", label: language === "zh" ? "年经验" : "Years Exp" },
-    { value: "10+", label: language === "zh" ? "成功项目" : "Projects" },
-    { value: "88%", label: language === "zh" ? "解决率" : "Resolution Rate" },
-    { value: "40%", label: language === "zh" ? "效率提升" : "Efficiency Gain" },
+    { value: `${profile?.yearsOfExperience ?? 0}+`, label: language === "zh" ? "年经验" : "Years Exp" },
+    { value: `${profile?.successRate ?? 0}%`, label: language === "zh" ? "解决率" : "Resolution Rate" },
+    { value: `${profile?.efficiencyGain ?? 0}%`, label: language === "zh" ? "效率提升" : "Efficiency Gain" },
   ]
 
   return (
@@ -45,8 +48,8 @@ export default function AboutSection() {
               theme === "dark" ? "border-gray-800" : "border-gray-200"
             }`}>
               <Image
-                src="/images/profile-avatar.png"
-                alt="Yu Meng"
+                src={profile?.avatar || "/images/profile-avatar.png"}
+                alt={profile?.nickname || "Yu Meng"}
                 fill
                 className="object-cover"
                 priority
@@ -59,17 +62,7 @@ export default function AboutSection() {
             <p className={`text-sm sm:text-base md:text-lg leading-relaxed ${
               theme === "dark" ? "text-gray-400" : "text-gray-600"
             }`}>
-              {language === "zh" 
-                ? "拥有2年AI产品经理实战经验，深度理解LLM、RAG、Agent技术原理，主导过基于Dify的企业级大模型应用从0到1落地。" 
-                : "2 years of AI Product Manager experience, deep understanding of LLM, RAG, and Agent technologies, led enterprise-grade AI applications from 0 to 1 based on Dify."}
-            </p>
-
-            <p className={`text-sm sm:text-base md:text-lg leading-relaxed ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}>
-              {language === "zh" 
-                ? "具备国际化产品视野，有中东、拉美地区产品经验，能打造可复制的海外AI产品方案。热爱摄影、旅行与美食，相信好的产品源于对生活的深度观察。" 
-                : "International product perspective with Middle East and Latin America experience, able to build replicable overseas AI product solutions. Passionate about photography, travel and food, believing great products come from deep observation of life."}
+              {language === "zh" ? profile?.bioZh : profile?.bioEn}
             </p>
 
             <div className="grid grid-cols-2 gap-3 sm:gap-6 pt-4">
@@ -92,7 +85,7 @@ export default function AboutSection() {
             {language === "zh" ? "联系方式" : "Contact"}
           </h3>
           <div className="flex flex-wrap justify-center gap-4">
-            <Button
+            {profile?.contact.emailDisplayed && <Button
               variant="ghost"
               size="icon"
               asChild
@@ -102,13 +95,13 @@ export default function AboutSection() {
               onMouseEnter={() => setHoveredContact("email")}
               onMouseLeave={() => setHoveredContact(null)}
             >
-              <a href="mailto:yumeng@aipmym.com">
+              <a href={`mailto:${profile?.contact.email || ''}`}>
                 <Mail className="w-6 h-6" />
               </a>
-            </Button>
-            {hoveredContact === "email" && (
+            </Button>}
+            {profile?.contact.emailDisplayed && hoveredContact === "email" && (
               <div className={`absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-2 text-xs rounded-lg whitespace-nowrap shadow-lg ${theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-800 text-white"}`}>
-                yumeng@aipmym.com
+                {profile?.contact.email}
               </div>
             )}
 
@@ -122,7 +115,7 @@ export default function AboutSection() {
               onMouseEnter={() => setHoveredContact("linkedin")}
               onMouseLeave={() => setHoveredContact(null)}
             >
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
+              <a href={profile?.contact.linkedin || '#'} target="_blank" rel="noopener noreferrer">
                 <Linkedin className="w-6 h-6" />
               </a>
             </Button>
@@ -132,7 +125,7 @@ export default function AboutSection() {
               </div>
             )}
 
-            <div className="relative">
+            {profile?.contact.wechatDisplayed && <div className="relative">
               <Button
                 variant="ghost"
                 size="icon"
@@ -152,15 +145,13 @@ export default function AboutSection() {
               )}
               {showQRCode && (
                 <div className="absolute -bottom-48 left-1/2 -translate-x-1/2 bg-white p-3 rounded-xl shadow-2xl border border-gray-200 z-50">
-                  <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <span className="text-4xl">📱</span>
-                  </div>
+                  {profile.contact.wechatQrcode ? <Image src={profile.contact.wechatQrcode} width={128} height={128} alt="WeChat QR Code" /> : <p className="p-6 text-xs text-gray-500">{profile.contact.wechatId}</p>}
                   <p className="text-center text-xs text-gray-600 mt-2">
                     {language === "zh" ? "微信二维码" : "WeChat QR Code"}
                   </p>
                 </div>
               )}
-            </div>
+            </div>}
           </div>
         </div>
       </div>

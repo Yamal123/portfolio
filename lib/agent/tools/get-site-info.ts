@@ -1,5 +1,4 @@
 import type { AgentTool } from '../types'
-import { agentConfig } from '../config'
 
 export const getSiteInfoTool: AgentTool = {
   name: 'get_site_info',
@@ -12,8 +11,8 @@ export const getSiteInfoTool: AgentTool = {
     return {
       success: true,
       data: {
-        siteName: agentConfig.siteName,
-        siteUrl: agentConfig.siteUrl,
+        siteName: process.env.NEXT_PUBLIC_SITE_NAME || 'PM 思钱想厚',
+        siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://yumeng.dev',
         sections: [
           { id: 'home', label: '首页', path: '/#home' },
           { id: 'portfolio', label: '作品集', path: '/portfolio' },

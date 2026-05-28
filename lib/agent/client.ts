@@ -33,3 +33,13 @@ export async function listAgentTools(): Promise<{
   }
   return response.json()
 }
+
+export async function getAgentBootstrap(): Promise<{
+  welcomeMessage: { zh: string; en: string }
+  quickQuestions: Array<{ zh: string; en: string }>
+  mode: 'rules' | 'llm'
+}> {
+  const response = await fetch('/api/agent/bootstrap', { cache: 'no-store' })
+  if (!response.ok) throw new Error('助手配置加载失败')
+  return (await response.json()).data
+}

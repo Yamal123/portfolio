@@ -3,15 +3,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { X, Send, Loader2, Zap, Plus, History, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { MessageBubble } from './MessageBubble'
-import { callAgentChat } from '@/lib/agent/client'
+import { callAgentChat, getAgentBootstrap } from '@/lib/agent/client'
 import type { ChatMessage } from '@/types/chatbot'
 import type { AgentHistoryMessage } from '@/lib/agent/types'
 
-const QUICK_QUESTIONS_ZH = ['有哪些 AI 相关的项目？', '介绍一下你的技能', '怎么联系作者？', '最近写了什么文章？']
-const WELCOME_ZH = '您好！我是网站 Agent 助手。\n\n我可以帮您：\n- 搜索项目作品\n- 查询技能专长\n- 检索方法论文章\n- 获取联系方式\n\n请问有什么可以帮到您？'
 const STORAGE_PREFIX = 'agent_session_'
+const MAX_INPUT_LENGTH = 2000
 
 // Session storage helpers
 function getAllSessions(): string[] {
@@ -62,25 +60,34 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
   const [sessionId, setSessionId] = useState('')
   const [showHistory, setShowHistory] = useState(false)
   const [sessions, setSessions] = useState<string[]>([])
+  const [bootstrap, setBootstrap] = useState<{ welcomeMessage: { zh: string; en: string }; quickQuestions: Array<{ zh: string; en: string }> } | null>(null)
   const messagesRef = useRef<ChatMessage[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   // Sync ref
   useEffect(() => { messagesRef.current = messages }, [messages])
 
-  // Start fresh session
+  useEffect(() => {
+    getAgentBootstrap().then(setBootstrap).catch(() => setBootstrap({
+      welcomeMessage: { zh: '助手暂时不可用，请稍后再试。', en: 'Assistant is temporarily unavailable.' },
+      quickQuestions: [],
+    }))
+  }, [])
+
+  const welcome = bootstrap?.welcomeMessage.zh || '正在加载助手配置...'
+
   const startNewSession = useCallback(() => {
     const id = String(Date.now())
     setSessionId(id)
     setMessages([{
       id: nextMsgId(),
       type: 'bot',
-      content: WELCOME_ZH,
+      content: welcome,
       timestamp: new Date(),
     }])
     setShowHistory(false)
-  }, [])
+  }, [welcome])
 
   // On open
   useEffect(() => {
@@ -117,7 +124,7 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
 
   const handleSend = useCallback(async (text?: string) => {
     const msg = (text || inputValue).trim()
-    if (!msg || isLoading) return
+    if (!msg || isLoading || msg.length > MAX_INPUT_LENGTH) return
 
     const userMessage: ChatMessage = {
       id: nextMsgId(),
@@ -132,7 +139,7 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
 
     try {
       const history: AgentHistoryMessage[] = messagesRef.current
-        .filter(m => !m.content.includes(WELCOME_ZH.slice(0, 20)))
+        .filter(m => m.id !== messagesRef.current[0]?.id)
         .map(m => ({ role: m.type === 'user' ? 'user' as const : 'assistant' as const, content: m.content }))
 
       const response = await callAgentChat({ message: msg, history, locale: 'zh' })
@@ -173,9 +180,12 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
 
   if (!isOpen) return null
 
+  const inputLength = inputValue.trim().length
+  const overLimit = inputLength > MAX_INPUT_LENGTH
+
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-full max-w-sm">
-      <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 flex flex-col" style={{ height: '520px' }}>
+    <div className="fixed inset-x-3 bottom-3 z-50 sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-full sm:max-w-sm">
+      <div className="flex h-[min(520px,calc(100dvh-1.5rem))] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
         {/* Header */}
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2.5">
@@ -188,13 +198,13 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={() => setShowHistory(!showHistory)} className="h-8 w-8 text-white hover:bg-white/20 rounded-full" title="对话历史">
+            <Button variant="ghost" size="icon" aria-label="对话历史" onClick={() => setShowHistory(!showHistory)} className="h-8 w-8 text-white hover:bg-white/20 rounded-full" title="对话历史">
               <History className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={startNewSession} className="h-8 w-8 text-white hover:bg-white/20 rounded-full" title="新建对话">
+            <Button variant="ghost" size="icon" aria-label="新建对话" onClick={startNewSession} className="h-8 w-8 text-white hover:bg-white/20 rounded-full" title="新建对话">
               <Plus className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-white hover:bg-white/20 rounded-full">
+            <Button variant="ghost" size="icon" aria-label="关闭聊天" onClick={onClose} className="h-8 w-8 text-white hover:bg-white/20 rounded-full">
               <X className="w-4 h-4" />
             </Button>
           </div>
@@ -252,22 +262,43 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
             {/* Quick Questions */}
             {messages.length <= 1 && (
               <div className="px-3 py-2 flex flex-wrap gap-1.5 flex-shrink-0 border-t border-gray-100">
-                {QUICK_QUESTIONS_ZH.map((q, i) => (
+                {(bootstrap?.quickQuestions || []).map((item, i) => {
+                  const q = item.zh
+                  return (
                   <button key={i} onClick={() => handleSend(q)} className="px-2.5 py-1 rounded-full text-xs bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200 transition-colors">{q}</button>
-                ))}
+                  )
+                })}
               </div>
             )}
 
             {/* Input */}
             <div className="p-3 border-t border-gray-200 flex-shrink-0">
-              <div className="flex gap-2">
-                <Input ref={inputRef} value={inputValue} onChange={e => setInputValue(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
-                  placeholder="输入您的问题..." className="flex-1 h-9 rounded-xl text-sm" disabled={isLoading} />
-                <Button onClick={() => handleSend()} disabled={isLoading || !inputValue.trim()}
+              <div className="flex gap-2 items-end">
+                <textarea
+                  ref={inputRef}
+                  value={inputValue}
+                  onChange={e => setInputValue(e.target.value.slice(0, MAX_INPUT_LENGTH + 50))}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      handleSend()
+                    }
+                  }}
+                  placeholder="输入您的问题..."
+                  className="min-h-[40px] max-h-32 flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm leading-6 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:bg-gray-50"
+                  disabled={isLoading}
+                  rows={1}
+                />
+                <Button onClick={() => handleSend()} disabled={isLoading || !inputValue.trim() || overLimit}
                   className="h-9 w-10 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white">
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </Button>
+              </div>
+              <div className="mt-1.5 flex items-center justify-between text-[11px]">
+                <span className="text-gray-400">Enter 发送，Shift + Enter 换行</span>
+                <span className={overLimit ? 'text-red-500' : 'text-gray-400'}>
+                  {inputLength}/{MAX_INPUT_LENGTH}
+                </span>
               </div>
             </div>
           </>

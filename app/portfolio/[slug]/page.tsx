@@ -8,41 +8,9 @@ import { useTheme } from "@/contexts/theme-context"
 import { ExternalLink, Calendar, Tag, Copy, Check, Loader2, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { fetchAPI } from "@/lib/api/client"
-import { adaptBackendProject } from "@/lib/api/adapter"
-import { mockProjects } from "@/data/projects"
 import type { Project } from '@/data/projects'
 import PageNav from "@/components/page-nav"
-
-const MarkdownRenderer = ({ content, theme }: { content: string, theme: string }) => {
-  const renderContent = content.split('\n').map((line, index) => {
-    const blueColor = theme === "dark" ? "text-blue-400" : "text-blue-600"
-    if (line.startsWith('### ')) {
-      return <h3 key={index} className={`text-xl font-bold mt-6 mb-3 ${blueColor}`}>{line.slice(4)}</h3>
-    } else if (line.startsWith('## ')) {
-      return <h2 key={index} className={`text-2xl font-bold mt-8 mb-4 ${blueColor}`}>{line.slice(3)}</h2>
-    } else if (line.startsWith('# ')) {
-      return <h1 key={index} className={`text-3xl font-bold mt-10 mb-6 ${blueColor}`}>{line.slice(2)}</h1>
-    } else if (line.startsWith('- **')) {
-      return (
-        <li key={index} className="ml-6 my-2 list-disc">
-          <strong>{line.slice(3, line.indexOf('**', 3))}</strong>{line.slice(line.indexOf('**', 3) + 2)}
-        </li>
-      )
-    } else if (line.startsWith('- ')) {
-      return <li key={index} className="ml-6 my-2 list-disc">{line.slice(2)}</li>
-    } else if (line.match(/^\d+\. /)) {
-      return <li key={index} className="ml-6 my-2 list-decimal">{line.replace(/^\d+\. /, '')}</li>
-    } else if (line.trim() === '') {
-      return <br key={index} />
-    } else {
-      let formattedLine = line
-      formattedLine = formattedLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      formattedLine = formattedLine.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-sm font-mono">$1</code>')
-      return <p key={index} className="my-3 leading-relaxed" dangerouslySetInnerHTML={{__html: formattedLine}} />
-    }
-  })
-  return <div>{renderContent}</div>
-}
+import { SafeMarkdown } from "@/components/safe-markdown"
 
 interface ProjectDetailPageProps {
   params: { slug: string }
@@ -54,20 +22,12 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const { theme } = useTheme()
   const [copied, setCopied] = useState(false)
 
-  const fallbackProject = slug ? mockProjects.find(p => p.slug === slug) || null : null
-
   const { data: project, isLoading, error } = useSWR(
     slug ? `/api/public/projects?slug=${slug}` : null,
-    (url) => fetchAPI<any | null>(url).then(data => {
-      if (data) {
-        return adaptBackendProject(data)
-      }
-      return fallbackProject
-    }),
+    (url) => fetchAPI<Project | null>(url),
     {
       errorRetryCount: 2,
       errorRetryInterval: 3000,
-      fallbackData: fallbackProject,
       suspense: false,
     }
   )
@@ -243,10 +203,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
 
           {/* Content */}
           <div className={`prose max-w-none ${theme === "dark" ? "text-gray-300" : "text-gray-800"}`}>
-            <MarkdownRenderer 
-              content={project.content[language === "zh" ? "zh" : "en"]} 
-              theme={theme}
-            />
+            <SafeMarkdown>{project.content[language === "zh" ? "zh" : "en"]}</SafeMarkdown>
           </div>
 
           {/* Footer */}

@@ -1,13 +1,10 @@
-import { API_CONFIG, TOKEN_KEY } from '@/lib/api/config'
+import { API_CONFIG } from '@/lib/api/config'
 import type { ApiResponse } from '@/types/admin'
 
 export async function fetcher<T = any>(
   url: string,
   options?: RequestInit
 ): Promise<T> {
-  const token =
-    typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null
-
   const controller = new AbortController()
   const timeoutId = setTimeout(() => {
     controller.abort()
@@ -16,10 +13,10 @@ export async function fetcher<T = any>(
   try {
     const response = await fetch(`${API_CONFIG.adminBaseUrl}${url}`, {
       ...options,
+      credentials: 'same-origin',
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options?.headers,
       },
     })
@@ -31,7 +28,6 @@ export async function fetcher<T = any>(
     if (!response.ok) {
       if (response.status === 401) {
         if (typeof window !== 'undefined') {
-          localStorage.removeItem(TOKEN_KEY)
           window.location.href = '/admin/login?redirect=' + encodeURIComponent(window.location.pathname)
         }
       }

@@ -5,17 +5,17 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/admin/AuthContext'
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push(`/admin/login?redirect=${encodeURIComponent(pathname)}`)
     }
-  }, [isAuthenticated, router, pathname])
+  }, [isAuthenticated, isLoading, router, pathname])
 
-  if (!isAuthenticated) {
+  if (isLoading || !isAuthenticated) {
     return null
   }
 

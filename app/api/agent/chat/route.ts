@@ -1,40 +1,29 @@
 import { NextResponse } from 'next/server'
 import { runAgent } from '@/lib/agent'
-import type { AgentHistoryMessage } from '@/lib/agent/types'
+import { agentChatSchema, consumeAgentRequest } from '@/lib/agent/request'
 
 export const runtime = 'nodejs'
-
-interface ChatBody {
-  message?: string
-  history?: AgentHistoryMessage[]
-  locale?: 'zh' | 'en'
-}
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'anonymous'
+  const budget = consumeAgentRequest(ip)
+  if (!budget.allowed) {
+    return NextResponse.json(
+      { error: '请求过于频繁，请稍后重试' },
+      { status: 429, headers: { 'Retry-After': String(budget.retryAfter) } }
+    )
+  }
+
+  const parsed = agentChatSchema.safeParse(await request.json().catch(() => null))
+  if (!parsed.success) {
+    return NextResponse.json({ error: '请求格式无效' }, { status: 400 })
+  }
+
   try {
-    const body = (await request.json()) as ChatBody
-    const message = body.message?.trim()
-
-    if (!message) {
-      return NextResponse.json({ error: 'message 不能为空' }, { status: 400 })
-    }
-
-    if (message.length > 2000) {
-      return NextResponse.json({ error: 'message 过长' }, { status: 400 })
-    }
-
-    const result = await runAgent({
-      message,
-      history: body.history?.slice(-10),
-      locale: body.locale || 'zh',
-    })
-
-    return NextResponse.json(result)
+    return NextResponse.json(await runAgent(parsed.data))
   } catch (error) {
     console.error('[API /agent/chat]', error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Agent 处理失败' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Agent 暂时不可用' }, { status: 503 })
   }
 }

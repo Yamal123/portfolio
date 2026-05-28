@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/admin/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { Eye, EyeOff, Loader2, Lock, User } from 'lucide-react'
@@ -14,31 +13,19 @@ export default function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [remember, setRemember] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { login, isAuthenticated } = useAuth()
-
-  // Load saved credentials
-  useEffect(() => {
-    const saved = localStorage.getItem('remembered_credentials')
-    if (saved) {
-      try {
-        const { username, password } = JSON.parse(saved)
-        setUsername(username || '')
-        setPassword(password || '')
-        setRemember(true)
-      } catch {}
-    }
-  }, [])
+  const getRedirect = () => {
+    if (typeof window === 'undefined') return '/admin/dashboard'
+    return new URLSearchParams(window.location.search).get('redirect') || '/admin/dashboard'
+  }
 
   useEffect(() => {
     if (isAuthenticated) {
-      const redirect = searchParams.get('redirect') || '/admin/dashboard'
-      router.push(redirect)
+      router.push(getRedirect())
     }
-  }, [isAuthenticated, router, searchParams])
+  }, [isAuthenticated, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,21 +57,10 @@ export default function LoginPage() {
       }
 
       const result = data.data
-      login(result.token, result.userInfo)
-
-      // Remember credentials
-      if (remember) {
-        localStorage.setItem('remembered_credentials', JSON.stringify({
-          username: username.trim(),
-          password,
-        }))
-      } else {
-        localStorage.removeItem('remembered_credentials')
-      }
+      login(result.userInfo)
 
       toast.success('登录成功')
-      const redirect = searchParams.get('redirect') || '/admin/dashboard'
-      router.push(redirect)
+      router.push(getRedirect())
     } catch (error) {
       toast.error('网络连接失败，请检查网络后重试')
     } finally {
@@ -153,17 +129,6 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
-            </div>
-
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  checked={remember}
-                  onCheckedChange={(checked) => setRemember(checked as boolean)}
-                  className="border-slate-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
-                />
-                <span className="text-slate-600 select-none">记住密码</span>
-              </label>
             </div>
 
             <Button

@@ -9,7 +9,8 @@ import { Search, ChevronLeft, ChevronRight, ExternalLink, Calendar, Tag, Github 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import PageNav from "@/components/page-nav"
-import { mockProjects } from "@/data/projects"
+import useSWR from "swr"
+import { fetchAPI } from "@/lib/api/client"
 import type { Project } from "@/data/projects"
 
 export default function PortfolioPage() {
@@ -19,7 +20,7 @@ export default function PortfolioPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
 
-  const displayProjects = mockProjects
+  const { data: displayProjects = [] } = useSWR<Project[]>('/api/public/projects', fetchAPI)
 
   const filteredProjects = useMemo(() => {
     if (!displayProjects || !searchQuery) return displayProjects || []

@@ -1,11 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useMemo } from "react"
 import Link from "next/link"
 import { ExternalLink, Calendar, Tag } from "lucide-react"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
-import { articlesData } from "@/data/articles"
+import useSWR from "swr"
+import { fetchAPI } from "@/lib/api/client"
+import type { Article as ContentArticle } from "@/types/article"
 
 interface Article {
   id: number
@@ -17,23 +19,22 @@ interface Article {
 }
 
 export default function BlogSection() {
-  const [articles, setArticles] = useState<Article[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: source = [], isLoading: loading } = useSWR<ContentArticle[]>('/api/public/articles', fetchAPI)
   const { language } = useLanguage()
   const { theme } = useTheme()
 
-  useEffect(() => {
-    const transformedArticles: Article[] = articlesData.slice(0, 6).map(article => ({
+  const articles = useMemo<Article[]>(
+    () =>
+      source.slice(0, 6).map((article) => ({
       id: article.id,
       slug: article.slug,
       title: article.title[language === "zh" ? "zh" : "en"],
       date: article.createdAt,
       tags: article.keywords,
       summary: article.intro[language === "zh" ? "zh" : "en"]
-    }))
-    setArticles(transformedArticles)
-    setLoading(false)
-  }, [language])
+      })),
+    [language, source],
+  )
 
   const formatDate = (dateString: string) => {
     try {

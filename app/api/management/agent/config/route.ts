@@ -1,50 +1,33 @@
 import { NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
 import { checkAuth } from '@/lib/auth/middleware'
+import { agentConfigInputSchema } from '@/lib/content/contracts'
+import { getAgentConfig, saveAgentConfig } from '@/lib/content/repository'
+import { resolveAgentMode } from '@/lib/agent/config'
 
-const CONFIG_PATH = path.join(process.cwd(), 'content', 'agent', 'config.json')
-
-function readConfig() {
-  if (fs.existsSync(CONFIG_PATH)) {
-    return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'))
-  }
-  return null
-}
-
-function writeConfig(data: any) {
-  const dir = path.dirname(CONFIG_PATH)
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
-  fs.writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2), 'utf-8')
-}
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   const auth = checkAuth(request)
   if (auth instanceof NextResponse) return auth
-
   try {
-    const config = readConfig()
-    if (!config) return NextResponse.json({ code: 404, message: 'Config not found' }, { status: 404 })
-    return NextResponse.json({ code: 0, data: config })
-  } catch {
-    return NextResponse.json({ code: 500, message: 'Read error' }, { status: 500 })
+    const config = await getAgentConfig()
+    return NextResponse.json({ code: 0, data: config && { ...config, actualMode: await resolveAgentMode(), apiKeyConfigured: !!process.env.OPENAI_API_KEY } })
+  } catch (error) {
+    console.error('[Management agent GET]', error)
+    return NextResponse.json({ code: 503, message: '数据服务暂不可用' }, { status: 503 })
   }
 }
 
 export async function PUT(request: Request) {
   const auth = checkAuth(request)
   if (auth instanceof NextResponse) return auth
-
+  const parsed = agentConfigInputSchema.safeParse(await request.json().catch(() => null))
+  if (!parsed.success) return NextResponse.json({ code: 400, message: 'Agent 配置格式无效' }, { status: 400 })
   try {
-    const body = await request.json()
-    if (!body || typeof body !== 'object') {
-      return NextResponse.json({ code: 400, message: '无效数据' }, { status: 400 })
-    }
-    const existing = readConfig()
-    const merged = { ...existing, ...body }
-    writeConfig(merged)
-    return NextResponse.json({ code: 0, message: '配置已保存', data: merged })
-  } catch {
-    return NextResponse.json({ code: 500, message: 'Write error' }, { status: 500 })
+    const config = await saveAgentConfig(parsed.data)
+    return NextResponse.json({ code: 0, message: '配置已保存', data: config })
+  } catch (error) {
+    console.error('[Management agent PUT]', error)
+    return NextResponse.json({ code: 503, message: '保存失败' }, { status: 503 })
   }
 }

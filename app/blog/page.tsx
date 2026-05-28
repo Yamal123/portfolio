@@ -8,7 +8,8 @@ import { ExternalLink, Calendar, Tag, Search, ChevronLeft, ChevronRight } from "
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import PageNav from "@/components/page-nav"
-import { articlesData } from "@/data/articles"
+import useSWR from "swr"
+import { fetchAPI } from "@/lib/api/client"
 import type { Article } from "@/types/article"
 
 export default function BlogListPage() {
@@ -17,6 +18,7 @@ export default function BlogListPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
+  const { data: articlesData = [] } = useSWR<Article[]>('/api/public/articles', fetchAPI)
 
   const filteredArticles = useMemo(() => {
     if (!searchQuery) return articlesData
@@ -26,7 +28,7 @@ export default function BlogListPage() {
       article.keywords.some(keyword => keyword.toLowerCase().includes(query)) ||
       article.intro[language === "zh" ? "zh" : "en"].toLowerCase().includes(query)
     )
-  }, [searchQuery, language])
+  }, [searchQuery, language, articlesData])
 
   const formatDate = (dateStr: string) => {
     try {

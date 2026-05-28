@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { message } from 'antd'
-import { API_BASE_URL, StatusCode, TOKEN_KEY } from './constants'
+import { API_BASE_URL, StatusCode } from './constants'
 import type { ApiResponse } from '@/types/admin'
 
 const instance = axios.create({
@@ -9,16 +9,11 @@ const instance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 })
 
 instance.interceptors.request.use(
   (config) => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem(TOKEN_KEY)
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`
-      }
-    }
     return config
   },
   (error) => {
@@ -34,7 +29,6 @@ instance.interceptors.response.use(
     if (error.response) {
       const { status } = error.response
       if (status === StatusCode.UNAUTHORIZED) {
-        localStorage.removeItem(TOKEN_KEY)
         if (typeof window !== 'undefined') {
           window.location.href = '/admin/login?redirect=' + encodeURIComponent(window.location.pathname)
         }
@@ -45,7 +39,7 @@ instance.interceptors.response.use(
         message.error('服务器错误，请稍后重试')
       }
     } else if (error.request) {
-      message.error('网络连接失败，请检查后端服务是否启动（http://localhost:8000）')
+      message.error('网络连接失败，请稍后重试')
     } else {
       message.error(error.message || '未知错误')
     }

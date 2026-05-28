@@ -1,6 +1,6 @@
 'use client'
 
-import { Bell, Search, Sun, Moon, User, LogOut, Settings, ChevronDown, X } from 'lucide-react'
+import { Search, Sun, Moon, User, LogOut, Settings, ChevronDown, X, Database } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
@@ -9,15 +9,6 @@ import { useAuth } from '@/contexts/admin/AuthContext'
 interface HeaderProps {
   title: string
 }
-
-// Simulated notifications
-const mockNotifications = [
-  { id: 1, text: '作品"AI 产品经理作品集"获得 100 次浏览', time: '5分钟前', type: 'info' },
-  { id: 2, text: '文章"Agent闭环" 已更新', time: '15分钟前', type: 'success' },
-  { id: 3, text: '有用户通过联系表单提交了消息', time: '1小时前', type: 'warning' },
-  { id: 4, text: 'Agent 工具列表已更新', time: '2小时前', type: 'info' },
-  { id: 5, text: '网站构建成功', time: '3小时前', type: 'success' },
-]
 
 // Search targets
 const searchTargets = [
@@ -73,22 +64,6 @@ export function Header({ title }: HeaderProps) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Notifications
-  const [notifOpen, setNotifOpen] = useState(false)
-  const [notifications] = useState(mockNotifications)
-  const [readIds, setReadIds] = useState<Set<number>>(new Set())
-  const notifRef = useRef<HTMLDivElement>(null)
-  const markRead = (id: number) => setReadIds(prev => new Set([...prev, id]))
-  const unreadCount = notifications.filter(n => !readIds.has(n.id)).length
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
-
   // Profile dropdown
   const [profileOpen, setProfileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
@@ -100,14 +75,6 @@ export function Header({ title }: HeaderProps) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'success': return 'bg-green-500'
-      case 'warning': return 'bg-amber-500'
-      default: return 'bg-blue-500'
-    }
-  }
-
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-3 shadow-sm flex-shrink-0">
       <div className="flex items-center justify-between">
@@ -116,6 +83,10 @@ export function Header({ title }: HeaderProps) {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
+          <div className="hidden rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700 md:flex md:items-center md:gap-1.5">
+            <Database className="h-3.5 w-3.5" />
+            实时内容模式
+          </div>
 
           {/* ----- Search ----- */}
           <div ref={searchRef} className="relative">
@@ -172,53 +143,6 @@ export function Header({ title }: HeaderProps) {
           >
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
-
-          {/* ----- Notifications ----- */}
-          <div ref={notifRef} className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setNotifOpen(!notifOpen)}
-              className="h-9 w-9 text-gray-500 hover:text-gray-700 hover:bg-gray-100 relative"
-            >
-              <Bell className="w-4 h-4" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold px-1">
-                  {unreadCount}
-                </span>
-              )}
-            </Button>
-            {notifOpen && (
-              <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 py-1 z-50">
-                <div className="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-900">通知</p>
-                  {unreadCount > 0 && <span className="text-xs text-orange-500">{unreadCount} 条未读</span>}
-                </div>
-                <div className="max-h-72 overflow-y-auto">
-                  {notifications.map(n => (
-                    <div
-                      key={n.id}
-                      onClick={() => markRead(n.id)}
-                      className={`px-4 py-3 cursor-pointer transition-colors flex gap-3 items-start ${
-                        readIds.has(n.id) ? 'bg-white hover:bg-gray-50' : 'bg-orange-50/50 hover:bg-orange-50'
-                      }`}
-                    >
-                      <span className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${getTypeColor(n.type)} ${readIds.has(n.id) ? 'opacity-0' : ''}`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-700">{n.text}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{n.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="px-4 py-2 border-t border-gray-100">
-                  <button onClick={() => setReadIds(new Set(notifications.map(n => n.id)))} className="w-full text-xs text-orange-500 hover:text-orange-600">
-                    全部标为已读
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
 
           {/* ----- Profile Dropdown ----- */}
           <div ref={profileRef} className="relative ml-1">

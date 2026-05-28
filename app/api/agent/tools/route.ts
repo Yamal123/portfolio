@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getToolDefinitions, resolveAgentMode } from '@/lib/agent'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   const tools = getToolDefinitions().map((t) => ({
@@ -11,7 +12,7 @@ export async function GET() {
   }))
 
   return NextResponse.json({
-    mode: resolveAgentMode(),
+    mode: await resolveAgentMode(),
     tools,
   })
 }

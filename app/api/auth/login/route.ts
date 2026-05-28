@@ -1,48 +1,39 @@
 import { NextResponse } from 'next/server'
-import { createToken } from '@/lib/auth'
+import { z } from 'zod'
+import { createSession, sessionCookie } from '@/lib/auth'
+
+const loginSchema = z.object({
+  username: z.string().trim().min(1).max(50),
+  password: z.string().min(1).max(100),
+})
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { username, password } = body
-
-    if (!username || !password) {
-      return NextResponse.json({ code: 401, message: '用户名和密码不能为空' }, { status: 401 })
-    }
-
-    if (typeof username !== 'string' || typeof password !== 'string') {
+    const body = loginSchema.safeParse(await request.json())
+    if (!body.success) {
       return NextResponse.json({ code: 400, message: '参数格式错误' }, { status: 400 })
     }
 
-    if (username.length > 50 || password.length > 100) {
-      return NextResponse.json({ code: 400, message: '输入过长' }, { status: 400 })
+    const adminUser = process.env.ADMIN_USERNAME
+    const adminPass = process.env.ADMIN_PASSWORD
+    if (!adminUser || !adminPass) {
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json({ code: 503, message: '管理登录未配置' }, { status: 503 })
+      }
     }
-
-    // Credentials from environment variables (fallback for local dev)
-    const adminUser = process.env.ADMIN_USERNAME || 'admin'
-    const adminPass = process.env.ADMIN_PASSWORD || 'Admin@2026'
-
-    if (username !== adminUser || password !== adminPass) {
+    const expectedUser = adminUser || 'admin'
+    const expectedPass = adminPass || 'Admin@2026'
+    if (body.data.username !== expectedUser || body.data.password !== expectedPass) {
       return NextResponse.json({ code: 401, message: '用户名或密码错误' }, { status: 401 })
     }
 
-    const token = createToken({ username: adminUser, id: 1 })
-
-    return NextResponse.json({
-      code: 0,
-      message: '登录成功',
-      data: {
-        token,
-        userInfo: {
-          id: 1,
-          username: adminUser,
-          nickname: '管理员',
-          avatar: '',
-          email: 'admin@aipmym.com',
-          created_at: new Date().toISOString(),
-        }
-      }
-    })
+    const userInfo = {
+      id: 1, username: expectedUser, nickname: '管理员', avatar: '', email: '',
+      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    }
+    const response = NextResponse.json({ code: 0, message: '登录成功', data: { userInfo } })
+    response.cookies.set(sessionCookie(createSession({ username: expectedUser, id: 1 })))
+    return response
   } catch {
     return NextResponse.json({ code: 500, message: '服务器内部错误' }, { status: 500 })
   }

@@ -14,5 +14,3 @@ export const API_CONFIG = {
   adminBaseUrl: getApiUrl(),
   timeout: 10000,
 }
-
-export const TOKEN_KEY = 'admin_token'

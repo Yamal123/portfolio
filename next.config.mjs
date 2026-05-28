@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
+const isDev = process.env.NODE_ENV === 'development'
+
 const nextConfig = {
+  // Use separate artifact directories for dev and production builds
+  // to avoid stale static chunks/CSS when switching between `next dev`
+  // and `next build` in the same workspace.
+  distDir: isDev ? '.next-dev' : '.next-prod',
   output: 'standalone',
   eslint: {
     ignoreDuringBuilds: true,

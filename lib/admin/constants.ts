@@ -13,8 +13,6 @@ export enum StatusCode {
 export const DEFAULT_PAGE_SIZE = 10
 export const DEFAULT_PAGE = 1
 
-export const TOKEN_KEY = 'admin_token'
-
 export const MENU_ITEMS = [
   { key: 'dashboard', label: '仪表盘', icon: 'DashboardOutlined', path: '/admin/dashboard' },
   { key: 'profile', label: '个人主页信息', icon: 'UserOutlined', path: '/admin/profile' },

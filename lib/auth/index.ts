@@ -1,62 +1,55 @@
-/**
- * Auth utilities for admin API routes.
- * Uses HMAC-SHA256 for token signing (no external dependencies needed).
- */
-
-import { NextResponse } from 'next/server'
 import crypto from 'crypto'
+import { NextResponse } from 'next/server'
 
-const SECRET = process.env.ADMIN_JWT_SECRET || 'aipmym_jwt_secret_key_2026'
-const TOKEN_EXPIRY = 2 * 60 * 60 * 1000 // 2 hours
+export const SESSION_COOKIE = 'admin_session'
+const TOKEN_EXPIRY = 2 * 60 * 60 * 1000
 
-export function createToken(payload: { username: string; id: number }): string {
-  const data = {
-    ...payload,
-    exp: Date.now() + TOKEN_EXPIRY,
-    iat: Date.now(),
+function secret() {
+  const configured = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_JWT_SECRET
+  if (configured) return configured
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('ADMIN_SESSION_SECRET is required in production')
   }
-  const json = JSON.stringify(data)
-  const encoded = Buffer.from(json).toString('base64url')
-  const hmac = crypto.createHmac('sha256', SECRET)
-  hmac.update(encoded)
-  const signature = hmac.digest('base64url')
+  return 'development-only-session-secret'
+}
+
+export function createSession(payload: { username: string; id: number }): string {
+  const encoded = Buffer.from(JSON.stringify({ ...payload, exp: Date.now() + TOKEN_EXPIRY })).toString('base64url')
+  const signature = crypto.createHmac('sha256', secret()).update(encoded).digest('base64url')
   return `${encoded}.${signature}`
 }
 
-export function verifyToken(token: string): { username: string; id: number } | null {
+export function verifySession(token: string): { username: string; id: number } | null {
   try {
-    const parts = token.split('.')
-    if (parts.length !== 2) return null
-
-    const [encoded, signature] = parts
-    const hmac = crypto.createHmac('sha256', SECRET)
-    hmac.update(encoded)
-    const expected = hmac.digest('base64url')
-
-    // Constant-time comparison
-    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
-      return null
-    }
-
-    const data = JSON.parse(Buffer.from(encoded, 'base64url').toString())
-    if (data.exp < Date.now()) return null
-
-    return { username: data.username, id: data.id }
+    const [encoded, signature] = token.split('.')
+    if (!encoded || !signature) return null
+    const expected = crypto.createHmac('sha256', secret()).update(encoded).digest('base64url')
+    if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null
+    const data = JSON.parse(Buffer.from(encoded, 'base64url').toString()) as { username: string; id: number; exp: number }
+    return data.exp > Date.now() ? { username: data.username, id: data.id } : null
   } catch {
     return null
   }
 }
 
-export function getTokenFromHeader(request: Request): string | null {
-  const auth = request.headers.get('authorization')
-  if (!auth?.startsWith('Bearer ')) return null
-  return auth.slice(7)
+export function getSessionFromRequest(request: Request): string | null {
+  const cookie = request.headers.get('cookie') || ''
+  const value = cookie.split(';').map((item) => item.trim()).find((item) => item.startsWith(`${SESSION_COOKIE}=`))
+  return value ? decodeURIComponent(value.slice(SESSION_COOKIE.length + 1)) : null
 }
 
-/**
- * Authentication middleware for API routes.
- * Usage: const auth = authenticate(request); if (!auth) return authResponse;
- */
+export function sessionCookie(value: string, maxAge = TOKEN_EXPIRY / 1000) {
+  return {
+    name: SESSION_COOKIE,
+    value,
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge,
+  }
+}
+
 export function authResponse(): NextResponse {
   return NextResponse.json({ code: 401, message: '未登录或登录已过期' }, { status: 401 })
 }

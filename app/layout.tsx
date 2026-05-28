@@ -101,6 +101,39 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta httpEquiv="x-ua-compatible" content="ie=edge" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                if (typeof window === 'undefined') return;
+                var key = '__css_recover_once__';
+                function hasCoreStylesheet() {
+                  try {
+                    return Array.from(document.styleSheets).some(function (sheet) {
+                      var href = sheet && sheet.href ? String(sheet.href) : '';
+                      return href.indexOf('/_next/static/css/app/layout.css') !== -1;
+                    });
+                  } catch (_error) {
+                    return false;
+                  }
+                }
+                window.addEventListener('load', function () {
+                  setTimeout(function () {
+                    if (hasCoreStylesheet()) {
+                      sessionStorage.removeItem(key);
+                      return;
+                    }
+                    if (sessionStorage.getItem(key) === '1') return;
+                    sessionStorage.setItem(key, '1');
+                    var url = new URL(window.location.href);
+                    url.searchParams.set('_css_reload', String(Date.now()));
+                    window.location.replace(url.toString());
+                  }, 250);
+                });
+              })();
+            `,
+          }}
+        />
 
         <script
           type="application/ld+json"

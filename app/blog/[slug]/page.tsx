@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
 import { ExternalLink, Calendar, Tag, Copy, Check } from "lucide-react"
-import { articlesData } from "@/data/articles"
 import type { Article } from "@/types/article"
+import useSWR from "swr"
+import { fetchAPI } from "@/lib/api/client"
 import PageNav from "@/components/page-nav"
 import { ArticleMarkdown } from "@/components/article-markdown"
 
@@ -20,9 +21,7 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
   const { theme } = useTheme()
   const [copied, setCopied] = useState(false)
 
-  const article: Article | undefined = useMemo(() => {
-    return articlesData.find(a => a.slug === slug)
-  }, [slug])
+  const { data: article } = useSWR<Article | null>(slug ? `/api/public/articles?slug=${encodeURIComponent(slug)}` : null, fetchAPI)
 
   const handleCopyLink = () => {
     const url = typeof window !== 'undefined' ? window.location.href : ''
