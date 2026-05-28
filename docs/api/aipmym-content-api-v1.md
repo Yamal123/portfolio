@@ -1,27 +1,50 @@
-# AIPMYM Content API v1
+# AIPMYM Content API v1 (Contract-Grade)
 
-Base URL:
+Last updated: `2026-05-28`
 
-```text
-https://www.aipmym.com
-```
+## 0. Base URLs
 
-Local:
+- Production: `https://www.aipmym.com`
+- Local: `http://localhost:3000`
 
-```text
-http://localhost:3000
-```
+---
 
-## 1) Auth & Security
+## 1. Auth Model (Important)
 
-- Admin write APIs require same-origin session cookie.
-- Login: `POST /api/auth/login`
-- Check session: `GET /api/auth/session`
-- Logout: `POST /api/auth/logout`
-- JSON content type: `application/json`
-- All write APIs validate request body with `zod`.
+Management write APIs are **session-cookie based**, not API-token based.
 
-Login example:
+### 1.1 Login Flow
+
+1. `POST /api/auth/login` with admin username/password.
+2. Server sets `admin_session` cookie.
+3. Call management APIs with this cookie.
+
+### 1.2 Session Cookie Attributes (actual implementation)
+
+- Cookie name: `admin_session`
+- `HttpOnly: true`
+- `SameSite: Lax`
+- `Secure: true` in production, `false` in local dev
+- `Path: /`
+- Expiration: `2h` (`maxAge = 7200`)
+- Domain: not explicitly set (host-only cookie)
+
+### 1.3 CSRF / CORS Reality
+
+- Current implementation does **not** require a separate CSRF token.
+- Browser cross-site usage is constrained by `SameSite=Lax`.
+- This API is designed for:
+  - same-site admin frontend, or
+  - server-to-server calls that can carry login cookie.
+- It is **not** a public third-party write API.
+
+### 1.4 Auth Endpoints
+
+- `POST /api/auth/login`
+- `GET /api/auth/session`
+- `POST /api/auth/logout`
+
+Example:
 
 ```bash
 curl -i -c /tmp/aipmym.cookies \
@@ -30,58 +53,186 @@ curl -i -c /tmp/aipmym.cookies \
   -d '{"username":"admin","password":"<YOUR_PASSWORD>"}'
 ```
 
-## 2) Unified Response Contract
+---
 
-Success:
+## 2. Response Contract
+
+### 2.1 Success
 
 ```json
 { "code": 0, "data": {}, "message": "optional" }
 ```
 
-Failure:
+### 2.2 Error
 
 ```json
 { "code": 400, "message": "error message" }
 ```
 
-Common status:
+### 2.3 Common HTTP status
 
-- `400` bad request / validation failed
+- `400` validation/bad input
 - `401` unauthenticated
-- `409` conflict (e.g. duplicate slug)
-- `429` rate limited
-- `503` upstream/service unavailable
+- `409` write conflict / not-found-on-update
+- `429` rate-limited (agent endpoint)
+- `503` service unavailable
+
+Note: field-level zod issue details are currently not returned in response body.
 
 ---
 
-## 3) Portfolio Module APIs
+## 3. Resource Models
 
-Portfolio = project content module. These are alias APIs designed for business semantics. They map to the same data source as `/api/public/projects` and `/api/management/projects`.
+## 3.1 Portfolio (Project)
 
-### 3.1 Public Read
+```ts
+type ProjectInput = {
+  id?: number
+  slug: string // ^[a-z0-9]+(?:-[a-z0-9]+)*$, 1..80
+  name: { zh: string; en: string } // required
+  thumbnail?: string // default ''
+  type: { zh: string; en: string } // required
+  intro: { zh: string; en: string } // required
+  keywords?: string[] // <=20, default []
+  tags?: string[] // <=20, default []
+  emoji?: string // default ''
+  problem: { zh: string; en: string } // required
+  action: { zh: string; en: string } // required
+  result: { zh: string; en: string } // required
+  content: { zh: string; en: string } // required
+  externalUrl?: string // default ''
+  published?: boolean // default true
+  sortOrder?: number // 0..10000, default 0
+  createdAt?: string // optional; if absent, server uses now
+}
+```
 
-#### `GET /api/public/portfolio`
+Server view shape (`GET` response `data` item):
 
-- Query:
-  - `slug` (optional): get single item by slug
+```ts
+type ProjectView = {
+  id: number
+  slug: string
+  name: { zh: string; en: string }
+  thumbnail: string
+  type: { zh: string; en: string }
+  intro: { zh: string; en: string }
+  keywords: string[]
+  tags: string[]
+  emoji: string
+  problem: { zh: string; en: string }
+  action: { zh: string; en: string }
+  result: { zh: string; en: string }
+  content: { zh: string; en: string }
+  externalUrl: string
+  published: boolean
+  sortOrder: number
+  createdAt: string // YYYY-MM-DD
+}
+```
 
-Examples:
+## 3.2 Methodology (Article)
+
+```ts
+type ArticleInput = {
+  id?: number
+  slug: string // same slug rule
+  title: { zh: string; en: string } // required
+  intro: { zh: string; en: string } // required
+  keywords?: string[] // <=20, default []
+  content: { zh: string; en: string } // required
+  published?: boolean // default true
+  createdAt: string // required; used as publishedAt
+}
+```
+
+Server view shape (`GET` response `data` item):
+
+```ts
+type ArticleView = {
+  id: number
+  slug: string
+  title: { zh: string; en: string }
+  intro: { zh: string; en: string }
+  keywords: string[]
+  content: { zh: string; en: string }
+  published: boolean
+  createdAt: string // YYYY-MM-DD
+}
+```
+
+---
+
+## 4. Endpoint Matrix
+
+## 4.1 Public (read-only)
+
+- `GET /api/public/portfolio`
+- `GET /api/public/portfolio?slug=:slug`
+- `GET /api/public/methods`
+- `GET /api/public/methods?slug=:slug`
+
+Compatibility aliases (same datasource):
+
+- `GET /api/public/projects`
+- `GET /api/public/projects?slug=:slug`
+- `GET /api/public/articles`
+- `GET /api/public/articles?slug=:slug`
+
+Behavior:
+
+- with `slug`: `data` is single object or `null`
+- without `slug`: `data` is array
+- public endpoints only return published and non-deleted rows
+
+## 4.2 Management (cookie session required)
+
+Portfolio:
+
+- `GET /api/management/portfolio`
+- `GET /api/management/portfolio?slug=:slug`
+- `POST /api/management/portfolio`
+- `PUT /api/management/portfolio`
+- `DELETE /api/management/portfolio?slug=:slug`
+
+Methodology:
+
+- `GET /api/management/methods`
+- `GET /api/management/methods?slug=:slug`
+- `POST /api/management/methods`
+- `PUT /api/management/methods`
+- `DELETE /api/management/methods?slug=:slug`
+
+Compatibility aliases (same datasource):
+
+- `/api/management/projects`
+- `/api/management/articles`
+
+Behavior:
+
+- `GET` returns admin-visible rows (includes unpublished, excludes soft-deleted)
+- `PUT` is full-payload update by `slug`
+- `PUT` on missing `slug` row returns `409`
+- `DELETE` is soft delete by `slug`
+- `DELETE` is effectively idempotent (currently returns success even if row not found)
+
+---
+
+## 5. Example Calls
+
+## 5.1 Read Public Portfolio
 
 ```bash
-curl -s "https://www.aipmym.com/api/public/portfolio"
 curl -s "https://www.aipmym.com/api/public/portfolio?slug=ai-portfolio"
 ```
 
-### 3.2 Admin CRUD
-
-#### `GET /api/management/portfolio`
+## 5.2 Read Public Methodology
 
 ```bash
-curl -s -b /tmp/aipmym.cookies \
-  "https://www.aipmym.com/api/management/portfolio"
+curl -s "https://www.aipmym.com/api/public/methods?slug=agent-loop"
 ```
 
-#### `POST /api/management/portfolio`
+## 5.3 Create Portfolio (Management)
 
 ```bash
 curl -s -b /tmp/aipmym.cookies \
@@ -107,52 +258,7 @@ curl -s -b /tmp/aipmym.cookies \
   }'
 ```
 
-#### `PUT /api/management/portfolio`
-
-```bash
-curl -s -b /tmp/aipmym.cookies \
-  -H "Content-Type: application/json" \
-  -X PUT "https://www.aipmym.com/api/management/portfolio" \
-  -d '{ ...same payload as POST... }'
-```
-
-#### `DELETE /api/management/portfolio?slug=...`
-
-```bash
-curl -s -b /tmp/aipmym.cookies \
-  -X DELETE "https://www.aipmym.com/api/management/portfolio?slug=agent-copilot-demo"
-```
-
----
-
-## 4) Methodology Module APIs
-
-Methodology = long-form knowledge articles. These are alias APIs mapped to the same content source as `/api/public/articles` and `/api/management/articles`.
-
-### 4.1 Public Read
-
-#### `GET /api/public/methods`
-
-- Query:
-  - `slug` (optional): get single item by slug
-
-Examples:
-
-```bash
-curl -s "https://www.aipmym.com/api/public/methods"
-curl -s "https://www.aipmym.com/api/public/methods?slug=agent-loop"
-```
-
-### 4.2 Admin CRUD
-
-#### `GET /api/management/methods`
-
-```bash
-curl -s -b /tmp/aipmym.cookies \
-  "https://www.aipmym.com/api/management/methods"
-```
-
-#### `POST /api/management/methods`
+## 5.4 Create Methodology (Management)
 
 ```bash
 curl -s -b /tmp/aipmym.cookies \
@@ -169,58 +275,28 @@ curl -s -b /tmp/aipmym.cookies \
   }'
 ```
 
-#### `PUT /api/management/methods`
+---
 
-```bash
-curl -s -b /tmp/aipmym.cookies \
-  -H "Content-Type: application/json" \
-  -X PUT "https://www.aipmym.com/api/management/methods" \
-  -d '{ ...same payload as POST... }'
-```
+## 6. Reliability Checklist Before External Integration
 
-#### `DELETE /api/management/methods?slug=...`
+For production integration, verify these first:
 
-```bash
-curl -s -b /tmp/aipmym.cookies \
-  -X DELETE "https://www.aipmym.com/api/management/methods?slug=agent-runtime-playbook"
-```
+1. Admin credentials are configured (`ADMIN_USERNAME`, `ADMIN_PASSWORD`).
+2. Session secret configured (`ADMIN_SESSION_SECRET`) in production.
+3. Your caller can persist and send `admin_session` cookie.
+4. You are not relying on browser cross-site cookie behavior for management APIs.
+5. You have tested both success and failure responses for your exact payloads.
 
 ---
 
-## 5) Compatibility APIs (Existing Paths)
+## 7. Verified Regression (Local)
 
-Portfolio-compatible:
+Verified on `2026-05-28` against `http://localhost:3000`:
 
-- `GET /api/public/projects`
-- `GET /api/public/projects?slug=...`
-- `GET/POST/PUT/DELETE /api/management/projects`
-
-Methodology-compatible:
-
-- `GET /api/public/articles`
-- `GET /api/public/articles?slug=...`
-- `GET/POST/PUT/DELETE /api/management/articles`
-
-Both path sets point to the same database source.
-
----
-
-## 6) Recommended Integration Scenarios
-
-- CMS/backoffice UI: use `/api/management/portfolio` and `/api/management/methods`.
-- External automation (n8n/Zapier/custom worker): call management APIs with login cookie or server-side proxy.
-- Public rendering/SEO pages and Agent tools: use `/api/public/portfolio` and `/api/public/methods` for stable business semantics.
-
----
-
-## 7) Regression Checklist (Verified)
-
-Verified at `2026-05-28` (local `http://localhost:3000`):
-
-1. Admin login success with cookie session.
-2. `POST/PUT/DELETE /api/management/portfolio` works.
-3. `GET /api/public/portfolio` and `GET /api/public/projects` reflect latest portfolio updates immediately.
-4. `POST/PUT/DELETE /api/management/methods` works.
-5. `GET /api/public/methods` and `GET /api/public/articles` reflect latest methodology updates immediately.
-6. Agent query can read newly created portfolio/methodology records and returns `/portfolio/...` or `/blog/...` links.
-7. Deleted records are no longer returned by public APIs.
+1. Login session cookie works.
+2. Portfolio `POST/PUT/DELETE` works.
+3. Public `/api/public/portfolio` and `/api/public/projects` reflect updates immediately.
+4. Methodology `POST/PUT/DELETE` works.
+5. Public `/api/public/methods` and `/api/public/articles` reflect updates immediately.
+6. Agent can query newly created records and return site links.
+7. Deleted records disappear from public read endpoints.
