@@ -210,3 +210,17 @@ Both path sets point to the same database source.
 - CMS/backoffice UI: use `/api/management/portfolio` and `/api/management/methods`.
 - External automation (n8n/Zapier/custom worker): call management APIs with login cookie or server-side proxy.
 - Public rendering/SEO pages and Agent tools: use `/api/public/portfolio` and `/api/public/methods` for stable business semantics.
+
+---
+
+## 7) Regression Checklist (Verified)
+
+Verified at `2026-05-28` (local `http://localhost:3000`):
+
+1. Admin login success with cookie session.
+2. `POST/PUT/DELETE /api/management/portfolio` works.
+3. `GET /api/public/portfolio` and `GET /api/public/projects` reflect latest portfolio updates immediately.
+4. `POST/PUT/DELETE /api/management/methods` works.
+5. `GET /api/public/methods` and `GET /api/public/articles` reflect latest methodology updates immediately.
+6. Agent query can read newly created portfolio/methodology records and returns `/portfolio/...` or `/blog/...` links.
+7. Deleted records are no longer returned by public APIs.
