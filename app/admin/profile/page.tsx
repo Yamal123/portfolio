@@ -1,169 +1,64 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
+import { Loader2, Save } from 'lucide-react'
+import { toast } from 'sonner'
 import { AdminLayout } from '@/components/admin/AdminLayout'
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { toast } from 'sonner'
-import { Save, Plus, Trash2, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { fetcher, put } from '@/lib/admin/fetcher'
+import type { ProfileInput } from '@/lib/content/contracts'
+import { defaultProfileInput } from '@/lib/content/defaults'
 
 function ProfileContent() {
-  const { data, mutate, isLoading } = useSWR('/profile', async (url) => {
-    const res = await fetch('/api/management/profile')
-    const j = await res.json()
-    return j.data || j
-  })
-
-  const [profile, setProfile] = useState<any>(null)
+  const { data, mutate, isLoading } = useSWR<ProfileInput>('/api/management/profile', fetcher)
+  const [profile, setProfile] = useState<ProfileInput | null>(null)
   const [saving, setSaving] = useState(false)
-
-  useEffect(() => { if (data) setProfile(data) }, [data])
+  useEffect(() => { setProfile(data || defaultProfileInput) }, [data])
+  const hasChanges = useMemo(() => {
+    if (!data || !profile) return false
+    return JSON.stringify(data) !== JSON.stringify(profile)
+  }, [data, profile])
+  if (isLoading || !profile) return <AdminLayout title="个人信息"><div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin" /></div></AdminLayout>
 
   const save = async () => {
     if (!profile) return
     setSaving(true)
-    try {
-      await fetch('/api/management/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profile),
-      })
-      mutate()
-      toast.success('个人信息已保存')
-    } catch {
-      toast.error('保存失败')
-    }
-    setSaving(false)
+    try { await put('/api/management/profile', profile); await mutate(); toast.success('个人信息已保存并立即生效') }
+    catch (error) { toast.error(error instanceof Error ? error.message : '保存失败') }
+    finally { setSaving(false) }
   }
-
-  const updateContact = (key: string, value: string) => {
-    setProfile((p: any) => ({ ...p, contact: { ...p.contact, [key]: value } }))
-  }
-
-  const updateSkill = (idx: number, field: string, value: any) => {
-    setProfile((p: any) => {
-      const skills = [...p.skills]
-      skills[idx] = { ...skills[idx], [field]: value }
-      return { ...p, skills }
-    })
-  }
-
-  const addSkill = () => setProfile((p: any) => ({ ...p, skills: [...p.skills, { nameZh: '', nameEn: '', level: 50, category: 'ai' }] }))
-  const removeSkill = (idx: number) => setProfile((p: any) => ({ ...p, skills: p.skills.filter((_: any, i: number) => i !== idx) }))
-
-  const updateExp = (idx: number, field: string, value: string) => {
-    setProfile((p: any) => {
-      const exps = [...p.experiences]
-      exps[idx] = { ...exps[idx], [field]: value }
-      return { ...p, experiences: exps }
-    })
-  }
-
-  const addExp = () => setProfile((p: any) => ({ ...p, experiences: [...p.experiences, { companyZh: '', companyEn: '', roleZh: '', roleEn: '', period: '', locationZh: '', locationEn: '', descriptionZh: '', descriptionEn: '' }] }))
-  const removeExp = (idx: number) => setProfile((p: any) => ({ ...p, experiences: p.experiences.filter((_: any, i: number) => i !== idx) }))
-
-  if (isLoading || !profile) return <AdminLayout title="个人信息"><div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-slate-300"/></div></AdminLayout>
-
   return (
     <AdminLayout title="个人信息管理">
-      <div className="flex justify-end mb-4">
-        <Button onClick={save} disabled={saving} className="bg-orange-500 hover:bg-orange-600">
-          {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin"/> : <Save className="w-4 h-4 mr-1"/>}保存全部
-        </Button>
+      <div className="mb-4 flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm">
+        <span className={hasChanges ? 'text-amber-700' : 'text-emerald-700'}>{hasChanges ? '有未保存更改' : '已与数据库同步'}</span>
+        <Button onClick={save} disabled={saving || !hasChanges} className="bg-orange-500 hover:bg-orange-600">{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}保存</Button>
       </div>
-
-      <Tabs defaultValue="base" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="base">基本信息</TabsTrigger>
-          <TabsTrigger value="contact">联系方式</TabsTrigger>
-          <TabsTrigger value="skills">技能管理</TabsTrigger>
-          <TabsTrigger value="experience">工作经历</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="base">
-          <Card><CardHeader><CardTitle>基本信息</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              {['nickname','titleZh','titleEn','avatar'].map(k => (
-                <div key={k}><label className="text-sm text-slate-600 mb-1 block">{k}</label>
-                  <Input value={profile[k] || ''} onChange={e => setProfile({...profile, [k]: e.target.value})}/>
-                </div>
-              ))}
-              {['bioZh','bioEn'].map(k => (
-                <div key={k}><label className="text-sm text-slate-600 mb-1 block">{k}</label>
-                  <textarea className="w-full p-3 border rounded-lg text-sm h-24" value={profile[k] || ''} onChange={e => setProfile({...profile, [k]: e.target.value})}/>
-                </div>
-              ))}
-              <div className="grid grid-cols-3 gap-3">
-                <div><label className="text-sm text-slate-600 mb-1 block">工作年限</label><Input type="number" value={profile.yearsOfExperience||0} onChange={e => setProfile({...profile, yearsOfExperience: Number(e.target.value)})}/></div>
-                <div><label className="text-sm text-slate-600 mb-1 block">成功率(%)</label><Input type="number" value={profile.successRate||0} onChange={e => setProfile({...profile, successRate: Number(e.target.value)})}/></div>
-                <div><label className="text-sm text-slate-600 mb-1 block">效率提升(%)</label><Input type="number" value={profile.efficiencyGain||0} onChange={e => setProfile({...profile, efficiencyGain: Number(e.target.value)})}/></div>
-              </div>
-            </CardContent></Card>
-        </TabsContent>
-
-        <TabsContent value="contact">
-          <Card><CardHeader><CardTitle>联系方式</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              {['email','phone','wechatId','linkedin','github','zhihu'].map(k => (
-                <div key={k}><label className="text-sm text-slate-600 mb-1 block">{k}</label>
-                  <Input value={profile.contact?.[k] || ''} onChange={e => updateContact(k, e.target.value)}/>
-                </div>
-              ))}
-              <div className="flex gap-4">
-                {['emailDisplayed','phoneDisplayed','wechatDisplayed'].map(k => (
-                  <label key={k} className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input type="checkbox" checked={profile.contact?.[k] || false} onChange={e => updateContact(k, String(e.target.checked))} />
-                    {k}
-                  </label>
-                ))}
-              </div>
-            </CardContent></Card>
-        </TabsContent>
-
-        <TabsContent value="skills">
-          <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>技能列表</CardTitle><Button size="sm" variant="outline" onClick={addSkill}><Plus className="w-4 h-4 mr-1"/>添加</Button></CardHeader>
-            <CardContent><div className="space-y-2">
-              {(profile.skills||[]).map((s: any, i: number) => (
-                <div key={i} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
-                  <Input className="flex-1" value={s.nameZh} placeholder="中文名" onChange={e => updateSkill(i, 'nameZh', e.target.value)}/>
-                  <Input className="flex-1" value={s.nameEn} placeholder="English" onChange={e => updateSkill(i, 'nameEn', e.target.value)}/>
-                  <Input className="w-20" type="number" value={s.level} min={0} max={100} onChange={e => updateSkill(i, 'level', Number(e.target.value))}/>
-                  <select className="border rounded p-2 text-sm" value={s.category} onChange={e => updateSkill(i, 'category', e.target.value)}>
-                    <option value="ai">AI</option><option value="product">产品</option><option value="technical">技术</option><option value="soft">软技能</option>
-                  </select>
-                  <Button variant="ghost" size="sm" className="text-red-400" onClick={() => removeSkill(i)}><Trash2 className="w-4 h-4"/></Button>
-                </div>
-              ))}
-            </div></CardContent></Card>
-        </TabsContent>
-
-        <TabsContent value="experience">
-          <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>工作经历</CardTitle><Button size="sm" variant="outline" onClick={addExp}><Plus className="w-4 h-4 mr-1"/>添加</Button></CardHeader>
-            <CardContent><div className="space-y-4">
-              {(profile.experiences||[]).map((exp: any, i: number) => (
-                <div key={i} className="p-4 bg-slate-50 rounded-lg space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input value={exp.companyZh} placeholder="公司(中)" onChange={e => updateExp(i, 'companyZh', e.target.value)}/>
-                    <Input value={exp.companyEn} placeholder="Company(EN)" onChange={e => updateExp(i, 'companyEn', e.target.value)}/>
-                    <Input value={exp.roleZh} placeholder="职位(中)" onChange={e => updateExp(i, 'roleZh', e.target.value)}/>
-                    <Input value={exp.roleEn} placeholder="Role(EN)" onChange={e => updateExp(i, 'roleEn', e.target.value)}/>
-                    <Input value={exp.period} placeholder="时段" onChange={e => updateExp(i, 'period', e.target.value)}/>
-                    <Input value={exp.locationZh} placeholder="地点" onChange={e => updateExp(i, 'locationZh', e.target.value)}/>
-                  </div>
-                  <Input value={exp.descriptionZh} placeholder="描述(中)" onChange={e => updateExp(i, 'descriptionZh', e.target.value)}/>
-                  <Input value={exp.descriptionEn} placeholder="Description(EN)" onChange={e => updateExp(i, 'descriptionEn', e.target.value)}/>
-                  <div className="flex justify-end"><Button variant="ghost" size="sm" className="text-red-400" onClick={() => removeExp(i)}><Trash2 className="w-4 h-4 mr-1"/>删除</Button></div>
-                </div>
-              ))}
-            </div></CardContent></Card>
-        </TabsContent>
-      </Tabs>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card><CardHeader><CardTitle>基本信息</CardTitle></CardHeader><CardContent className="space-y-3">
+          <Field label="昵称"><Input value={profile.nickname} onChange={(e) => setProfile({ ...profile, nickname: e.target.value })} /></Field>
+          <Field label="头像 URL"><Input value={profile.avatar} onChange={(e) => setProfile({ ...profile, avatar: e.target.value })} /></Field>
+          <div className="grid gap-3 sm:grid-cols-2"><Field label="中文职位"><Input value={profile.titleZh} onChange={(e) => setProfile({ ...profile, titleZh: e.target.value })} /></Field><Field label="English Title"><Input value={profile.titleEn} onChange={(e) => setProfile({ ...profile, titleEn: e.target.value })} /></Field></div>
+          <Field label="中文简介"><textarea className="h-24 w-full rounded-md border p-3 text-sm" value={profile.bioZh} onChange={(e) => setProfile({ ...profile, bioZh: e.target.value })} /></Field>
+          <Field label="English Bio"><textarea className="h-24 w-full rounded-md border p-3 text-sm" value={profile.bioEn} onChange={(e) => setProfile({ ...profile, bioEn: e.target.value })} /></Field>
+          <div className="grid grid-cols-3 gap-3">
+            {([['年经验', 'yearsOfExperience'], ['解决率', 'successRate'], ['效率提升', 'efficiencyGain']] as const).map(([label, key]) => <Field key={key} label={label}><Input type="number" value={profile[key]} onChange={(e) => setProfile({ ...profile, [key]: Number(e.target.value) })} /></Field>)}
+          </div>
+        </CardContent></Card>
+        <Card><CardHeader><CardTitle>公开联系方式</CardTitle></CardHeader><CardContent className="space-y-3">
+          {(['email', 'phone', 'wechatId', 'wechatQrcode', 'github', 'linkedin', 'zhihu'] as const).map((key) => <Field key={key} label={key}><Input value={profile.contact[key]} onChange={(e) => setProfile({ ...profile, contact: { ...profile.contact, [key]: e.target.value } })} /></Field>)}
+          <div className="flex flex-wrap gap-4 pt-2">
+            {([['emailDisplayed', '公开邮箱'], ['phoneDisplayed', '公开电话'], ['wechatDisplayed', '公开微信']] as const).map(([key, label]) => (
+              <label key={key} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={profile.contact[key]} onChange={(e) => setProfile({ ...profile, contact: { ...profile.contact, [key]: e.target.checked } })} />{label}</label>
+            ))}
+          </div>
+        </CardContent></Card>
+      </div>
     </AdminLayout>
   )
 }
-
+function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="block space-y-1 text-sm text-slate-600"><span>{label}</span>{children}</label> }
 export default function ProfilePage() { return <ProtectedRoute><ProfileContent /></ProtectedRoute> }

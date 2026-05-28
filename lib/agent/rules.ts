@@ -37,6 +37,13 @@ function formatArticleList(
     .join('\n\n')
 }
 
+function compactIntentQuery(input: string, pattern: RegExp): string {
+  return input
+    .replace(pattern, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 export async function runRulesAgent(input: {
   message: string
   locale?: 'zh' | 'en'
@@ -45,16 +52,6 @@ export async function runRulesAgent(input: {
   const query = input.message.trim()
   const lower = query.toLowerCase()
   const toolsUsed: string[] = []
-
-  const faq = matchFaq(lower)
-  if (faq) {
-    return {
-      content: faq.answer,
-      mode: 'rules',
-      type: 'faq',
-      toolsUsed: [],
-    }
-  }
 
   if (
     lower.includes('联系') ||
@@ -134,15 +131,29 @@ export async function runRulesAgent(input: {
     lower.includes('blog')
   ) {
     toolsUsed.push('search_articles')
-    const { data } = await executeTool('search_articles', {
-      query: query.replace(/文章|方法论|博客|article|blog/gi, '').trim(),
+    const articleQuery = compactIntentQuery(
+      query,
+      /文章|方法论|博客|article|blog|最近|最新|看看|给我|介绍|一下|有哪些|有什么|写了|内容|关于|please|show|list/gi,
+    )
+    const primary = await executeTool('search_articles', {
+      query: articleQuery,
       limit: 5,
     })
-    const result = data as {
+    const result = primary.data as {
+      items: Array<{ title: string; intro: string; url: string }>
+    }
+    const fallback = !result.items.length && articleQuery
+      ? await executeTool('search_articles', { query: '', limit: 5 })
+      : null
+    const finalResult = (fallback?.data || result) as {
       items: Array<{ title: string; intro: string; url: string }>
     }
     return {
-      content: `相关文章：\n${formatArticleList(result.items)}`,
+      content: finalResult.items.length
+        ? `相关文章：\n${formatArticleList(finalResult.items)}`
+        : locale === 'zh'
+          ? '暂未找到匹配文章，可访问 [方法论](/blog) 浏览全部。'
+          : 'No matching articles. Visit [Methodology](/blog).',
       mode: 'rules',
       type: 'text',
       toolsUsed,
@@ -156,8 +167,12 @@ export async function runRulesAgent(input: {
     lower.includes('案例')
   ) {
     toolsUsed.push('search_projects')
+    const projectQuery = compactIntentQuery(
+      query,
+      /项目|作品|案例|portfolio|project|有哪些|有什么|介绍|一下|看看|给我|请|关于|show|list/gi,
+    )
     const { data } = await executeTool('search_projects', {
-      query: query.replace(/项目|作品|案例|portfolio/gi, '').trim(),
+      query: projectQuery,
       limit: 5,
     })
     const result = data as {
@@ -189,6 +204,16 @@ export async function runRulesAgent(input: {
       type: 'project',
       toolsUsed,
       projects,
+    }
+  }
+
+  const faq = matchFaq(lower)
+  if (faq) {
+    return {
+      content: faq.answer,
+      mode: 'rules',
+      type: 'faq',
+      toolsUsed: [],
     }
   }
 
