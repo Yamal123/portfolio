@@ -12,6 +12,7 @@
     "start": "next start",
     "db:migrate": "tsx scripts/migrate-db.ts",
     "db:seed": "tsx scripts/seed-db.ts",
+    "industry:daily": "tsx scripts/generate-industry-daily.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

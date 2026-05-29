@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { readFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { neon } from '@neondatabase/serverless'
 import { config as loadEnv } from 'dotenv'
@@ -11,16 +11,20 @@ async function main() {
   if (!url) throw new Error('DATABASE_URL is required')
 
   const sql = neon(url)
-  const migration = await readFile(join(process.cwd(), 'drizzle', '0000_live_content.sql'), 'utf8')
-  const statements = migration
-    .split(';')
-    .map((segment) => segment.trim())
-    .filter(Boolean)
+  const migrationDir = join(process.cwd(), 'drizzle')
+  const files = (await readdir(migrationDir)).filter((file) => file.endsWith('.sql')).sort()
 
-  for (const statement of statements) {
-    await sql.query(`${statement};`)
+  for (const file of files) {
+    const migration = await readFile(join(migrationDir, file), 'utf8')
+    const statements = migration
+      .split(';')
+      .map((segment) => segment.trim())
+      .filter(Boolean)
+    for (const statement of statements) {
+      await sql.query(`${statement};`)
+    }
   }
-  console.log('Applied live content database migration.')
+  console.log(`Applied ${files.length} live content database migration(s).`)
 }
 
 void main()

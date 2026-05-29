@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, ilike, isNull, or } from 'drizzle-orm'
 import { getDb } from '@/lib/db'
-import { agentConfigs, articles, profiles, projects, skills } from '@/lib/db/schema'
-import type { AgentConfigInput, ArticleInput, ProfileInput, ProjectInput, SkillInput } from './contracts'
+import { agentConfigs, articles, industryUpdates, profiles, projects, skills } from '@/lib/db/schema'
+import type { AgentConfigInput, ArticleInput, IndustryUpdateInput, ProfileInput, ProjectInput, SkillInput } from './contracts'
 
 function projectView(row: typeof projects.$inferSelect) {
   return {
@@ -33,6 +33,23 @@ function articleView(row: typeof articles.$inferSelect) {
     intro: { zh: row.introZh, en: row.introEn },
     keywords: row.keywords,
     content: { zh: row.contentZh, en: row.contentEn },
+    published: row.published,
+    createdAt: row.publishedAt.toISOString().slice(0, 10),
+  }
+}
+
+function industryUpdateView(row: typeof industryUpdates.$inferSelect): IndustryUpdateInput {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: { zh: row.titleZh, en: row.titleEn },
+    intro: { zh: row.introZh, en: row.introEn },
+    keywords: row.keywords,
+    content: { zh: row.contentZh, en: row.contentEn },
+    coverImage: row.coverImage,
+    sources: row.sources,
+    newsItems: row.newsItems as IndustryUpdateInput['newsItems'],
+    techItems: row.techItems as IndustryUpdateInput['techItems'],
     published: row.published,
     createdAt: row.publishedAt.toISOString().slice(0, 10),
   }
@@ -183,6 +200,48 @@ export async function saveArticle(input: ArticleInput, update = false) {
 
 export async function deleteArticle(slug: string) {
   return getDb().update(articles).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(articles.slug, slug)).returning()
+}
+
+export async function listIndustryUpdates(options: { admin?: boolean; query?: string } = {}) {
+  const filters = options.admin
+    ? [isNull(industryUpdates.deletedAt)]
+    : [isNull(industryUpdates.deletedAt), eq(industryUpdates.published, true)]
+  if (options.query) {
+    filters.push(or(
+      ilike(industryUpdates.titleZh, `%${options.query}%`),
+      ilike(industryUpdates.titleEn, `%${options.query}%`),
+      ilike(industryUpdates.introZh, `%${options.query}%`),
+      ilike(industryUpdates.contentZh, `%${options.query}%`),
+    )!)
+  }
+  const rows = await getDb().select().from(industryUpdates).where(and(...filters)).orderBy(desc(industryUpdates.publishedAt))
+  return rows.map(industryUpdateView)
+}
+
+export async function getIndustryUpdate(slug: string, admin = false) {
+  const row = (await getDb().select().from(industryUpdates).where(and(
+    eq(industryUpdates.slug, slug), isNull(industryUpdates.deletedAt),
+    ...(admin ? [] : [eq(industryUpdates.published, true)])
+  )).limit(1))[0]
+  return row ? industryUpdateView(row) : null
+}
+
+export async function saveIndustryUpdate(input: IndustryUpdateInput, update = false) {
+  const values = {
+    slug: input.slug, titleZh: input.title.zh, titleEn: input.title.en, introZh: input.intro.zh,
+    introEn: input.intro.en, keywords: input.keywords, contentZh: input.content.zh, contentEn: input.content.en,
+    coverImage: input.coverImage, sources: input.sources, newsItems: input.newsItems, techItems: input.techItems,
+    published: input.published, publishedAt: new Date(input.createdAt), updatedAt: new Date(),
+  }
+  const row = update
+    ? (await getDb().update(industryUpdates).set(values).where(eq(industryUpdates.slug, input.slug)).returning())[0]
+    : (await getDb().insert(industryUpdates).values(values).onConflictDoUpdate({ target: industryUpdates.slug, set: values }).returning())[0]
+  if (!row) throw new Error('Industry update not found')
+  return industryUpdateView(row)
+}
+
+export async function deleteIndustryUpdate(slug: string) {
+  return getDb().update(industryUpdates).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(industryUpdates.slug, slug)).returning()
 }
 
 export async function listSkills(query = '', category?: string) {

@@ -4,6 +4,7 @@ import Navbar from "@/components/navbar"
 import HeroSection from "@/components/hero-section"
 import { PortfolioSection } from "@/components/portfolio-section"
 import BlogSection from "@/components/blog-section"
+import { IndustryTimelineSection } from "@/components/industry-timeline-section"
 import AboutSection from "@/components/about-section"
 import Footer from "@/components/footer"
 import { useTheme } from "@/contexts/theme-context"
@@ -17,6 +18,7 @@ export default function Home() {
       <HeroSection />
       <PortfolioSection />
       <BlogSection />
+      <IndustryTimelineSection />
       <AboutSection />
       <Footer />
     </main>

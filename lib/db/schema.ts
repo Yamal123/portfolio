@@ -85,6 +85,28 @@ export const articles = pgTable('articles', {
   slugIndex: uniqueIndex('articles_slug_unique').on(table.slug),
 }))
 
+export const industryUpdates = pgTable('industry_updates', {
+  id: serial('id').primaryKey(),
+  slug: text('slug').notNull(),
+  titleZh: text('title_zh').notNull(),
+  titleEn: text('title_en').notNull(),
+  introZh: text('intro_zh').notNull().default(''),
+  introEn: text('intro_en').notNull().default(''),
+  keywords: jsonb('keywords').$type<string[]>().notNull().default([]),
+  contentZh: text('content_zh').notNull().default(''),
+  contentEn: text('content_en').notNull().default(''),
+  coverImage: text('cover_image').notNull().default(''),
+  sources: jsonb('sources').$type<Array<{ name: string; url: string }>>().notNull().default([]),
+  newsItems: jsonb('news_items').$type<Array<Record<string, unknown>>>().notNull().default([]),
+  techItems: jsonb('tech_items').$type<Array<Record<string, unknown>>>().notNull().default([]),
+  published: boolean('published').notNull().default(true),
+  publishedAt: timestamp('published_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (table) => ({
+  slugIndex: uniqueIndex('industry_updates_slug_unique').on(table.slug),
+}))
+
 export const agentConfigs = pgTable('agent_configs', {
   id: serial('id').primaryKey(),
   mode: text('mode').notNull().default('auto'),

@@ -8,6 +8,7 @@ import {
   Briefcase,
   BookOpen,
   Bot,
+  Newspaper,
   LogOut,
   ChevronRight,
 } from 'lucide-react'
@@ -37,6 +38,12 @@ const menuItems = [
     label: '方法论',
     icon: BookOpen,
     path: '/admin/articles',
+  },
+  {
+    key: 'industry',
+    label: '行业动态',
+    icon: Newspaper,
+    path: '/admin/industry',
   },
   {
     key: 'agent',

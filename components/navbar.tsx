@@ -28,6 +28,7 @@ export default function Navbar() {
     { id: "home", label: language === "zh" ? "首页" : "Home", isScroll: true },
     { id: "portfolio", label: language === "zh" ? "作品集" : "Portfolio", href: "/portfolio", isScroll: true },
     { id: "blog", label: language === "zh" ? "方法论" : "Methodology", href: "/blog", isScroll: true },
+    { id: "industry", label: language === "zh" ? "行业动态" : "Industry", href: "/industry", isScroll: true },
     { id: "about", label: language === "zh" ? "关于我" : "About", isScroll: true },
   ]
 

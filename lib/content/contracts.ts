@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 const localText = z.string().trim().max(20000)
+const markdownText = z.string().trim().max(60000)
 const slug = z.string().trim().min(1).max(80).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
 const strings = z.array(z.string().trim().min(1).max(80)).max(20)
 
@@ -31,6 +32,39 @@ export const articleInputSchema = z.object({
   intro: z.object({ zh: localText, en: localText }),
   keywords: strings.default([]),
   content: z.object({ zh: localText, en: localText }),
+  published: z.boolean().default(true),
+  createdAt: z.string().min(1),
+})
+
+const industryItemSchema = z.object({
+  title: z.string().trim().min(1).max(300),
+  url: z.string().trim().url().max(1000),
+  source: z.string().trim().min(1).max(120),
+  summary: z.string().trim().max(1000),
+  category: z.enum(['news', 'tech']),
+  publishedAt: z.string().optional(),
+  score: z.number().optional(),
+  metrics: z.object({
+    stars: z.number().optional(),
+    forks: z.number().optional(),
+    rank: z.number().optional(),
+  }).optional(),
+})
+
+export const industryUpdateInputSchema = z.object({
+  id: z.number().int().positive().optional(),
+  slug,
+  title: z.object({ zh: localText.min(1), en: localText.min(1) }),
+  intro: z.object({ zh: localText, en: localText }),
+  keywords: strings.default([]),
+  content: z.object({ zh: markdownText, en: markdownText }),
+  coverImage: z.string().trim().max(500).default(''),
+  sources: z.array(z.object({
+    name: z.string().trim().min(1).max(120),
+    url: z.string().trim().url().max(1000),
+  })).max(50).default([]),
+  newsItems: z.array(industryItemSchema).max(30).default([]),
+  techItems: z.array(industryItemSchema).max(30).default([]),
   published: z.boolean().default(true),
   createdAt: z.string().min(1),
 })
@@ -95,6 +129,7 @@ export const skillInputSchema = z.object({
 
 export type ProjectInput = z.infer<typeof projectInputSchema>
 export type ArticleInput = z.infer<typeof articleInputSchema>
+export type IndustryUpdateInput = z.infer<typeof industryUpdateInputSchema>
 export type ProfileInput = z.infer<typeof profileInputSchema>
 export type AgentConfigInput = z.infer<typeof agentConfigInputSchema>
 export type SkillInput = z.infer<typeof skillInputSchema>
