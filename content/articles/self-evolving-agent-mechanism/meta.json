@@ -1,0 +1,11 @@
+{
+  "id": 15,
+  "slug": "self-evolving-agent-mechanism",
+  "titleZh": "在 Claude Code 中构建自进化 Agent 机制",
+  "titleEn": "Building a Self-Evolving Agent Mechanism in Claude Code",
+  "createdAt": "2026-05-25",
+  "introZh": "如果 Agent 每次执行完任务就结束，它永远只是一次性工具。本文从产品经理视角拆解如何在 Claude Code 中构建“会复盘、会记忆、会优化”的自进化机制，让 Agent 越用越强。",
+  "introEn": "If an agent stops learning when a task ends, it remains a one-off tool. This article explains, from a PM perspective, how to build a self-evolving mechanism in Claude Code so the agent can reflect, remember, and improve over time.",
+  "keywords": ["Agent", "自进化", "Claude Code", "记忆系统", "复盘机制", "PM方法论"],
+  "contentType": "markdown"
+}

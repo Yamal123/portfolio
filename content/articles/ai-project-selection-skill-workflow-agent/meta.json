@@ -1,0 +1,11 @@
+{
+  "id": 16,
+  "slug": "ai-project-selection-skill-workflow-agent",
+  "titleZh": "AI 项目选型：什么时候用 Skill、Workflow 和 Agent",
+  "titleEn": "AI Project Architecture: When to Use Skill, Workflow, and Agent",
+  "createdAt": "2026-06-01",
+  "introZh": "从产品经理视角拆解 AI 项目里的三种能力层级：Skill 负责稳定动作，Workflow 负责流程控制，Agent 负责动态判断。重点不是把所有东西做成 Agent，而是判断哪一层需要智能、哪一层需要确定性、哪一层必须审计和兜底。",
+  "introEn": "A PM-oriented framework for deciding between Skill, Workflow, and Agent in AI products: use Skills for deterministic actions, Workflows for controlled processes, and Agents for dynamic judgment.",
+  "keywords": ["AI产品经理", "Agent", "Workflow", "Skill", "AI项目选型", "产品方法论"],
+  "contentType": "markdown"
+}
