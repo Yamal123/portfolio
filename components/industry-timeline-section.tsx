@@ -89,9 +89,9 @@ export function IndustryTimelineSection() {
         )}
 
         <div className="mt-12 text-center">
-          <Link href="/industry" className={`inline-flex items-center rounded-full border px-8 py-4 font-semibold transition-all duration-300 hover:scale-105 ${theme === 'dark' ? 'border-gray-700 text-white hover:border-orange-400 hover:text-orange-400' : 'border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-500'}`}>
+          <Link href="/industry" className={`group inline-flex items-center rounded-full border px-8 py-4 font-semibold transition-all duration-300 hover:scale-105 ${theme === 'dark' ? 'border-gray-700 text-white hover:border-orange-400 hover:text-orange-400' : 'border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-500'}`}>
             {t.more}
-            <ArrowUpRight className="ml-2 h-5 w-5" />
+            <ArrowUpRight className="ml-2 h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
           </Link>
         </div>
       </div>

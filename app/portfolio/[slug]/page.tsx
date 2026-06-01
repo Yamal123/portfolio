@@ -83,7 +83,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
       <main className={`min-h-screen ${theme === "dark" ? "bg-black" : "bg-white"}`}>
         <PageNav showBack backUrl="/portfolio" />
         <div className="max-w-4xl mx-auto px-6 pt-32 pb-24 text-center">
-          <Loader2 className={`w-8 h-8 animate-spin mx-auto ${theme === "dark" ? "text-blue-400" : "text-blue-500"}`} />
+          <Loader2 className={`w-8 h-8 animate-spin mx-auto ${theme === "dark" ? "text-orange-400" : "text-orange-500"}`} />
           <p className={`mt-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
             {t.loading}
           </p>
@@ -101,7 +101,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
           <h1 className={`text-2xl font-bold mb-4 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
             {t.notFound}
           </h1>
-          <Link href="/portfolio" className={`inline-flex items-center gap-2 ${theme === "dark" ? "text-blue-400" : "text-blue-600"} hover:underline`}>
+          <Link href="/portfolio" className={`inline-flex items-center gap-2 ${theme === "dark" ? "text-orange-400" : "text-orange-600"} hover:underline`}>
             <ArrowLeft className="w-4 h-4" />
             {t.back}
           </Link>
@@ -120,7 +120,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
           <header className="mb-12">
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <span className="text-5xl">{project.emoji}</span>
-              <span className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-semibold rounded-full">
+              <span className="px-3 py-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold rounded-full">
                 {project.type[language === "zh" ? "zh" : "en"]}
               </span>
             </div>
@@ -136,7 +136,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
               </span>
               <button
                 onClick={handleCopyLink}
-                className={`flex items-center gap-1 ${theme === "dark" ? "text-gray-400 hover:text-blue-400" : "text-gray-600 hover:text-blue-600"} transition-colors`}
+                className={`flex items-center gap-1 ${theme === "dark" ? "text-gray-400 hover:text-orange-400" : "text-gray-600 hover:text-orange-600"} transition-colors`}
               >
                 {copied ? <Check className={`w-4 h-4 ${theme === "dark" ? "text-green-400" : "text-green-500"}`} /> : <Copy className="w-4 h-4" />}
                 <span>{copied ? t.copied : t.copyLink}</span>
@@ -178,10 +178,10 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
             
             <div className={`p-6 rounded-2xl ${theme === "dark" ? "bg-gray-900/50 border border-gray-800" : "bg-white border border-gray-200"}`}>
               <div className="flex items-center gap-2 mb-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${theme === "dark" ? "bg-blue-500/20" : "bg-blue-50"}`}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${theme === "dark" ? "bg-orange-500/20" : "bg-orange-50"}`}>
                   <span className="text-lg">🚀</span>
                 </div>
-                <span className={`font-semibold ${theme === "dark" ? "text-blue-400" : "text-blue-600"}`}>{t.action}</span>
+                <span className={`font-semibold ${theme === "dark" ? "text-orange-400" : "text-orange-600"}`}>{t.action}</span>
               </div>
               <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
                 {project.action[language === "zh" ? "zh" : "en"]}
@@ -202,8 +202,8 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
           </div>
 
           {/* Content */}
-          <div className={`prose max-w-none ${theme === "dark" ? "text-gray-300" : "text-gray-800"}`}>
-            <SafeMarkdown>{project.content[language === "zh" ? "zh" : "en"]}</SafeMarkdown>
+          <div className={`max-w-none ${theme === "dark" ? "text-gray-300" : "text-gray-800"}`}>
+            <SafeMarkdown theme={theme}>{project.content[language === "zh" ? "zh" : "en"]}</SafeMarkdown>
           </div>
 
           {/* Footer */}
@@ -218,7 +218,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                 href="https://github.com/Yamal123/portfolio"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg hover:shadow-xl"
               >
                 <ExternalLink className="w-5 h-5" />
                 <span>{t.viewGithub}</span>

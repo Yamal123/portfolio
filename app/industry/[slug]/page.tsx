@@ -93,7 +93,7 @@ export default function IndustryDetailPage({ params }: IndustryDetailPageProps) 
             <SignalPanel title={language === 'zh' ? '技术动向' : 'Technical Trends'} items={update.techItems} theme={theme} />
           </div>
 
-          <div className={`prose max-w-none ${theme === 'dark' ? 'text-gray-300' : 'text-gray-800'}`}>
+          <div className={`max-w-none ${theme === 'dark' ? 'text-gray-300' : 'text-gray-800'}`}>
             <ArticleMarkdown content={update.content[language]} theme={theme} />
           </div>
         </article>

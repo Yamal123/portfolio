@@ -3,8 +3,15 @@ export interface ChatMessage {
   type: 'user' | 'bot'
   content: string
   timestamp: Date
+  isStreaming?: boolean
   toolsUsed?: string[]
   agentMode?: 'rules' | 'llm'
+  sources?: Array<{
+    title: string
+    url: string
+    intro?: string
+    date?: string
+  }>
 }
 
 export interface FAQItem {

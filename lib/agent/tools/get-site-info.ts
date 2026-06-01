@@ -1,3 +1,4 @@
+import { SITE_NAV_ITEMS, getNavLabel } from '@/lib/site-navigation'
 import type { AgentTool } from '../types'
 
 export const getSiteInfoTool: AgentTool = {
@@ -13,12 +14,11 @@ export const getSiteInfoTool: AgentTool = {
       data: {
         siteName: process.env.NEXT_PUBLIC_SITE_NAME || 'PM 思钱想厚',
         siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://yumeng.dev',
-        sections: [
-          { id: 'home', label: '首页', path: '/#home' },
-          { id: 'portfolio', label: '作品集', path: '/portfolio' },
-          { id: 'blog', label: '方法论', path: '/blog' },
-          { id: 'about', label: '关于我', path: '/#about' },
-        ],
+        sections: SITE_NAV_ITEMS.map((item) => ({
+          id: item.id,
+          label: getNavLabel(item, 'zh'),
+          path: item.href,
+        })),
         description:
           '余猛的个人品牌网站，展示 AI 产品经理的作品集、方法论文章与个人简介',
       },

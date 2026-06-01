@@ -99,7 +99,7 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
           </header>
 
           {/* 文章内容区 */}
-          <div className={`prose max-w-none ${theme === "dark" ? "text-gray-300" : "text-gray-800"}`}>
+          <div className={`max-w-none ${theme === "dark" ? "text-gray-300" : "text-gray-800"}`}>
             <ArticleMarkdown
               content={article.content[language === "zh" ? "zh" : "en"]}
               theme={theme}

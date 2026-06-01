@@ -151,7 +151,7 @@ function ProjectCard({
               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center">
+            <div className="h-full w-full bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-400 flex items-center justify-center">
               <span className="text-5xl">{project.emoji}</span>
             </div>
           )}
@@ -204,7 +204,7 @@ function ProjectCard({
                 <Target className="w-3 h-3" />
                 <span className="line-clamp-1">{project.problem[language]}</span>
               </div>
-              <div className="flex items-center gap-1 text-blue-500">
+              <div className="flex items-center gap-1 text-orange-500">
                 <Rocket className="w-3 h-3" />
                 <span className="line-clamp-1">{project.action[language]}</span>
               </div>

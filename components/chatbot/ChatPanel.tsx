@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { X, Send, Loader2, Zap, Plus, History, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MessageBubble } from './MessageBubble'
-import { callAgentChat, getAgentBootstrap } from '@/lib/agent/client'
+import { getAgentBootstrap, streamAgentChat } from '@/lib/agent/client'
 import type { ChatMessage } from '@/types/chatbot'
 import type { AgentHistoryMessage } from '@/lib/agent/types'
 
@@ -64,6 +64,7 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
   const messagesRef = useRef<ChatMessage[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const requestIdRef = useRef(0)
 
   // Sync ref
   useEffect(() => { messagesRef.current = messages }, [messages])
@@ -78,6 +79,7 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
   const welcome = bootstrap?.welcomeMessage.zh || '正在加载助手配置...'
 
   const startNewSession = useCallback(() => {
+    requestIdRef.current += 1
     const id = String(Date.now())
     setSessionId(id)
     setMessages([{
@@ -107,6 +109,7 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
       }
       setTimeout(() => inputRef.current?.focus(), 200)
     } else {
+      requestIdRef.current += 1
       setMessages([])
       setShowHistory(false)
     }
@@ -125,6 +128,7 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
   const handleSend = useCallback(async (text?: string) => {
     const msg = (text || inputValue).trim()
     if (!msg || isLoading || msg.length > MAX_INPUT_LENGTH) return
+    const requestId = ++requestIdRef.current
 
     const userMessage: ChatMessage = {
       id: nextMsgId(),
@@ -133,7 +137,19 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
       timestamp: new Date(),
     }
 
-    setMessages(prev => [...prev, userMessage])
+    const botMessageId = nextMsgId()
+
+    setMessages(prev => [
+      ...prev,
+      userMessage,
+      {
+        id: botMessageId,
+        type: 'bot',
+        content: '',
+        timestamp: new Date(),
+        isStreaming: true,
+      },
+    ])
     setInputValue('')
     setIsLoading(true)
 
@@ -142,28 +158,65 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
         .filter(m => m.id !== messagesRef.current[0]?.id)
         .map(m => ({ role: m.type === 'user' ? 'user' as const : 'assistant' as const, content: m.content }))
 
-      const response = await callAgentChat({ message: msg, history, locale: 'zh' })
-
-      setMessages(prev => [...prev, {
-        id: nextMsgId(),
-        type: 'bot',
-        content: response.content || '收到您的消息了。',
-        timestamp: new Date(),
-        toolsUsed: response.toolsUsed,
-        agentMode: response.mode,
-      }])
+      await streamAgentChat(
+        { message: msg, history, locale: 'zh' },
+        {
+          onStart: (meta) => {
+            if (requestIdRef.current !== requestId) return
+            setMessages((prev) => prev.map((message) =>
+              message.id === botMessageId
+                ? {
+                    ...message,
+                    isStreaming: true,
+                    toolsUsed: meta.toolsUsed,
+                    agentMode: meta.mode,
+                    sources: meta.sources,
+                  }
+                : message
+            ))
+          },
+          onDelta: (delta) => {
+            if (requestIdRef.current !== requestId) return
+            setMessages((prev) => prev.map((message) =>
+              message.id === botMessageId
+                ? {
+                    ...message,
+                    isStreaming: false,
+                    content: `${message.content}${delta}`,
+                  }
+                : message
+            ))
+          },
+          onDone: () => {
+            if (requestIdRef.current !== requestId) return
+            setMessages((prev) => prev.map((message) =>
+              message.id === botMessageId
+                ? { ...message, isStreaming: false, content: message.content || '收到您的消息了。' }
+                : message
+            ))
+          },
+        }
+      )
     } catch {
-      setMessages(prev => [...prev, {
-        id: nextMsgId(),
-        type: 'bot',
-        content: '抱歉，暂时无法回答，请稍后再试。',
-        timestamp: new Date(),
-      }])
+      if (requestIdRef.current === requestId) {
+        setMessages(prev => prev.map((message) =>
+          message.id === botMessageId
+            ? {
+                ...message,
+                isStreaming: false,
+                content: '抱歉，暂时无法回答，请稍后再试。',
+              }
+            : message
+        ))
+      }
     }
-    setIsLoading(false)
+    if (requestIdRef.current === requestId) {
+      setIsLoading(false)
+    }
   }, [inputValue, isLoading])
 
   const loadConversation = (id: string) => {
+    requestIdRef.current += 1
     const msgs = loadSession(id)
     if (msgs) {
       setSessionId(id)
@@ -173,6 +226,7 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
   }
 
   const removeConversation = (id: string) => {
+    requestIdRef.current += 1
     deleteSession(id)
     setSessions(prev => prev.filter(s => s !== id))
     if (id === sessionId) startNewSession()

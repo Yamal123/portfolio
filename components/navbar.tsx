@@ -7,9 +7,14 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Menu, X, Sun, Moon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  SITE_NAV_ITEMS,
+  getNavDestination,
+  getNavLabel,
+} from "@/lib/site-navigation"
 
 export default function Navbar() {
-  const { language, setLanguage } = useLanguage()
+  const { language } = useLanguage()
   const { theme, toggleTheme } = useTheme()
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -24,36 +29,22 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  const navItems = [
-    { id: "home", label: language === "zh" ? "首页" : "Home", isScroll: true },
-    { id: "portfolio", label: language === "zh" ? "作品集" : "Portfolio", href: "/portfolio", isScroll: true },
-    { id: "blog", label: language === "zh" ? "方法论" : "Methodology", href: "/blog", isScroll: true },
-    { id: "industry", label: language === "zh" ? "行业动态" : "Industry", href: "/industry", isScroll: true },
-    { id: "about", label: language === "zh" ? "关于我" : "About", isScroll: true },
-  ]
+  const closeMobileMenu = () => setMobileMenuOpen(false)
 
-  const handleNavClick = (item: typeof navItems[0]) => {
-    // On homepage, scroll to section. On other pages, navigate.
-    if (isHomePage && item.isScroll) {
-      const element = document.getElementById(item.id)
-      if (element) {
-        const offsetTop = element.offsetTop - 80
-        window.scrollTo({ top: offsetTop, behavior: "smooth" })
-        setMobileMenuOpen(false)
-        return
-      }
-    }
-    // If not on homepage or section not found, navigate
-    if (item.href) {
-      // Use window.location for simple navigation
-      window.location.href = item.href
-    } else if (item.id === "home") {
-      window.location.href = "/"
-    }
-    setMobileMenuOpen(false)
+  const handleScrollToSection = (targetId: string) => {
+    const element = document.getElementById(targetId)
+    if (!element) return false
+    window.scrollTo({
+      top: Math.max(0, element.offsetTop - 80),
+      behavior: "smooth",
+    })
+    closeMobileMenu()
+    return true
   }
 
-  const renderNavItem = (item: typeof navItems[0], isMobile: boolean) => {
+  const renderNavItem = (item: (typeof SITE_NAV_ITEMS)[number], isMobile: boolean) => {
+    const label = getNavLabel(item, language)
+    const destination = getNavDestination(item, isHomePage)
     const baseClass = isMobile
       ? `block w-full text-left transition-colors duration-300 py-2 font-medium ${
           theme === "dark" ? "text-white/70 hover:text-orange-400" : "text-gray-600 hover:text-orange-500"
@@ -62,33 +53,32 @@ export default function Navbar() {
           theme === "dark" ? "text-white/70 hover:text-orange-400" : "text-gray-600 hover:text-orange-500"
         }`
 
-    // On homepage, use button for scroll items
-    if (isHomePage && item.isScroll && !isMobile) {
+    if (destination.type === "scroll") {
       return (
-        <button key={item.id} onClick={() => handleNavClick(item)} className={baseClass}>
-          {item.label}
+        <button
+          key={item.id}
+          type="button"
+          onClick={() => {
+            if (!handleScrollToSection(destination.targetId)) {
+              window.location.href = item.href
+              closeMobileMenu()
+            }
+          }}
+          className={baseClass}
+        >
+          {label}
         </button>
       )
     }
 
-    // On homepage mobile, use button
-    if (isHomePage && item.isScroll && isMobile) {
-      return (
-        <button key={item.id} onClick={() => handleNavClick(item)} className={baseClass}>
-          {item.label}
-        </button>
-      )
-    }
-
-    // Otherwise, use Link
     return (
       <Link
         key={item.id}
-        href={item.href || (item.id === "home" ? "/" : "#")}
+        href={destination.href}
         className={baseClass}
-        onClick={() => setMobileMenuOpen(false)}
+        onClick={closeMobileMenu}
       >
-        {item.label}
+        {label}
       </Link>
     )
   }
@@ -103,10 +93,13 @@ export default function Navbar() {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
-          {/* Logo */}
           <div
             className="cursor-pointer"
-            onClick={() => handleNavClick({ id: "home", label: "", isScroll: true })}
+            onClick={() => {
+              if (!handleScrollToSection("home")) {
+                window.location.href = "/"
+              }
+            }}
           >
             <span className="text-xl font-bold">
               <span className="text-orange-400">PM</span>
@@ -114,12 +107,10 @@ export default function Navbar() {
             </span>
           </div>
 
-          {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
-            {navItems.map((item) => renderNavItem(item, false))}
+            {SITE_NAV_ITEMS.map((item) => renderNavItem(item, false))}
           </div>
 
-          {/* Actions */}
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -146,13 +137,14 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className={`md:hidden backdrop-blur-md ${
-          theme === "dark" ? "bg-black/95" : "bg-white/95"
-        }`}>
+        <div
+          className={`md:hidden backdrop-blur-md ${
+            theme === "dark" ? "bg-black/95" : "bg-white/95"
+          }`}
+        >
           <div className="max-w-6xl mx-auto px-6 py-6 space-y-4">
-            {navItems.map((item) => renderNavItem(item, true))}
+            {SITE_NAV_ITEMS.map((item) => renderNavItem(item, true))}
           </div>
         </div>
       )}

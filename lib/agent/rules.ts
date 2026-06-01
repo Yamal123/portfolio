@@ -2,6 +2,7 @@ import { executeTool } from './executor'
 import { faqList } from '@/lib/chatbot'
 import type { AgentRunOutput } from './types'
 import type { ProjectInfo } from '@/types/chatbot'
+import { collectArticleSources } from './sources'
 
 function matchFaq(query: string) {
   const lower = query.toLowerCase()
@@ -146,8 +147,9 @@ export async function runRulesAgent(input: {
       ? await executeTool('search_articles', { query: '', limit: 5 })
       : null
     const finalResult = (fallback?.data || result) as {
-      items: Array<{ title: string; intro: string; url: string }>
+      items: Array<{ title: string; intro: string; url: string; date?: string }>
     }
+    const sources = collectArticleSources(finalResult.items)
     return {
       content: finalResult.items.length
         ? `相关文章：\n${formatArticleList(finalResult.items)}`
@@ -157,6 +159,7 @@ export async function runRulesAgent(input: {
       mode: 'rules',
       type: 'text',
       toolsUsed,
+      sources: sources.length ? sources : undefined,
     }
   }
 

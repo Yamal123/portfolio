@@ -2,6 +2,6 @@
 
 import { SafeMarkdown } from '@/components/safe-markdown'
 
-export function ArticleMarkdown({ content }: { content: string; theme: string }) {
-  return <SafeMarkdown>{content}</SafeMarkdown>
+export function ArticleMarkdown({ content, theme }: { content: string; theme: 'dark' | 'light' }) {
+  return <SafeMarkdown theme={theme}>{content}</SafeMarkdown>
 }

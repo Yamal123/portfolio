@@ -1,4 +1,5 @@
 import type { ChatResponseType, ProjectInfo } from '@/types/chatbot'
+import type { ArticleSource } from './sources'
 
 export type AgentMode = 'rules' | 'llm' | 'auto'
 
@@ -45,6 +46,7 @@ export interface AgentRunOutput {
   type: ChatResponseType
   toolsUsed: string[]
   projects?: ProjectInfo[]
+  sources?: ArticleSource[]
   metadata?: {
     model?: string
     toolRounds?: number

@@ -272,7 +272,7 @@ export default function HeroSection() {
         style={{ transform: `translate(${mouseX}px, ${mouseY}px)` }}
       ></div>
       <div 
-        className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-3xl transition-transform duration-500 ease-out"
+        className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-orange-500/5 rounded-full blur-3xl transition-transform duration-500 ease-out"
         style={{ transform: `translate(${-mouseX * 0.8}px, ${-mouseY * 0.8}px)` }}
       ></div>
       
@@ -415,7 +415,7 @@ export default function HeroSection() {
           >
             <div className={`absolute -top-10 -right-10 w-full h-full border-2 rounded-[3.5rem] ${theme === "dark" ? "border-gray-800" : "border-gray-200"}`}></div>
             <div className="absolute -bottom-10 -left-10 w-full h-full border-2 border-orange-500/30 rounded-[3.5rem]"></div>
-            <div className="absolute -inset-4 bg-gradient-to-br from-orange-500/10 to-blue-500/10 rounded-[4rem] blur-xl"></div>
+            <div className="absolute -inset-4 bg-gradient-to-br from-orange-500/10 to-amber-500/10 rounded-[4rem] blur-xl"></div>
             
             <div className="relative">
               <div className={`w-full aspect-square rounded-[3rem] overflow-hidden shadow-2xl ${theme === "dark" ? "bg-gradient-to-br from-orange-500/20 to-orange-600/20 border border-gray-700" : "bg-gradient-to-br from-orange-100 to-orange-200 border border-orange-200"}`}>

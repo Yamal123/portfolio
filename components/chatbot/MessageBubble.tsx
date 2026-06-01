@@ -1,9 +1,10 @@
 'use client'
 
 import type { ChatMessage } from '@/types/chatbot'
-import { User, Bot, Copy, Check } from 'lucide-react'
+import { User, Bot, Copy, Check, Link2 } from 'lucide-react'
 import { SafeMarkdown } from '@/components/safe-markdown'
 import { useState } from 'react'
+import Link from 'next/link'
 
 export function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.type === 'user'
@@ -49,11 +50,41 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               {modeLabel}
             </span>
           )}
-          {isUser ? <p className="whitespace-pre-wrap">{message.content}</p> : <SafeMarkdown compact>{message.content}</SafeMarkdown>}
+          {isUser ? (
+            <p className="whitespace-pre-wrap">{message.content}</p>
+          ) : message.isStreaming && !message.content ? (
+            <div className="flex items-center gap-1 py-1">
+              <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:150ms]" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:300ms]" />
+            </div>
+          ) : (
+            <SafeMarkdown compact>{message.content}</SafeMarkdown>
+          )}
           {message.toolsUsed && message.toolsUsed.length > 0 && (
             <p className="mt-2 border-t border-gray-200/80 pt-1.5 text-[10px] text-gray-400">
               工具: {message.toolsUsed.join(', ')}
             </p>
+          )}
+          {!isUser && message.sources && message.sources.length > 0 && (
+            <div className="mt-2 border-t border-gray-200/80 pt-2 text-[10px] text-gray-500">
+              <div className="mb-1 inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 font-medium text-orange-600">
+                <Link2 className="h-3 w-3" />
+                RAG 来源
+              </div>
+              <div className="space-y-1">
+                {message.sources.map((source) => (
+                  <Link
+                    key={source.url}
+                    href={source.url}
+                    className="block truncate rounded-md text-gray-500 underline-offset-2 hover:text-orange-600 hover:underline"
+                    title={source.title}
+                  >
+                    {source.title}
+                  </Link>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </div>

@@ -4,6 +4,7 @@ import { getSystemPrompt } from './prompts'
 import type { RuntimeAgentConfig } from './config'
 import type { AgentHistoryMessage, AgentRunOutput, OpenAIToolCall } from './types'
 import type { ProjectInfo } from '@/types/chatbot'
+import { collectArticleSources } from './sources'
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant' | 'tool'
@@ -21,6 +22,7 @@ export async function runLlmAgent(input: {
   const locale = input.locale || 'zh'
   const toolsUsed: string[] = []
   const foundProjects: ProjectInfo[] = []
+  const foundSources: Array<{ title: string; url: string; intro?: string; date?: string }> = []
   let toolRounds = 0
   const messages: ChatMessage[] = [
     { role: 'system', content: getSystemPrompt(input.config, locale) },
@@ -52,6 +54,12 @@ export async function runLlmAgent(input: {
         try { args = JSON.parse(call.function.arguments || '{}') } catch {}
         const result = await executeTool(call.function.name, args)
         toolsUsed.push(call.function.name)
+        if (call.function.name === 'search_articles' && result.success) {
+          const items = (result.data as {
+            items?: Array<{ title?: string; intro?: string; url?: string; date?: string }>
+          })?.items || []
+          foundSources.push(...collectArticleSources(items))
+        }
         if (call.function.name === 'search_projects' && result.success) {
           const items = (result.data as { items?: Array<{ id: number; name: string; intro: string; type: string; tags: string[] }> })?.items || []
           foundProjects.push(...items.map((item) => ({ id: item.id, name: item.name, description: item.intro, type: item.type, tags: item.tags })))
@@ -68,6 +76,7 @@ export async function runLlmAgent(input: {
       type: foundProjects.length ? 'project' : 'text',
       toolsUsed: [...new Set(toolsUsed)],
       projects: foundProjects.length ? foundProjects : undefined,
+      sources: foundSources.length ? collectArticleSources(foundSources) : undefined,
       metadata: { model: input.config.openaiModel, toolRounds },
     }
   }
@@ -75,6 +84,7 @@ export async function runLlmAgent(input: {
   return {
     content: locale === 'zh' ? '查询步骤较多，请尝试更具体的问题。' : 'Too many tool steps. Please try a more specific question.',
     mode: 'llm', type: 'unknown', toolsUsed: [...new Set(toolsUsed)],
+    sources: foundSources.length ? collectArticleSources(foundSources) : undefined,
     metadata: { model: input.config.openaiModel, toolRounds },
   }
 }

@@ -132,9 +132,9 @@ export default function PortfolioPage() {
                 href={`/portfolio/${project.slug}`}
                 className={`group block rounded-2xl overflow-hidden transition-all duration-500 cursor-pointer ${
                   theme === "dark"
-                    ? "bg-gray-900/50 border border-gray-800 hover:border-blue-500/30"
-                    : "bg-white border border-gray-200 hover:border-blue-300"
-                } hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2`}
+                    ? "bg-gray-900/50 border border-gray-800 hover:border-orange-500/30"
+                    : "bg-white border border-gray-200 hover:border-orange-300"
+                } hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-2`}
               >
                 <div className="relative h-48 md:h-52 overflow-hidden">
                   {project.thumbnail ? (
@@ -147,7 +147,7 @@ export default function PortfolioPage() {
                       quality={80}
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center">
+                    <div className="w-full h-full bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-400 flex items-center justify-center">
                       <span className="text-5xl">{project.emoji}</span>
                     </div>
                   )}
@@ -162,7 +162,7 @@ export default function PortfolioPage() {
                 <div className="p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xl">{project.emoji}</span>
-                    <h3 className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-gray-900"} group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors`}>
+                    <h3 className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-gray-900"} group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors`}>
                       {project.name[language === "zh" ? "zh" : "en"]}
                     </h3>
                   </div>
@@ -225,9 +225,9 @@ export default function PortfolioPage() {
                   variant={currentPage === page ? "default" : "outline"}
                   size="icon"
                   onClick={() => setCurrentPage(page)}
-                  className={`w-10 h-10 ${
-                    currentPage === page 
-                      ? "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600" 
+                className={`w-10 h-10 ${
+                  currentPage === page 
+                      ? "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600" 
                       : theme === "dark" ? "border-gray-700 hover:bg-gray-800" : "border-gray-200 hover:bg-gray-100"
                   }`}
                 >
