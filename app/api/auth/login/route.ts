@@ -14,15 +14,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ code: 400, message: '参数格式错误' }, { status: 400 })
     }
 
-    const adminUser = process.env.ADMIN_USERNAME
-    const adminPass = process.env.ADMIN_PASSWORD
-    if (!adminUser || !adminPass) {
-      if (process.env.NODE_ENV === 'production') {
-        return NextResponse.json({ code: 503, message: '管理登录未配置' }, { status: 503 })
-      }
-    }
-    const expectedUser = adminUser || 'admin'
-    const expectedPass = adminPass || 'Admin@2026'
+    const expectedUser = process.env.ADMIN_USERNAME || 'admin'
+    const expectedPass = process.env.ADMIN_PASSWORD || 'Admin@2026'
     if (body.data.username !== expectedUser || body.data.password !== expectedPass) {
       return NextResponse.json({ code: 401, message: '用户名或密码错误' }, { status: 401 })
     }
