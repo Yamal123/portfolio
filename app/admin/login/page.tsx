@@ -1,154 +1,79 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useAuth } from '@/contexts/admin/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { toast } from 'sonner'
-import { Eye, EyeOff, Loader2, Lock, User } from 'lucide-react'
 
 export default function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const { login, isAuthenticated } = useAuth()
+
   const getRedirect = () => {
-    if (typeof window === 'undefined') return '/admin/dashboard'
-    return new URLSearchParams(window.location.search).get('redirect') || '/admin/dashboard'
+    if (typeof window === 'undefined') return '/admin/portfolio'
+    return new URLSearchParams(window.location.search).get('redirect') || '/admin/portfolio'
   }
 
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push(getRedirect())
-    }
+    if (isAuthenticated) router.push(getRedirect())
   }, [isAuthenticated, router])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!username.trim()) {
-      toast.error('请输入用户名')
-      return
-    }
-    if (!password) {
-      toast.error('请输入密码')
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!username.trim() || !password) {
+      toast.error('请输入账号和密码')
       return
     }
 
     setIsLoading(true)
-
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: username.trim(), password }),
       })
-
       const data = await response.json()
-
       if (!response.ok) {
         toast.error(data.message || '用户名或密码错误')
-        setIsLoading(false)
         return
       }
-
-      const result = data.data
-      login(result.userInfo)
-
-      toast.success('登录成功')
+      login(data.data.userInfo)
       router.push(getRedirect())
-    } catch (error) {
+    } catch {
       toast.error('网络连接失败，请检查网络后重试')
     } finally {
       setIsLoading(false)
     }
   }
 
-  if (isAuthenticated) {
-    return null
-  }
+  if (isAuthenticated) return null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-xl">
-        <CardHeader className="text-center pb-2">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
-            <Lock className="w-8 h-8 text-white" />
-          </div>
-          <CardTitle className="text-2xl font-bold text-slate-900">后台管理</CardTitle>
-          <CardDescription className="text-slate-500 mt-1">
-            AI PM Portfolio Admin
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                用户名
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="请输入用户名"
-                  className="pl-10"
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                密码
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="请输入密码"
-                  className="pl-10 pr-10"
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  tabIndex={-1}
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md shadow-blue-500/20"
-              disabled={isLoading}
-              size="lg"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  登录中...
-                </>
-              ) : (
-                '登 录'
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <main className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
+      <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-6">
+        <div className="mb-5">
+          <h1 className="text-xl font-semibold text-slate-950">内容管理后台</h1>
+          <p className="mt-1 text-sm text-slate-500">PM 思钱想厚</p>
+        </div>
+        <label className="mb-3 block space-y-1.5 text-sm font-medium text-slate-700">
+          <span>账号</span>
+          <Input value={username} onChange={(event) => setUsername(event.target.value)} disabled={isLoading} />
+        </label>
+        <label className="mb-5 block space-y-1.5 text-sm font-medium text-slate-700">
+          <span>密码</span>
+          <Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} disabled={isLoading} />
+        </label>
+        <Button type="submit" disabled={isLoading} className="w-full bg-orange-500 hover:bg-orange-600">
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          登录
+        </Button>
+      </form>
+    </main>
   )
 }
