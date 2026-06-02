@@ -15,8 +15,8 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Header title={title} />
-        <main className="flex-1 overflow-auto p-5">
-          <div className="mx-auto max-w-[1500px]">
+        <main className="flex-1 overflow-hidden bg-slate-100">
+          <div className="h-full">
             {children}
           </div>
         </main>

@@ -40,7 +40,6 @@ export interface WorkbenchItem {
 }
 
 interface ContentWorkbenchProps {
-  title: string
   items: WorkbenchItem[]
   selected: WorkbenchItem | null
   isNew: boolean
@@ -81,7 +80,6 @@ function statusLabel(status: ContentStatus) {
 }
 
 export function ContentWorkbench({
-  title,
   items,
   selected,
   isNew,
@@ -117,54 +115,78 @@ export function ContentWorkbench({
 
   const setSelectedValue = (patch: Partial<WorkbenchItem>) => {
     if (!selected) return
-        onChange({ ...selected, ...patch })
+    onChange({ ...selected, ...patch })
   }
 
   const setMarkdown = (markdown: string) => setSelectedValue({ markdown })
 
   return (
-    <div className="flex min-h-[calc(100vh-104px)] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white">
-      <header className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-        <div>
-          <h1 className="text-lg font-semibold text-slate-950">{title}</h1>
-          <p className="mt-1 text-xs text-slate-500">列表 / 新增 / 编辑 / 发布</p>
+    <div className="flex h-full flex-col overflow-hidden border-t border-slate-200 bg-white">
+      <header className="shrink-0 border-b border-slate-200 bg-white">
+        <div className="flex items-center justify-between gap-4 px-4 py-3">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+            <Input className="h-9 w-[150px]" placeholder="按标题筛选" value={query} onChange={(event) => setQuery(event.target.value)} />
+            <Input className="h-9 w-[150px]" type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
+            <Input className="h-9 w-[150px]" type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {selected && (
+              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${selected.status === 'published' ? 'bg-emerald-50 text-emerald-700' : 'bg-orange-50 text-orange-700'}`}>
+                {statusLabel(selected.status)}
+              </span>
+            )}
+            {selected && mode === 'preview' && (
+              <Button variant="outline" className="h-9" onClick={() => setMode('edit')}>
+                <Edit className="mr-2 h-4 w-4" />
+                编辑
+              </Button>
+            )}
+            {selected && mode === 'edit' && (
+              <Button variant="outline" className="h-9" disabled={isSaving} onClick={onSaveDraft}>
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                保存草稿
+              </Button>
+            )}
+            {selected && (
+              <Button className="h-9 bg-orange-500 hover:bg-orange-600" disabled={isPublishing} onClick={() => onPublish()}>
+                {isPublishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                发布到生产
+              </Button>
+            )}
+            {selected && (
+              <Button variant="outline" className="h-9 text-red-600 hover:text-red-600" onClick={() => onDelete(selected)}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                删除
+              </Button>
+            )}
+            <Button onClick={() => { setMode('edit'); onNew() }} className="h-9 bg-orange-500 hover:bg-orange-600">
+              <Plus className="mr-1.5 h-4 w-4" />
+              新增
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${selected?.status === 'published' ? 'bg-emerald-50 text-emerald-700' : 'bg-orange-50 text-orange-700'}`}>
-            当前：{selected ? statusLabel(selected.status) : '-'}
-          </span>
-          <Button onClick={() => { setMode('edit'); onNew() }} className="h-9 bg-orange-500 hover:bg-orange-600">
-            <Plus className="mr-1.5 h-4 w-4" />
-            新增
-          </Button>
+
+        <div className="flex gap-2 px-4 pb-3">
+          {[
+            ['all', '全部'],
+            ['draft', '草稿'],
+            ['published', '已发布'],
+            ...(supportsKind ? [['link', '链接'], ['document', '文档']] : []),
+          ].map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setTab(key as typeof tab)}
+              className={`h-8 rounded-md border px-3 text-sm font-medium ${tab === key ? 'border-orange-200 bg-orange-50 text-orange-700' : 'border-slate-200 bg-white text-slate-700'}`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </header>
 
-      <div className="flex gap-2 border-b border-slate-200 px-5 py-3">
-        {[
-          ['all', '全部'],
-          ['draft', '草稿'],
-          ['published', '已发布'],
-          ...(supportsKind ? [['link', '链接'], ['document', '文档']] : []),
-        ].map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setTab(key as typeof tab)}
-            className={`h-8 rounded-md border px-3 text-sm font-medium ${tab === key ? 'border-orange-200 bg-orange-50 text-orange-700' : 'border-slate-200 bg-white text-slate-700'}`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
       <div className="grid min-h-0 flex-1 grid-cols-[390px_minmax(0,1fr)]">
-        <aside className="min-h-0 border-r border-slate-200 bg-slate-50 p-4">
-          <div className="mb-3 grid grid-cols-[1fr_132px_132px] gap-2">
-            <Input className="h-9" placeholder="按标题筛选" value={query} onChange={(event) => setQuery(event.target.value)} />
-            <Input className="h-9" type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
-            <Input className="h-9" type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
-          </div>
+        <aside className="min-h-0 overflow-y-auto border-r border-slate-200 bg-slate-50 p-4">
           <div className="mb-3 flex items-center justify-between text-xs text-slate-500">
             <span>每页最多 10 条</span>
             <span>{filtered.length} / {items.length}</span>
@@ -183,12 +205,14 @@ export function ContentWorkbench({
                 >
                   <button type="button" className="block w-full text-left" onClick={() => { setMode('preview'); onSelect(item) }}>
                     <div className="flex items-start justify-between gap-3">
-                      <h2 className="text-sm font-semibold leading-5 text-slate-950">{item.title || '未命名内容'}</h2>
+                      <h2 className="min-w-0 flex-1 truncate text-sm font-semibold leading-5 text-slate-950" title={item.title || '未命名内容'}>
+                        {item.title || '未命名内容'}
+                      </h2>
                       <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${item.status === 'published' ? 'bg-emerald-50 text-emerald-700' : 'bg-orange-50 text-orange-700'}`}>
                         {statusLabel(item.status)}
                       </span>
                     </div>
-                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{item.intro || item.slug}</p>
+                    <p className="mt-1 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">{item.intro || '暂无摘要'}</p>
                   </button>
                   <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
                     <span>{item.createdAt || '-'}{item.kind ? ` · ${item.kind === 'link' ? '链接' : '文档'}` : ''}</span>
@@ -206,27 +230,12 @@ export function ContentWorkbench({
           )}
         </aside>
 
-        <section className="min-w-0 p-4">
+        <section className="min-w-0 overflow-y-auto p-4">
           {selected && mode === 'preview' ? (
             <div>
               <div className="mb-3 flex items-center justify-between gap-3">
                 <h2 className="text-sm font-semibold text-slate-950">详情预览</h2>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" onClick={() => setMode('edit')}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    编辑
-                  </Button>
-                  {selected.status === 'draft' && (
-                    <Button className="bg-orange-500 hover:bg-orange-600" disabled={isPublishing} onClick={() => onPublish()}>
-                      {isPublishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      发布到生产
-                    </Button>
-                  )}
-                  <Button variant="outline" className="text-red-600 hover:text-red-600" onClick={() => onDelete(selected)}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    删除
-                  </Button>
-                </div>
+                <p className="text-xs text-slate-500">编辑、发布和删除请使用顶部操作栏</p>
               </div>
               <article className="rounded-lg border border-slate-200 bg-white p-5">
                 <div className="mb-4 flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
@@ -258,11 +267,13 @@ export function ContentWorkbench({
                     <Input type="date" value={selected.createdAt} onChange={(event) => setSelectedValue({ createdAt: event.target.value })} />
                   </label>
                 </div>
-                <div className="grid grid-cols-[1fr_150px] gap-3">
-                  <label className="space-y-1 text-xs font-medium text-slate-500">
-                    <span>Slug</span>
-                    <Input value={selected.slug} disabled={!isNew} onChange={(event) => setSelectedValue({ slug: event.target.value })} />
-                  </label>
+                <div className={isNew ? 'grid grid-cols-[1fr_150px] gap-3' : 'grid grid-cols-[150px] gap-3'}>
+                  {isNew && (
+                    <label className="space-y-1 text-xs font-medium text-slate-500">
+                      <span>Slug</span>
+                      <Input value={selected.slug} onChange={(event) => setSelectedValue({ slug: event.target.value })} />
+                    </label>
+                  )}
                   <label className="space-y-1 text-xs font-medium text-slate-500">
                     <span>状态</span>
                     <Input value={statusLabel(selected.status)} disabled />
@@ -310,27 +321,13 @@ export function ContentWorkbench({
                   </div>
                   <Textarea
                     ref={textareaRef}
-                    className="min-h-[310px] rounded-t-none font-mono text-sm"
+                    className="min-h-[520px] rounded-t-none font-mono text-sm"
                     value={selected.markdown}
                     onChange={(event) => setMarkdown(event.target.value)}
                   />
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button variant="outline" disabled={isSaving} onClick={onSaveDraft}>
-                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    保存草稿
-                  </Button>
-                  <Button className="bg-orange-500 hover:bg-orange-600" disabled={isPublishing} onClick={() => onPublish()}>
-                    {isPublishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    发布到生产
-                  </Button>
-                  <Button variant="outline" className="text-red-600 hover:text-red-600" onClick={() => onDelete(selected)}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    删除
-                  </Button>
-                  <span className="ml-auto text-xs text-slate-500">保存默认为草稿，发布成功后状态更新为已发布</span>
-                </div>
+                <p className="text-xs text-slate-500">保存默认为草稿，发布成功后状态更新为已发布。保存、发布和删除请使用顶部操作栏。</p>
               </div>
             </div>
           ) : (

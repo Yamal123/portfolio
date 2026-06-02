@@ -107,7 +107,6 @@ function PortfolioContent() {
   return (
     <AdminLayout title="作品集">
       <ContentWorkbench
-        title="作品集"
         items={items}
         selected={selected}
         isNew={isNew}

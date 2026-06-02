@@ -94,7 +94,6 @@ function ArticlesContent() {
   return (
     <AdminLayout title="方法论">
       <ContentWorkbench
-        title="方法论"
         items={items}
         selected={selected}
         isNew={isNew}

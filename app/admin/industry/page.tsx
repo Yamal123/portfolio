@@ -98,7 +98,6 @@ function IndustryContent() {
   return (
     <AdminLayout title="行业动态">
       <ContentWorkbench
-        title="行业动态"
         items={items}
         selected={selected}
         isNew={isNew}
