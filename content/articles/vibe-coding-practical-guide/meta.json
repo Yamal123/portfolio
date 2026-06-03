@@ -1,0 +1,11 @@
+{
+  "id": 17,
+  "slug": "vibe-coding-practical-guide",
+  "titleZh": "Vibe Coding 实战指南：产品经理如何把想法真正跑通",
+  "titleEn": "Vibe Coding Practical Guide: How PMs Turn Ideas into Working Results",
+  "createdAt": "2026-06-03",
+  "introZh": "从产品经理视角讲清楚 Vibe Coding 不是“和 AI 聊天”，而是把目标、边界、方案和验收标准结构化地喂给 AI，再用最小闭环把想法跑通。",
+  "introEn": "A PM-focused guide to Vibe Coding: not chatting with AI, but structuring goals, boundaries, plans, and acceptance criteria so ideas can be turned into working results through the smallest possible closed loop.",
+  "keywords": ["Vibe Coding", "AI产品经理", "Prompt", "Agent", "工程化思维", "产品方法论"],
+  "contentType": "markdown"
+}

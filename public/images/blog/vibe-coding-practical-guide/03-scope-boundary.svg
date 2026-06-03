@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" fill="none">
+  <rect width="1200" height="800" rx="36" fill="#fffdf8"/>
+  <g stroke="#111111" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="216" y="172" width="406" height="406" rx="34" fill="#fff"/>
+    <path d="M252 228h320" />
+    <path d="M252 278h228" />
+    <path d="M252 328h275" />
+    <path d="M252 378h204" />
+    <path d="M252 428h301" />
+    <path d="M252 478h154" />
+    <rect x="672" y="216" width="298" height="320" rx="26" fill="#fff"/>
+    <path d="M710 260h224" />
+    <path d="M710 318h160" />
+    <path d="M710 376h192" />
+    <path d="M710 434h138" />
+    <path d="M672 582h298" />
+    <path d="M702 614c24-16 49-24 76-24 29 0 53 9 73 26" />
+    <path d="M434 604c28-16 57-25 88-25 32 0 60 8 84 23" />
+    <path d="M949 610c16 24 35 39 57 44" />
+    <path d="M154 604c19 26 38 43 59 50" />
+    <path d="M561 162c34-10 66-10 95 1" />
+  </g>
+  <g fill="#0f62fe" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="286" y="230" width="116" height="82" rx="18"/>
+    <rect x="433" y="230" width="116" height="82" rx="18"/>
+    <rect x="286" y="338" width="263" height="82" rx="18"/>
+    <path d="M321 270h46" />
+    <path d="M470 270h46" />
+    <path d="M325 378h184" />
+  </g>
+  <g fill="#fff" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="732" y="250" width="200" height="86" rx="18"/>
+    <rect x="732" y="360" width="200" height="86" rx="18"/>
+    <path d="M760 290h90" />
+    <path d="M760 400h70" />
+  </g>
+  <g stroke="#f15a24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M650 180c28 12 49 30 67 55" />
+    <path d="M982 202c20 20 29 42 30 68" />
+    <path d="M666 544c32-8 59-5 82 8" />
+  </g>
+  <path d="M626 170c69 18 122 72 139 141 17 71-3 143-54 194-51 51-124 71-194 54-70-18-123-72-140-142-17-70 4-144 55-195 51-50 124-70 194-52Z" stroke="#d72638" stroke-width="10" stroke-dasharray="18 14" fill="none"/>
+  <text x="170" y="112" font-size="44" font-family="Arial, sans-serif" fill="#111111">In scope</text>
+  <text x="708" y="112" font-size="44" font-family="Arial, sans-serif" fill="#111111">Out of scope</text>
+</svg>

@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" fill="none">
+  <rect width="1200" height="800" rx="36" fill="#fffdf8"/>
+  <g stroke="#111111" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M134 620c52-42 94-56 152-48" />
+    <path d="M289 572c9-52 39-97 84-130" />
+    <path d="M393 427c-24 21-32 54-24 90" />
+    <circle cx="196" cy="364" r="84" fill="#fff"/>
+    <path d="M167 360c0-31 19-53 48-53 21 0 36 10 46 29 8 15 9 31 4 45-8 23-30 40-55 40-25 0-43-19-43-61Z" fill="#fff"/>
+    <path d="M180 270c10-20 26-32 48-35" />
+    <path d="M235 266c18 4 34 15 44 32" />
+    <path d="M194 355c8 5 20 6 32 0" />
+    <path d="M174 392l24 42 18-41" fill="#fff"/>
+    <path d="M146 534h98" />
+    <path d="M169 535l-22 80" />
+    <path d="M220 535l21 83" />
+    <path d="M151 434l-40 55" />
+    <path d="M244 434l53 34" />
+    <rect x="288" y="322" width="250" height="190" rx="26" fill="#fff"/>
+    <path d="M318 360h190" />
+    <path d="M318 408h158" />
+    <path d="M318 456h118" />
+    <path d="M320 498c18 0 28-12 28-26" />
+    <path d="M520 500c-10-18-17-39-17-64 0-29 7-58 23-82" />
+    <path d="M706 265l7 41" />
+    <path d="M691 293l26-8" />
+    <path d="M814 358c38 0 70 30 70 66 0 38-32 70-70 70s-69-32-69-70c0-36 31-66 69-66Z" fill="#fff"/>
+    <path d="M814 296v62" />
+    <path d="M814 493v57" />
+    <path d="M732 425h-56" />
+    <path d="M852 425h56" />
+    <path d="M761 372l-36-35" />
+    <path d="M867 375l35-37" />
+    <path d="M759 475l-33 34" />
+    <path d="M867 476l35 35" />
+    <rect x="948" y="248" width="146" height="104" rx="20" fill="#fff"/>
+    <path d="M978 300h86" />
+    <path d="M978 325h58" />
+    <path d="M962 268c24 12 48 15 86 13" stroke="#f15a24"/>
+    <circle cx="1030" cy="560" r="70" fill="#fff"/>
+    <path d="M1001 560c0-16 13-30 29-30 17 0 30 14 30 30" />
+    <path d="M1021 528c-6 18-7 36-1 60" />
+    <path d="M1039 527c5 18 8 39 5 61" />
+    <path d="M989 628c16-20 39-31 65-31 25 0 46 10 64 30" />
+  </g>
+  <g stroke="#f15a24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M388 270c28-12 52-12 76 0" />
+    <path d="M570 338c18 28 20 57 5 89" />
+    <path d="M959 419c30-7 58-4 83 9" />
+  </g>
+  <g fill="#0f62fe" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="604" y="372" width="116" height="70" rx="18"/>
+    <path d="M630 409h64" />
+    <path d="M640 428l12-19 17 11 20-24" fill="none"/>
+  </g>
+  <text x="86" y="92" font-size="44" font-family="Arial, sans-serif" fill="#111111">Goal</text>
+  <text x="936" y="606" font-size="34" font-family="Arial, sans-serif" fill="#111111">AI</text>
+  <text x="304" y="555" font-size="32" font-family="Arial, sans-serif" fill="#111111">PM</text>
+</svg>

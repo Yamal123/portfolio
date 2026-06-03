@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" fill="none">
+  <rect width="1200" height="800" rx="36" fill="#fffdf8"/>
+  <g stroke="#111111" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M128 668c66-41 145-52 216-33" />
+    <path d="M172 610c18-42 41-74 77-100" />
+    <path d="M220 520c-3 42 6 78 29 112" />
+    <circle cx="222" cy="454" r="84" fill="#fff"/>
+    <path d="M190 456c0-30 20-51 46-51 25 0 43 15 51 39 10 28-1 58-24 73-32 21-73-1-73-61Z" fill="#fff"/>
+    <path d="M196 382c13-18 30-28 50-31" />
+    <path d="M255 385c16 5 29 16 38 32" />
+    <path d="M221 441c7 6 18 7 30 1" />
+    <path d="M210 509l27 45 16-43" fill="#fff"/>
+    <path d="M178 611h103" />
+    <path d="M202 611l-25 80" />
+    <path d="M250 611l25 80" />
+    <path d="M158 518l-38 49" />
+    <path d="M273 523l52 25" />
+    <rect x="356" y="202" width="250" height="456" rx="26" fill="#fff"/>
+    <path d="M391 240h180" />
+    <path d="M389 270h186" />
+    <path d="M389 300h122" />
+    <path d="M391 338h80" />
+    <path d="M391 371h160" />
+    <path d="M391 404h130" />
+    <path d="M391 437h170" />
+    <path d="M391 470h112" />
+    <path d="M391 503h145" />
+    <path d="M391 536h84" />
+    <path d="M391 569h176" />
+    <path d="M391 602h137" />
+    <path d="M652 188c28 10 54 34 70 64 16 29 22 64 17 98" />
+    <path d="M715 356c-20 39-50 67-90 87" />
+    <circle cx="810" cy="396" r="190" fill="#fff"/>
+    <path d="M687 488h246" />
+    <path d="M687 488l28-230h190l28 230" fill="#fff"/>
+    <path d="M734 298h108" />
+    <path d="M734 338h148" />
+    <path d="M734 378h118" />
+    <path d="M734 418h95" />
+    <path d="M732 510l-8 90" />
+    <path d="M892 510l9 90" />
+    <path d="M769 600c28-14 57-18 89-12 29 5 52 16 70 34" />
+    <path d="M942 270l84-44" />
+    <path d="M948 316l92 2" />
+    <path d="M930 372l79 53" />
+    <path d="M928 445l74 82" />
+  </g>
+  <g stroke="#f15a24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M675 246l74-32" />
+    <path d="M1002 350l70 22" />
+    <path d="M972 508c22 6 41 18 58 36" />
+  </g>
+  <g fill="#0f62fe" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M826 172c0 26-21 47-47 47s-47-21-47-47 21-47 47-47 47 21 47 47Z"/>
+    <path d="M779 151v42" />
+    <path d="M758 172h42" />
+  </g>
+  <text x="754" y="704" font-size="34" font-family="Arial, sans-serif" fill="#111111">MAP</text>
+  <text x="76" y="106" font-size="44" font-family="Arial, sans-serif" fill="#111111">Inspect first</text>
+</svg>
