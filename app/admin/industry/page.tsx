@@ -95,6 +95,22 @@ function IndustryContent() {
     }
   }
 
+  const runBulk = async (action: 'delete' | 'publish' | 'unpublish', selectedItems: WorkbenchItem[]) => {
+    if (selectedItems.length === 0) return
+    try {
+      await post('/api/management/industry-updates/bulk', {
+        action,
+        slugs: selectedItems.map((item) => item.slug),
+      })
+      await mutate()
+      setSelected(null)
+      setIsNew(false)
+      toast.success(action === 'delete' ? '行业动态已批量删除' : action === 'publish' ? '行业动态已批量发布' : '行业动态已批量取消发布')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '批量操作失败')
+    }
+  }
+
   return (
     <AdminLayout title="行业动态">
       <ContentWorkbench
@@ -104,6 +120,7 @@ function IndustryContent() {
         isLoading={isLoading}
         isSaving={saving}
         isPublishing={publishing}
+        supportsBulk
         onNew={() => {
           setSelected(toWorkbench(blankIndustry))
           setIsNew(true)
@@ -116,6 +133,9 @@ function IndustryContent() {
         onSaveDraft={() => selected && persist(selected, false)}
         onPublish={(item) => persist(item || selected!, true)}
         onDelete={remove}
+        onBulkDelete={(items) => runBulk('delete', items)}
+        onBulkPublish={(items) => runBulk('publish', items)}
+        onBulkUnpublish={(items) => runBulk('unpublish', items)}
       />
     </AdminLayout>
   )

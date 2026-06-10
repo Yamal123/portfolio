@@ -1,0 +1,9 @@
+{
+  "slug": "ai-model-landscape-2026",
+  "titleZh": "2026 年 AI 大模型全景对比：开源与闭源模型的多维度深度分析",
+  "titleEn": "The 2026 AI Model Landscape: A Multi-Dimensional Deep Dive into Open-Source and Closed-Source Models",
+  "introZh": "全面梳理截至 2026 年 6 月的主流开源与闭源大模型，从发布时间、应用场景、成本、模态、合规性、数据安全等维度进行系统对比，为 AI 产品经理和技术决策者提供选型参考。",
+  "introEn": "A comprehensive June 2026 survey of open-source and closed-source AI models, systematically compared across release dates, use cases, cost, modality, licensing compliance, and data security.",
+  "keywords": ["AI大模型","开源模型","闭源模型","GPT-5.5","Claude Opus 4.7","Gemini 3.1 Pro","DeepSeek V4","Qwen3.6","Kimi K2.6","MiniMax M3","模型对比","AI选型"],
+  "createdAt": "2026-06-07"
+}

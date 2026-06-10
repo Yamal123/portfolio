@@ -7,6 +7,7 @@ import { AdminLayout } from '@/components/admin/AdminLayout'
 import { ContentWorkbench, type WorkbenchItem } from '@/components/admin/ContentWorkbench'
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute'
 import { del, fetcher, post, put } from '@/lib/admin/fetcher'
+import { deriveArticleStatus } from '@/lib/admin/article-status'
 import type { ArticleInput } from '@/lib/content/contracts'
 
 const today = new Date().toISOString().slice(0, 10)
@@ -18,6 +19,7 @@ const blankArticle: ArticleInput = {
   keywords: [],
   content: { zh: '', en: '' },
   published: false,
+  wasPublished: false,
   createdAt: today,
 }
 
@@ -27,20 +29,24 @@ function toWorkbench(item: ArticleInput): WorkbenchItem {
     title: item.title.zh,
     intro: item.intro.zh,
     createdAt: item.createdAt,
-    status: item.published ? 'published' : 'draft',
+    status: deriveArticleStatus({ published: item.published, wasPublished: item.wasPublished ?? false }),
+    keywords: item.keywords,
     markdown: item.content.zh,
   }
 }
 
 function fromWorkbench(item: WorkbenchItem, original?: ArticleInput): ArticleInput {
   const base = original || blankArticle
+  const nextStatus = item.status
   return {
     ...base,
     slug: item.slug,
     title: { zh: item.title, en: base.title.en || item.title },
     intro: { zh: item.intro, en: base.intro.en || item.intro },
+    keywords: item.keywords || base.keywords || [],
     content: { zh: item.markdown, en: base.content.en },
-    published: item.status === 'published',
+    published: nextStatus === 'published',
+    wasPublished: nextStatus === 'published' || nextStatus === 'pending',
     createdAt: item.createdAt,
   }
 }
@@ -53,21 +59,37 @@ function ArticlesContent() {
   const [publishing, setPublishing] = useState(false)
 
   const items = useMemo(() => data.map(toWorkbench), [data])
-  const persist = async (item: WorkbenchItem, publish: boolean) => {
+  const persist = async (
+    item: WorkbenchItem,
+    operation: 'save' | 'publish' | 'unpublish',
+    nextStatus: WorkbenchItem['status'] = item.status
+  ) => {
     const original = data.find((entry) => entry.slug === item.slug)
-    const payload = fromWorkbench({ ...item, status: publish ? 'published' : 'draft' }, original)
+    const payload = fromWorkbench({ ...item, status: nextStatus }, original)
     if (!payload.slug || !payload.title.zh) {
       toast.error('请填写标题和 slug')
       return
     }
-    publish ? setPublishing(true) : setSaving(true)
+    const isPublishing = operation !== 'save'
+    const loading = isPublishing ? setPublishing : setSaving
+    loading(true)
     try {
       const exists = data.some((entry) => entry.slug === payload.slug)
       exists ? await put('/api/management/articles', payload) : await post('/api/management/articles', payload)
       await mutate()
       setSelected(toWorkbench(payload))
       setIsNew(false)
-      toast.success(publish ? '方法论已发布到生产' : '方法论草稿已保存')
+      if (operation === 'publish') {
+        toast.success('方法论已发布到生产')
+      } else if (operation === 'unpublish') {
+        toast.success('方法论已下架为待发布')
+      } else if (nextStatus === 'published') {
+        toast.success('方法论已保存并保持已发布')
+      } else if (nextStatus === 'pending') {
+        toast.success('方法论已保存并保持待发布')
+      } else {
+        toast.success('方法论草稿已保存')
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '保存失败')
     } finally {
@@ -79,6 +101,8 @@ function ArticlesContent() {
   const remove = async (item: WorkbenchItem) => {
     const message = item.status === 'published'
       ? '该方法论已发布到生产。删除后前台生产环境会同步下架，确定删除？'
+      : item.status === 'pending'
+        ? '该方法论处于待发布状态。删除后将彻底移除，确定删除？'
       : '确定删除该方法论草稿？'
     if (!item.slug || !window.confirm(message)) return
     try {
@@ -91,6 +115,22 @@ function ArticlesContent() {
     }
   }
 
+  const runBulk = async (action: 'delete' | 'publish' | 'unpublish', selectedItems: WorkbenchItem[]) => {
+    if (selectedItems.length === 0) return
+    try {
+      await post('/api/management/articles/bulk', {
+        action,
+        slugs: selectedItems.map((item) => item.slug),
+      })
+      await mutate()
+      setSelected(null)
+      setIsNew(false)
+      toast.success(action === 'delete' ? '文章已批量删除' : action === 'publish' ? '文章已批量发布' : '文章已批量下架')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '批量操作失败')
+    }
+  }
+
   return (
     <AdminLayout title="方法论">
       <ContentWorkbench
@@ -100,6 +140,8 @@ function ArticlesContent() {
         isLoading={isLoading}
         isSaving={saving}
         isPublishing={publishing}
+        supportsKeywords
+        supportsBulk
         onNew={() => {
           setSelected(toWorkbench(blankArticle))
           setIsNew(true)
@@ -109,9 +151,13 @@ function ArticlesContent() {
           setIsNew(false)
         }}
         onChange={setSelected}
-        onSaveDraft={() => selected && persist(selected, false)}
-        onPublish={(item) => persist(item || selected!, true)}
+        onSaveDraft={() => selected && persist(selected, 'save', selected.status)}
+        onPublish={(item) => persist(item || selected!, 'publish', 'published')}
+        onUnpublish={(item) => persist(item || selected!, 'unpublish', 'pending')}
         onDelete={remove}
+        onBulkDelete={(items) => runBulk('delete', items)}
+        onBulkPublish={(items) => runBulk('publish', items)}
+        onBulkUnpublish={(items) => runBulk('unpublish', items)}
       />
     </AdminLayout>
   )

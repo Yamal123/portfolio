@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 export const agentChatSchema = z.object({
+  sessionId: z.string().trim().min(1).max(80).optional(),
   message: z.string().trim().min(1).max(2000),
   history: z.array(z.object({
     role: z.enum(['user', 'assistant']),

@@ -18,6 +18,7 @@ module.exports = {
       login_at: null,
       fail_count: 0,
       locked_until: null,
+      session_version: 0,
       status: 1,
       created_at: formatDate(new Date()),
       updated_at: formatDate(new Date())
@@ -351,6 +352,8 @@ module.exports = {
   ],
 
   visitStats: [],
-  
+
+  agentSessions: [],
+
   adminLogs: []
 }

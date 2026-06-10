@@ -33,6 +33,7 @@ export const articleInputSchema = z.object({
   keywords: strings.default([]),
   content: z.object({ zh: localText, en: localText }),
   published: z.boolean().default(true),
+  wasPublished: z.boolean().default(false),
   createdAt: z.string().min(1),
 })
 

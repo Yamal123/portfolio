@@ -59,6 +59,10 @@ body::-webkit-scrollbar-thumb:hover {
   min-height: 100vh;
 }
 
+.admin-shell {
+  overflow: hidden;
+}
+
 .admin-layout ::-webkit-scrollbar-track {
   background: #f1f2f3;
 }

@@ -104,6 +104,22 @@ function PortfolioContent() {
     }
   }
 
+  const runBulk = async (action: 'delete' | 'publish' | 'unpublish', selectedItems: WorkbenchItem[]) => {
+    if (selectedItems.length === 0) return
+    try {
+      await post('/api/management/projects/bulk', {
+        action,
+        slugs: selectedItems.map((item) => item.slug),
+      })
+      await mutate()
+      setSelected(null)
+      setIsNew(false)
+      toast.success(action === 'delete' ? '项目已批量删除' : action === 'publish' ? '项目已批量发布' : '项目已批量取消发布')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '批量操作失败')
+    }
+  }
+
   return (
     <AdminLayout title="作品集">
       <ContentWorkbench
@@ -114,6 +130,7 @@ function PortfolioContent() {
         isSaving={saving}
         isPublishing={publishing}
         supportsKind
+        supportsBulk
         onNew={() => {
           setSelected(toWorkbench(blankProject))
           setIsNew(true)
@@ -126,6 +143,9 @@ function PortfolioContent() {
         onSaveDraft={() => selected && persist(selected, false)}
         onPublish={(item) => persist(item || selected!, true)}
         onDelete={remove}
+        onBulkDelete={(items) => runBulk('delete', items)}
+        onBulkPublish={(items) => runBulk('publish', items)}
+        onBulkUnpublish={(items) => runBulk('unpublish', items)}
       />
     </AdminLayout>
   )

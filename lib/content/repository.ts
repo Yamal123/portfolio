@@ -34,6 +34,7 @@ function articleView(row: typeof articles.$inferSelect) {
     keywords: row.keywords,
     content: { zh: row.contentZh, en: row.contentEn },
     published: row.published,
+    wasPublished: row.wasPublished,
     createdAt: row.publishedAt.toISOString().slice(0, 10),
   }
 }
@@ -186,10 +187,14 @@ export async function getArticle(slug: string, admin = false) {
 }
 
 export async function saveArticle(input: ArticleInput, update = false) {
+  const existingRow = update
+    ? (await getDb().select().from(articles).where(eq(articles.slug, input.slug)).limit(1))[0]
+    : null
+  const wasPublished = input.wasPublished ?? existingRow?.wasPublished ?? (input.published ? true : false)
   const values = {
     slug: input.slug, titleZh: input.title.zh, titleEn: input.title.en, introZh: input.intro.zh,
     introEn: input.intro.en, keywords: input.keywords, contentZh: input.content.zh, contentEn: input.content.en,
-    published: input.published, publishedAt: new Date(input.createdAt), updatedAt: new Date(),
+    published: input.published, wasPublished: wasPublished ?? false, publishedAt: new Date(input.createdAt), updatedAt: new Date(),
   }
   const row = update
     ? (await getDb().update(articles).set(values).where(eq(articles.slug, input.slug)).returning())[0]

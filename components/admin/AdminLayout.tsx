@@ -11,12 +11,12 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children, title }: AdminLayoutProps) {
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="admin-shell flex h-dvh overflow-hidden bg-slate-100">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Header title={title} />
-        <main className="flex-1 overflow-hidden bg-slate-100">
-          <div className="h-full">
+        <main className="min-h-0 flex-1 overflow-hidden bg-slate-100">
+          <div className="h-full min-h-0">
             {children}
           </div>
         </main>

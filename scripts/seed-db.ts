@@ -57,7 +57,7 @@ async function main() {
     const contentEn = await readFile(join(root, 'content.en.md'), 'utf8').catch(() => '')
     const values = {
       slug: meta.slug || directory, titleZh: meta.titleZh, titleEn: meta.titleEn, introZh: meta.introZh || '',
-      introEn: meta.introEn || '', keywords: meta.keywords || [], contentZh, contentEn, publishedAt: new Date(meta.createdAt),
+      introEn: meta.introEn || '', keywords: meta.keywords || [], contentZh, contentEn, wasPublished: true, publishedAt: new Date(meta.createdAt),
     }
     await db.insert(articles).values(values).onConflictDoUpdate({ target: articles.slug, set: values })
   }

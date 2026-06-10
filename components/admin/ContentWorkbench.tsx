@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Bold,
   Code,
@@ -23,10 +23,28 @@ import {
 } from 'lucide-react'
 import { ArticleMarkdown } from '@/components/article-markdown'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { getArticleStatusLabel } from '@/lib/admin/article-status'
+import { getBulkActionCopy, getPrimaryActionLabel } from '@/lib/admin/content-workbench'
+import { toast } from 'sonner'
 
-export type ContentStatus = 'draft' | 'published'
+export type ContentStatus = 'draft' | 'pending' | 'published'
 export type ContentKind = 'link' | 'document'
 
 export interface WorkbenchItem {
@@ -36,6 +54,7 @@ export interface WorkbenchItem {
   createdAt: string
   status: ContentStatus
   kind?: ContentKind
+  keywords?: string[]
   markdown: string
 }
 
@@ -47,12 +66,18 @@ interface ContentWorkbenchProps {
   isSaving?: boolean
   isPublishing?: boolean
   supportsKind?: boolean
+  supportsKeywords?: boolean
+  supportsBulk?: boolean
   onNew: () => void
   onSelect: (item: WorkbenchItem) => void
   onChange: (item: WorkbenchItem) => void
   onSaveDraft: () => void
   onPublish: (item?: WorkbenchItem) => void
+  onUnpublish?: (item?: WorkbenchItem) => void
   onDelete: (item: WorkbenchItem) => void
+  onBulkDelete?: (items: WorkbenchItem[]) => Promise<void> | void
+  onBulkPublish?: (items: WorkbenchItem[]) => Promise<void> | void
+  onBulkUnpublish?: (items: WorkbenchItem[]) => Promise<void> | void
 }
 
 function inRange(date: string, start: string, end: string) {
@@ -76,7 +101,7 @@ function insertAtCursor(textarea: HTMLTextAreaElement | null, markdown: string, 
 }
 
 function statusLabel(status: ContentStatus) {
-  return status === 'published' ? '已发布' : '草稿'
+  return getArticleStatusLabel(status)
 }
 
 export function ContentWorkbench({
@@ -87,18 +112,27 @@ export function ContentWorkbench({
   isSaving = false,
   isPublishing = false,
   supportsKind = false,
+  supportsKeywords = false,
+  supportsBulk = false,
   onNew,
   onSelect,
   onChange,
   onSaveDraft,
   onPublish,
+  onUnpublish,
   onDelete,
+  onBulkDelete,
+  onBulkPublish,
+  onBulkUnpublish,
 }: ContentWorkbenchProps) {
   const [query, setQuery] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [tab, setTab] = useState<'all' | ContentStatus | ContentKind>('all')
   const [mode, setMode] = useState<'preview' | 'edit'>('preview')
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedSlugs, setSelectedSlugs] = useState<string[]>([])
+  const [bulkAction, setBulkAction] = useState<'delete' | 'publish' | 'unpublish' | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   const filtered = useMemo(() => {
@@ -107,7 +141,7 @@ export function ContentWorkbench({
       .filter((item) => inRange(item.createdAt || '', startDate, endDate))
       .filter((item) => {
         if (tab === 'all') return true
-        if (tab === 'draft' || tab === 'published') return item.status === tab
+        if (tab === 'draft' || tab === 'pending' || tab === 'published') return item.status === tab
         return item.kind === tab
       })
       .slice(0, 10)
@@ -120,8 +154,59 @@ export function ContentWorkbench({
 
   const setMarkdown = (markdown: string) => setSelectedValue({ markdown })
 
+  const selectedItems = useMemo(
+    () => filtered.filter((item) => selectedSlugs.includes(item.slug)),
+    [filtered, selectedSlugs]
+  )
+  const selectedCount = selectedItems.length
+  const allSelected = filtered.length > 0 && filtered.every((item) => selectedSlugs.includes(item.slug))
+  const canPublishSelected = selectedItems.length > 0 && selectedItems.every((item) => item.status !== 'published')
+  const canUnpublishSelected = selectedItems.length > 0 && selectedItems.every((item) => item.status === 'published')
+
+  useEffect(() => {
+    setSelectedSlugs((current) => current.filter((slug) => filtered.some((item) => item.slug === slug)))
+  }, [filtered])
+
+  const toggleSelect = (slug: string) => {
+    setSelectedSlugs((current) =>
+      current.includes(slug) ? current.filter((item) => item !== slug) : [...current, slug]
+    )
+  }
+
+  const toggleSelectAll = (checked: boolean) => {
+    setSelectedSlugs(checked ? filtered.map((item) => item.slug) : [])
+  }
+
+  const openBulkAction = (type: 'delete' | 'publish' | 'unpublish') => {
+    if (!selectedItems.length) return
+    if (type === 'publish' && !canPublishSelected) {
+      toast.error('批量发布仅支持未发布文章，请先取消已发布文章的选择。')
+      return
+    }
+    if (type === 'unpublish' && !canUnpublishSelected) {
+      toast.error('批量下架仅支持已发布文章，请先取消草稿文章的选择。')
+      return
+    }
+    setBulkAction(type)
+  }
+
+  const handleBulk = async (type: 'delete' | 'publish' | 'unpublish') => {
+    const handlers = {
+      delete: onBulkDelete,
+      publish: onBulkPublish,
+      unpublish: onBulkUnpublish,
+    }
+    const handler = handlers[type]
+    if (!handler) return
+
+    await handler(selectedItems)
+    setSelectedSlugs([])
+    setBulkAction(null)
+    setSelectionMode(false)
+  }
+
   return (
-    <div className="flex h-full flex-col overflow-hidden border-t border-slate-200 bg-white">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden border-t border-slate-200 bg-white">
       <header className="shrink-0 border-b border-slate-200 bg-white">
         <div className="flex items-center justify-between gap-4 px-4 py-3">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
@@ -131,32 +216,84 @@ export function ContentWorkbench({
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {selected && (
-              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${selected.status === 'published' ? 'bg-emerald-50 text-emerald-700' : 'bg-orange-50 text-orange-700'}`}>
+              <span
+                className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                  selected.status === 'published'
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : selected.status === 'pending'
+                      ? 'bg-amber-50 text-amber-700'
+                      : 'bg-orange-50 text-orange-700'
+                }`}
+              >
                 {statusLabel(selected.status)}
               </span>
             )}
-            {selected && mode === 'preview' && (
+            {selectionMode && supportsBulk ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="h-9 border-slate-200">
+                    操作
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem onClick={() => openBulkAction('publish')} disabled={!selectedCount || !canPublishSelected}>
+                    批量发布
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => openBulkAction('unpublish')} disabled={!selectedCount || !canUnpublishSelected}>
+                    批量下架
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => openBulkAction('delete')} disabled={!selectedCount}>
+                    批量删除
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+            {selected && mode === 'preview' && !selectionMode && (
+              <>
+                {(() => {
+                  const isPrimaryLoading = selected.status === 'published' ? isSaving : isPublishing
+                  return (
+                    <Button
+                      className="h-9 bg-orange-500 hover:bg-orange-600"
+                      disabled={isPrimaryLoading}
+                      onClick={() => (selected.status === 'published' ? onUnpublish?.(selected) : onPublish())}
+                    >
+                      {isPrimaryLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {getPrimaryActionLabel(selected.status)}
+                    </Button>
+                  )
+                })()}
+              </>
+            )}
+            {selected && mode === 'preview' && !selectionMode && (
               <Button variant="outline" className="h-9" onClick={() => setMode('edit')}>
                 <Edit className="mr-2 h-4 w-4" />
                 编辑
               </Button>
             )}
-            {selected && mode === 'edit' && (
+            {selected && mode === 'edit' && !selectionMode && (
               <Button variant="outline" className="h-9" disabled={isSaving} onClick={onSaveDraft}>
                 {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                保存草稿
+                {selected.status === 'draft' ? '保存草稿' : '保存修改'}
               </Button>
             )}
-            {selected && (
-              <Button className="h-9 bg-orange-500 hover:bg-orange-600" disabled={isPublishing} onClick={() => onPublish()}>
-                {isPublishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                发布到生产
-              </Button>
-            )}
-            {selected && (
+            {selected && !selectionMode && (
               <Button variant="outline" className="h-9 text-red-600 hover:text-red-600" onClick={() => onDelete(selected)}>
                 <Trash2 className="mr-2 h-4 w-4" />
                 删除
+              </Button>
+            )}
+            {supportsBulk && (
+              <Button
+                variant={selectionMode ? 'default' : 'outline'}
+                className={`h-9 ${selectionMode ? 'bg-orange-500 hover:bg-orange-600' : ''}`}
+                onClick={() => {
+                  setSelectionMode((current) => !current)
+                  setSelectedSlugs([])
+                  setBulkAction(null)
+                }}
+              >
+                {selectionMode ? '退出选择' : '选择'}
               </Button>
             )}
             <Button onClick={() => { setMode('edit'); onNew() }} className="h-9 bg-orange-500 hover:bg-orange-600">
@@ -166,29 +303,42 @@ export function ContentWorkbench({
           </div>
         </div>
 
-        <div className="flex gap-2 px-4 pb-3">
-          {[
-            ['all', '全部'],
-            ['draft', '草稿'],
-            ['published', '已发布'],
-            ...(supportsKind ? [['link', '链接'], ['document', '文档']] : []),
-          ].map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setTab(key as typeof tab)}
-              className={`h-8 rounded-md border px-3 text-sm font-medium ${tab === key ? 'border-orange-200 bg-orange-50 text-orange-700' : 'border-slate-200 bg-white text-slate-700'}`}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 pb-3">
+          <div className="flex flex-wrap gap-2">
+            {[
+              ['all', '全部'],
+              ['draft', '草稿'],
+              ['pending', '待发布'],
+              ['published', '已发布'],
+              ...(supportsKind ? [['link', '链接'], ['document', '文档']] : []),
+            ].map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setTab(key as typeof tab)}
+                className={`h-8 rounded-md border px-3 text-sm font-medium ${tab === key ? 'border-orange-200 bg-orange-50 text-orange-700' : 'border-slate-200 bg-white text-slate-700'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {selectionMode && supportsBulk && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-slate-500">已选 {selectedCount} 项</span>
+            </div>
+          )}
         </div>
       </header>
 
       <div className="grid min-h-0 flex-1 grid-cols-[390px_minmax(0,1fr)]">
         <aside className="min-h-0 overflow-y-auto border-r border-slate-200 bg-slate-50 p-4">
           <div className="mb-3 flex items-center justify-between text-xs text-slate-500">
-            <span>每页最多 10 条</span>
+            <span className="flex items-center gap-2">
+              {selectionMode && supportsBulk && (
+                <Checkbox checked={allSelected} onCheckedChange={(checked) => toggleSelectAll(Boolean(checked))} />
+              )}
+              <span>每页最多 10 条</span>
+            </span>
             <span>{filtered.length} / {items.length}</span>
           </div>
 
@@ -198,34 +348,76 @@ export function ContentWorkbench({
             </div>
           ) : (
             <div className="space-y-2">
-              {filtered.map((item) => (
-                <article
-                  key={item.slug}
-                  className={`rounded-lg border bg-white p-3 ${selected?.slug === item.slug ? 'border-orange-300 bg-orange-50/40' : 'border-slate-200'}`}
-                >
-                  <button type="button" className="block w-full text-left" onClick={() => { setMode('preview'); onSelect(item) }}>
-                    <div className="flex items-start justify-between gap-3">
-                      <h2 className="min-w-0 flex-1 truncate text-sm font-semibold leading-5 text-slate-950" title={item.title || '未命名内容'}>
-                        {item.title || '未命名内容'}
-                      </h2>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${item.status === 'published' ? 'bg-emerald-50 text-emerald-700' : 'bg-orange-50 text-orange-700'}`}>
-                        {statusLabel(item.status)}
-                      </span>
-                    </div>
-                    <p className="mt-1 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">{item.intro || '暂无摘要'}</p>
-                  </button>
-                  <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
-                    <span>{item.createdAt || '-'}{item.kind ? ` · ${item.kind === 'link' ? '链接' : '文档'}` : ''}</span>
-                    <div className="flex items-center gap-2">
-                      {item.status === 'draft' && (
-                      <button type="button" className="font-medium text-orange-700" onClick={() => onPublish(item)}>发布</button>
+              {filtered.map((item) => {
+                const checked = selectedSlugs.includes(item.slug)
+                return (
+                  <article
+                    key={item.slug}
+                    className={`rounded-lg border bg-white p-3 ${selected?.slug === item.slug ? 'border-orange-300 bg-orange-50/40' : 'border-slate-200'}`}
+                  >
+                    <div className="flex items-start gap-2">
+                      {selectionMode && supportsBulk && (
+                        <Checkbox checked={checked} onCheckedChange={() => toggleSelect(item.slug)} className="mt-1" />
                       )}
-                      <button type="button" className="font-medium text-slate-700" onClick={() => { setMode('edit'); onSelect(item) }}>编辑</button>
-                      <button type="button" className="font-medium text-red-600" onClick={() => onDelete(item)}>删除</button>
+                      <button
+                        type="button"
+                        className="block flex-1 text-left"
+                        onClick={() => {
+                          if (selectionMode) {
+                            toggleSelect(item.slug)
+                            return
+                          }
+                          setMode('preview')
+                          onSelect(item)
+                        }}
+                      >
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                          <h2
+                            className="min-w-0 break-words text-left text-sm font-semibold leading-6 text-slate-950"
+                            title={item.title || '未命名内容'}
+                          >
+                            {item.title || '未命名内容'}
+                          </h2>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                              item.status === 'published'
+                                ? 'bg-emerald-50 text-emerald-700'
+                                : item.status === 'pending'
+                                  ? 'bg-amber-50 text-amber-700'
+                                  : 'bg-orange-50 text-orange-700'
+                            }`}
+                          >
+                            {statusLabel(item.status)}
+                          </span>
+                        </div>
+                        <p className="mt-2 line-clamp-2 min-h-[2.5rem] text-xs leading-5 text-slate-500">
+                          {item.intro || '暂无摘要'}
+                        </p>
+                      </button>
                     </div>
-                  </div>
-                </article>
-              ))}
+                    <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                      <span>{item.createdAt || '-'}{item.kind ? ` · ${item.kind === 'link' ? '链接' : '文档'}` : ''}</span>
+                      <div className="flex items-center gap-2">
+                        {!selectionMode && (
+                          <button
+                            type="button"
+                            className="font-medium text-orange-700"
+                            onClick={() => (item.status === 'published' ? onUnpublish?.(item) : onPublish(item))}
+                          >
+                            {getPrimaryActionLabel(item.status)}
+                          </button>
+                        )}
+                        {!selectionMode && (
+                          <>
+                            <button type="button" className="font-medium text-slate-700" onClick={() => { setMode('edit'); onSelect(item) }}>编辑</button>
+                            <button type="button" className="font-medium text-red-600" onClick={() => onDelete(item)}>删除</button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                )
+              })}
             </div>
           )}
         </aside>
@@ -235,7 +427,9 @@ export function ContentWorkbench({
             <div>
               <div className="mb-3 flex items-center justify-between gap-3">
                 <h2 className="text-sm font-semibold text-slate-950">详情预览</h2>
-                <p className="text-xs text-slate-500">编辑、发布和删除请使用顶部操作栏</p>
+                <p className="text-xs text-slate-500">
+                  {selectionMode ? '选择模式下可通过顶部操作菜单批量处理' : '编辑、发布/下架和删除请使用顶部操作栏'}
+                </p>
               </div>
               <article className="rounded-lg border border-slate-200 bg-white p-5">
                 <div className="mb-4 flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
@@ -249,6 +443,10 @@ export function ContentWorkbench({
                 </div>
                 <ArticleMarkdown content={selected.markdown || ''} theme="light" />
               </article>
+            </div>
+          ) : selectionMode ? (
+            <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
+              选择模式已开启。请在左侧勾选内容后使用右上角“操作”菜单执行批量处理。
             </div>
           ) : selected ? (
             <div>
@@ -283,6 +481,24 @@ export function ContentWorkbench({
                   <span>摘要</span>
                   <Input value={selected.intro} onChange={(event) => setSelectedValue({ intro: event.target.value })} />
                 </label>
+
+                {supportsKeywords && (
+                  <label className="space-y-1 text-xs font-medium text-slate-500">
+                    <span>标签</span>
+                    <Input
+                      value={(selected.keywords || []).join(', ')}
+                      onChange={(event) =>
+                        setSelectedValue({
+                          keywords: event.target.value
+                            .split(',')
+                            .map((tag) => tag.trim())
+                            .filter(Boolean),
+                        })
+                      }
+                      placeholder="请输入标签，多个标签用英文逗号分隔"
+                    />
+                  </label>
+                )}
 
                 {supportsKind && (
                   <div className="flex gap-2">
@@ -327,7 +543,7 @@ export function ContentWorkbench({
                   />
                 </div>
 
-                <p className="text-xs text-slate-500">保存默认为草稿，发布成功后状态更新为已发布。保存、发布和删除请使用顶部操作栏。</p>
+                <p className="text-xs text-slate-500">保存会保留当前状态，发布成功后状态更新为已发布。保存、发布/下架和删除请使用顶部操作栏。</p>
               </div>
             </div>
           ) : (
@@ -335,6 +551,39 @@ export function ContentWorkbench({
           )}
         </section>
       </div>
+
+      <Dialog open={Boolean(bulkAction)} onOpenChange={(open) => !open && setBulkAction(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {bulkAction ? getBulkActionCopy(bulkAction, selectedCount).title : ''}
+            </DialogTitle>
+            <DialogDescription>
+              {bulkAction ? getBulkActionCopy(bulkAction, selectedCount).description : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-slate-600">
+            {bulkAction !== 'delete' && (
+              <div className="rounded-xl bg-slate-50 p-3">
+                {bulkAction ? getBulkActionCopy(bulkAction, selectedCount).helper : ''}
+              </div>
+            )}
+            <div className="rounded-xl border border-slate-200 p-3">
+              已选文章：{selectedItems.slice(0, 5).map((item) => item.title || item.slug).join('、')}
+              {selectedItems.length > 5 ? '…' : ''}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkAction(null)}>取消</Button>
+            <Button
+              className={bulkAction === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-orange-500 hover:bg-orange-600'}
+              onClick={() => bulkAction && handleBulk(bulkAction)}
+            >
+              {bulkAction ? getBulkActionCopy(bulkAction, selectedCount).confirm : ''}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -78,6 +78,7 @@ export const articles = pgTable('articles', {
   contentZh: text('content_zh').notNull().default(''),
   contentEn: text('content_en').notNull().default(''),
   published: boolean('published').notNull().default(true),
+  wasPublished: boolean('was_published').notNull().default(false),
   publishedAt: timestamp('published_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),

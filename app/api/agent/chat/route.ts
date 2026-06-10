@@ -35,6 +35,19 @@ export async function POST(request: Request) {
 
   try {
     const result = await runAgent(parsed.data)
+    try {
+      const store = (await import('@/lib/admin/system-store')).getSystemStore()
+      store.recordAgentSession({
+        sessionId: parsed.data.sessionId || String(Date.now()),
+        message: parsed.data.message,
+        history: parsed.data.history,
+        locale: parsed.data.locale,
+        answer: result.content,
+        metadata: result.metadata,
+      })
+    } catch (error) {
+      console.warn('[API /agent/chat] Failed to record agent session', error)
+    }
     const stream = createLineStream([
       JSON.stringify({
         type: 'start',

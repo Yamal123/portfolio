@@ -9,7 +9,7 @@
   "successRate": 88,
   "efficiencyGain": 40,
   "contact": {
-    "email": "yumeng@aipmym.com",
+    "email": "yumengfine@163.com",
     "phone": "",
     "wechatId": "",
     "wechatQrcode": "",
@@ -21,12 +21,42 @@
     "wechatDisplayed": false
   },
   "skills": [
-    { "nameZh": "AI Agent 设计", "nameEn": "AI Agent Design", "level": 95, "category": "ai" },
-    { "nameZh": "RAG 技术", "nameEn": "RAG Technology", "level": 90, "category": "ai" },
-    { "nameZh": "需求分析", "nameEn": "Requirements Analysis", "level": 95, "category": "product" },
-    { "nameZh": "产品设计", "nameEn": "Product Design", "level": 90, "category": "product" },
-    { "nameZh": "React/Next.js", "nameEn": "React/Next.js", "level": 75, "category": "technical" },
-    { "nameZh": "跨团队协作", "nameEn": "Cross-team Collaboration", "level": 95, "category": "soft" }
+    {
+      "nameZh": "AI Agent 设计",
+      "nameEn": "AI Agent Design",
+      "level": 95,
+      "category": "ai"
+    },
+    {
+      "nameZh": "RAG 技术",
+      "nameEn": "RAG Technology",
+      "level": 90,
+      "category": "ai"
+    },
+    {
+      "nameZh": "需求分析",
+      "nameEn": "Requirements Analysis",
+      "level": 95,
+      "category": "product"
+    },
+    {
+      "nameZh": "产品设计",
+      "nameEn": "Product Design",
+      "level": 90,
+      "category": "product"
+    },
+    {
+      "nameZh": "React/Next.js",
+      "nameEn": "React/Next.js",
+      "level": 75,
+      "category": "technical"
+    },
+    {
+      "nameZh": "跨团队协作",
+      "nameEn": "Cross-team Collaboration",
+      "level": 95,
+      "category": "soft"
+    }
   ],
   "experiences": [
     {

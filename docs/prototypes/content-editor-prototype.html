@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>内容编辑器原型</title>
+    <style>
+      :root {
+        --bg: #f6f7f9;
+        --panel: #ffffff;
+        --line: #d8dde6;
+        --line-soft: #e8ebf0;
+        --text: #172033;
+        --muted: #667085;
+        --soft: #f2f4f7;
+        --primary: #f97316;
+        --primary-dark: #c2410c;
+        --green: #027a48;
+        --red: #b42318;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+        font-size: 14px;
+      }
+
+      button, input, select, textarea {
+        font: inherit;
+      }
+
+      .page {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .section-title {
+        margin: 0 0 12px;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .login {
+        display: grid;
+        place-items: center;
+        min-height: 420px;
+        margin-bottom: 24px;
+      }
+
+      .login-card {
+        width: 360px;
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+
+      .brand {
+        margin-bottom: 20px;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      .brand p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .field {
+        margin-bottom: 14px;
+      }
+
+      .field label {
+        display: block;
+        margin-bottom: 6px;
+        color: #344054;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .control {
+        width: 100%;
+        height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        padding: 0 10px;
+        color: var(--muted);
+      }
+
+      .button {
+        height: 38px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 0 14px;
+        background: var(--soft);
+        color: #344054;
+        font-weight: 600;
+      }
+
+      .button.primary {
+        background: var(--primary);
+        color: #fff;
+      }
+
+      .button.danger {
+        background: #fff;
+        border-color: #fecdca;
+        color: var(--red);
+      }
+
+      .button.full {
+        width: 100%;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        min-height: 760px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--panel);
+      }
+
+      .sidebar {
+        border-right: 1px solid var(--line);
+        background: #fbfcfd;
+        padding: 16px;
+      }
+
+      .sidebar-title {
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--line-soft);
+      }
+
+      .sidebar-title strong {
+        display: block;
+        font-size: 16px;
+      }
+
+      .sidebar-title span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .nav {
+        display: grid;
+        gap: 4px;
+      }
+
+      .nav-item {
+        padding: 10px 12px;
+        border-radius: 6px;
+        color: #344054;
+        font-weight: 600;
+      }
+
+      .nav-item.active {
+        background: #fff7ed;
+        color: var(--primary-dark);
+      }
+
+      .logout {
+        margin-top: 24px;
+        width: 100%;
+      }
+
+      .main {
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+        min-width: 0;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .topbar h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .topbar .meta {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        height: 24px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: #f2f4f7;
+        color: #475467;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .status.published {
+        background: #ecfdf3;
+        color: var(--green);
+      }
+
+      .status.draft {
+        background: #fff7ed;
+        color: var(--primary-dark);
+      }
+
+      .tabs {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .tab {
+        padding: 7px 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        color: #344054;
+        font-weight: 600;
+      }
+
+      .tab.active {
+        border-color: #fed7aa;
+        background: #fff7ed;
+        color: var(--primary-dark);
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: 420px 1fr;
+        min-height: 0;
+      }
+
+      .list {
+        border-right: 1px solid var(--line);
+        padding: 16px;
+        background: #fbfcfd;
+      }
+
+      .filters {
+        display: grid;
+        grid-template-columns: 1fr 136px 136px;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .list-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .list-actions span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .content-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .item {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .item.active {
+        border-color: #fdba74;
+        background: #fffaf5;
+      }
+
+      .item-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+
+      .item-title {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.45;
+      }
+
+      .item-desc {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .item-foot {
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 12px;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .item-foot a {
+        color: var(--primary-dark);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .item-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .text-action {
+        border: 0;
+        background: transparent;
+        color: var(--primary-dark);
+        font-size: 12px;
+        font-weight: 600;
+        padding: 0;
+      }
+
+      .publish-action {
+        height: 28px;
+        border: 1px solid #fed7aa;
+        border-radius: 5px;
+        background: #fff7ed;
+        color: var(--primary-dark);
+        padding: 0 8px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .pager {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .editor {
+        display: grid;
+        grid-template-columns: minmax(420px, 1fr) minmax(300px, 0.82fr);
+        min-width: 0;
+      }
+
+      .form-panel, .preview-panel {
+        padding: 16px;
+        min-width: 0;
+      }
+
+      .form-panel {
+        border-right: 1px solid var(--line);
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 160px;
+        gap: 10px;
+      }
+
+      .select-row {
+        display: flex;
+        gap: 8px;
+        margin: 12px 0;
+      }
+
+      .mode {
+        padding: 7px 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        color: #344054;
+        font-weight: 600;
+      }
+
+      .mode.active {
+        border-color: #fdba74;
+        background: #fff7ed;
+        color: var(--primary-dark);
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 6px;
+        padding: 8px;
+        border: 1px solid var(--line);
+        border-bottom: 0;
+        border-radius: 6px 6px 0 0;
+        background: #f8fafc;
+      }
+
+      .tool {
+        min-width: 30px;
+        height: 28px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        background: #fff;
+        color: #344054;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 0 8px;
+      }
+
+      .markdown-editor {
+        width: 100%;
+        min-height: 280px;
+        resize: vertical;
+        border: 1px solid var(--line);
+        border-radius: 0 0 6px 6px;
+        padding: 12px;
+        color: #344054;
+        line-height: 1.7;
+      }
+
+      .editor-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .save-note {
+        margin-left: auto;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .preview {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 16px;
+      }
+
+      .preview h1 {
+        margin: 0 0 8px;
+        font-size: 22px;
+      }
+
+      .preview p {
+        color: #475467;
+        line-height: 1.75;
+      }
+
+      .preview .body {
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid var(--line-soft);
+      }
+
+      @media (max-width: 1180px) {
+        .app, .workspace, .editor, .form-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar, .list, .form-panel {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <section class="login" aria-label="登录页">
+        <div class="login-card">
+          <div class="brand">
+            <h1>PM 思钱想厚</h1>
+            <p>内容管理后台</p>
+          </div>
+          <div class="field">
+            <label>账号</label>
+            <input class="control" value="admin" />
+          </div>
+          <div class="field">
+            <label>密码</label>
+            <input class="control" type="password" value="password" />
+          </div>
+          <button class="button primary full">登录</button>
+        </div>
+      </section>
+
+      <section class="app" aria-label="内容编辑器后台">
+        <aside class="sidebar">
+          <div class="sidebar-title">
+            <strong>内容管理</strong>
+            <span>PM 思钱想厚</span>
+          </div>
+          <nav class="nav">
+            <div class="nav-item active">作品集</div>
+            <div class="nav-item">方法论</div>
+            <div class="nav-item">行业动态</div>
+          </nav>
+          <button class="button logout">退出登录</button>
+        </aside>
+
+        <main class="main">
+          <header class="topbar">
+            <div>
+              <h2>作品集</h2>
+              <div class="meta">列表 / 新增 / 编辑 / 发布</div>
+            </div>
+            <div>
+              <span class="status draft">当前：草稿</span>
+            </div>
+          </header>
+
+          <div class="tabs">
+            <button class="tab active">全部</button>
+            <button class="tab">草稿</button>
+            <button class="tab">已发布</button>
+            <button class="tab">回收站</button>
+            <button class="tab">链接</button>
+            <button class="tab">文档</button>
+          </div>
+
+          <div class="workspace">
+            <section class="list">
+              <h3 class="section-title">内容列表</h3>
+              <div class="filters">
+                <input class="control" value="按标题筛选" />
+                <input class="control" value="开始时间" />
+                <input class="control" value="结束时间" />
+              </div>
+              <div class="list-actions">
+                <span>每页最多 10 条</span>
+                <button class="button primary">新增</button>
+              </div>
+              <div class="content-list">
+                <article class="item active">
+                  <div class="item-head">
+                    <h4 class="item-title">AI 产品经理作品集</h4>
+                    <span class="status draft">草稿</span>
+                  </div>
+                  <p class="item-desc">文档型作品集，使用 Markdown 编辑器维护详情。</p>
+                  <div class="item-foot">
+                    <span>2026-06-02 · 文档</span>
+                    <span class="item-actions">
+                      <button class="publish-action">发布</button>
+                      <button class="text-action">编辑</button>
+                      <button class="text-action">删除</button>
+                    </span>
+                  </div>
+                </article>
+                <article class="item">
+                  <div class="item-head">
+                    <h4 class="item-title">个人网站线上版本</h4>
+                    <span class="status published">已发布</span>
+                  </div>
+                  <p class="item-desc">链接型作品集，前台新开页面跳转。</p>
+                  <div class="item-foot">
+                    <span>2026-05-29 · 链接</span>
+                    <span class="item-actions">
+                      <button class="text-action">编辑</button>
+                      <button class="text-action">删除</button>
+                    </span>
+                  </div>
+                </article>
+                <article class="item">
+                  <div class="item-head">
+                    <h4 class="item-title">客服 Agent 方案复盘</h4>
+                    <span class="status published">已发布</span>
+                  </div>
+                  <p class="item-desc">文档型作品集，详情参考前台渲染。</p>
+                  <div class="item-foot">
+                    <span>2026-05-21 · 文档</span>
+                    <span class="item-actions">
+                      <button class="text-action">编辑</button>
+                      <button class="text-action">删除</button>
+                    </span>
+                  </div>
+                </article>
+              </div>
+              <div class="pager">
+                <span>第 1 页</span>
+                <span>上一页 / 下一页</span>
+              </div>
+            </section>
+
+            <section class="editor">
+              <div class="form-panel">
+                <h3 class="section-title">编辑内容</h3>
+                <div class="form-grid">
+                  <div class="field">
+                    <label>标题</label>
+                    <input class="control" value="AI 产品经理作品集" />
+                  </div>
+                  <div class="field">
+                    <label>创建时间</label>
+                    <input class="control" value="2026-06-02" />
+                  </div>
+                </div>
+                <div class="form-grid">
+                  <div class="field">
+                    <label>Slug</label>
+                    <input class="control" value="ai-portfolio" />
+                  </div>
+                  <div class="field">
+                    <label>状态</label>
+                    <input class="control" value="草稿" />
+                  </div>
+                </div>
+                <div class="field">
+                  <label>摘要</label>
+                  <input class="control" value="展示 AI 产品经理项目经验和方法论沉淀。" />
+                </div>
+                <div class="select-row">
+                  <button class="mode">链接</button>
+                  <button class="mode active">文档</button>
+                </div>
+                <div class="toolbar" aria-label="Markdown 工具栏">
+                  <button class="tool">↶</button>
+                  <button class="tool">↷</button>
+                  <button class="tool">H1</button>
+                  <button class="tool">H2</button>
+                  <button class="tool">B</button>
+                  <button class="tool">I</button>
+                  <button class="tool">U</button>
+                  <button class="tool">•</button>
+                  <button class="tool">1.</button>
+                  <button class="tool">“”</button>
+                  <button class="tool">链</button>
+                  <button class="tool">图</button>
+                  <button class="tool">码</button>
+                  <button class="tool">表</button>
+                  <button class="tool">—</button>
+                </div>
+                <textarea class="markdown-editor">## 项目背景
+这里写 Markdown 正文。
+
+- 支持上传图片
+- 详情参考前台渲染
+- 保存默认为草稿
+</textarea>
+                <div class="editor-actions">
+                  <button class="button">保存草稿</button>
+                  <button class="button">预览</button>
+                  <button class="button primary">发布到生产</button>
+                  <button class="button danger">删除</button>
+                  <span class="save-note">发布成功后状态更新为已发布</span>
+                </div>
+              </div>
+
+              <div class="preview-panel">
+                <h3 class="section-title">详情预览</h3>
+                <article class="preview">
+                  <h1>AI 产品经理作品集</h1>
+                  <p>展示 AI 产品经理项目经验和方法论沉淀。</p>
+                  <div class="body">
+                    <h2>项目背景</h2>
+                    <p>这里展示前台详情页的 Markdown 渲染效果，包括标题、段落、列表、图片和代码块。</p>
+                    <ul>
+                      <li>支持上传图片</li>
+                      <li>详情参考前台渲染</li>
+                      <li>保存默认为草稿</li>
+                    </ul>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </div>
+        </main>
+      </section>
+    </div>
+  </body>
+</html>

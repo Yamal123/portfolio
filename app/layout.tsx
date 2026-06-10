@@ -5,6 +5,7 @@ import "./globals.css"
 import { LanguageProvider } from "@/contexts/language-context"
 import { ThemeProvider } from "@/contexts/theme-context"
 import { ChatbotWrapper } from "@/components/chatbot"
+import { VisitTracker } from "@/components/VisitTracker"
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -180,7 +181,10 @@ export default function RootLayout({
       </head>
       <body className={spaceGrotesk.className}>
         <ThemeProvider>
-          <LanguageProvider>{children}</LanguageProvider>
+          <LanguageProvider>
+            <VisitTracker />
+            {children}
+          </LanguageProvider>
         </ThemeProvider>
         <ChatbotWrapper />
       </body>

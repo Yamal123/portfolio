@@ -1,31 +1,41 @@
 import { NextResponse } from 'next/server'
+import { getSystemStore } from '@/lib/admin/system-store'
+import { listArticles } from '@/lib/content/repository'
 
-export async function GET() {
-  const now = new Date()
-  const trend = []
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
-    const dateStr = date.toISOString().slice(0, 10)
-    const baseUv = Math.floor(Math.random() * 50) + 20
-    trend.push({
-      date: dateStr,
-      uv: baseUv,
-      pv: baseUv * (Math.floor(Math.random() * 3) + 2),
-    })
-  }
+function parseRange(request: Request) {
+  const url = new URL(request.url)
+  const end = url.searchParams.get('end') || new Date().toISOString().slice(0, 10)
+  const start = url.searchParams.get('start') || (() => {
+    const date = new Date(`${end}T00:00:00`)
+    date.setDate(date.getDate() - 6)
+    return date.toISOString().slice(0, 10)
+  })()
+  return { start, end }
+}
 
-  return NextResponse.json({
-    code: 0,
-    data: {
-      total_pv: 2847,
-      total_uv: 892,
-      today_pv: 124,
-      today_uv: 38,
-      week_pv: 856,
-      week_uv: 267,
-      total_projects: 8,
-      total_skills: 16,
-      top_projects: [],
-    }
-  })
+function inRange(visitDate: string, start: string, end: string) {
+  if (!visitDate) return false
+  return visitDate >= start && visitDate <= end
+}
+
+export async function GET(request: Request) {
+  const store = getSystemStore()
+  const { start, end } = parseRange(request)
+  const visits = (store.data?.visitStats || []).filter((item: any) => inRange(item.visit_date || item.created_at?.slice(0, 10) || '', start, end))
+  const uv = new Set(visits.map((item: any) => String(item.ip_address || '')).filter(Boolean)).size
+  const articles = await listArticles({ admin: true })
+
+  return NextResponse.json(
+    {
+      code: 0,
+      data: {
+        total_pv: visits.length,
+        total_uv: uv,
+        total_articles: articles.length,
+        start,
+        end,
+      },
+    },
+    { headers: { 'Cache-Control': 'no-store' } }
+  )
 }

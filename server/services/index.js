@@ -24,7 +24,8 @@ class DataService {
       skills: 16,
       projects: 8,
       visitStats: 0,
-      adminLogs: 0
+      adminLogs: 0,
+      agentSessions: 0
     }
 
     this.initializeCounters()
@@ -99,14 +100,63 @@ class DataService {
     return this.data.adminUsers.find(u => u.username === username)
   }
 
+  getAdminUserById(id) {
+    return this.data.adminUsers.find(u => u.id === Number(id))
+  }
+
+  hashAdminPassword(password, salt) {
+    return crypto.createHash('md5').update(password + salt).digest('hex')
+  }
+
+  verifyAdminPassword(user, password) {
+    if (!user) return false
+    return this.hashAdminPassword(password, user.salt) === user.password
+  }
+
   updateUserLogin(id, ip) {
     const user = this.data.adminUsers.find(u => u.id === id)
     if (user) {
       user.login_ip = ip
       user.login_at = formatDate(new Date())
       user.fail_count = 0
+      user.locked_until = null
       user.updated_at = formatDate(new Date())
     }
+    return user
+  }
+
+  recordAdminLoginFailure(id) {
+    const user = this.data.adminUsers.find(u => u.id === Number(id))
+    if (!user) return null
+
+    user.fail_count = (user.fail_count || 0) + 1
+    if (user.fail_count >= 5) {
+      const lockedUntil = new Date(Date.now() + 30 * 60 * 1000)
+      user.locked_until = formatDate(lockedUntil)
+    }
+    user.updated_at = formatDate(new Date())
+    this.saveData()
+    return user
+  }
+
+  bumpAdminSessionVersion(id) {
+    const user = this.data.adminUsers.find(u => u.id === Number(id))
+    if (!user) return null
+    user.session_version = (user.session_version || 0) + 1
+    user.updated_at = formatDate(new Date())
+    this.saveData()
+    return user.session_version
+  }
+
+  updateAdminPassword(id, password) {
+    const user = this.data.adminUsers.find(u => u.id === Number(id))
+    if (!user) return null
+    user.password = this.hashAdminPassword(password, user.salt)
+    user.session_version = (user.session_version || 0) + 1
+    user.fail_count = 0
+    user.locked_until = null
+    user.updated_at = formatDate(new Date())
+    this.saveData()
     return user
   }
 
@@ -369,6 +419,8 @@ class DataService {
       today_uv: uniqueIPsToday.size,
       week_pv: weekVisits.length,
       week_uv: uniqueIPsWeek.size,
+      avg_duration: allVisits.length ? Math.round(allVisits.reduce((sum, v) => sum + (Number(v.duration) || 0), 0) / allVisits.length) : 0,
+      bounce_rate: allVisits.length ? Math.round((allVisits.filter(v => Number(v.duration) <= 5).length / allVisits.length) * 1000) / 10 : 0,
       total_projects: this.data.projects.filter(p => !p.deleted_at).length,
       total_skills: this.data.skills.filter(s => s.status === 1).length,
       top_projects: Object.entries(projectViews)
@@ -378,22 +430,24 @@ class DataService {
     }
   }
 
-  getAnalyticsTrend(days = 7) {
+  getAnalyticsTrend(query = {}) {
     const result = []
     const now = new Date()
-    
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
-      const dateStr = date.toISOString().slice(0, 10)
+    const endDate = query.end ? new Date(`${query.end}T23:59:59`) : now
+    const startDate = query.start ? new Date(`${query.start}T00:00:00`) : new Date(endDate.getTime() - 6 * 24 * 60 * 60 * 1000)
+    const cursor = new Date(startDate)
+
+    while (cursor <= endDate) {
+      const dateStr = cursor.toISOString().slice(0, 10)
       const dayVisits = this.data.visitStats.filter(v => v.visit_date === dateStr)
-      
       result.push({
         date: dateStr,
         uv: new Set(dayVisits.map(v => v.ip_address)).size,
         pv: dayVisits.length
       })
+      cursor.setDate(cursor.getDate() + 1)
     }
-    
+
     return result
   }
 
@@ -410,6 +464,134 @@ class DataService {
         thumbnail: p.thumbnail,
         view_count: p.view_count || 0
       }))
+  }
+
+  getCategoryDistribution() {
+    const categories = new Map()
+    this.data.projects.filter(p => !p.deleted_at).forEach((project) => {
+      const key = String(project.cate_id || 0)
+      const current = categories.get(key) || { cate_id: key, count: 0, views: 0 }
+      current.count += 1
+      current.views += Number(project.view_count || 0)
+      categories.set(key, current)
+    })
+    return Array.from(categories.values())
+  }
+
+  getRecentVisits(limit = 20) {
+    return [...this.data.visitStats]
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, limit)
+  }
+
+  normalizeAgentTokens(text) {
+    return String(text || '')
+      .toLowerCase()
+      .match(/[a-z0-9]+|[\u4e00-\u9fa5]{2,}/g) || []
+  }
+
+  extractAgentKeywords(messages = []) {
+    const stopwords = new Set(['你好', '您好', '谢谢', '请问', '怎么', '一个', '这个', '那个', '我们', '你们', '以及', '和', '的', '了', '啊', '吗', '呢', '我', '你', '他', '她', '它', '以及', 'or', 'and', 'the', 'a', 'to', 'of', 'in', 'on', 'for', 'with'])
+    const countMap = new Map()
+    messages.forEach((message) => {
+      this.normalizeAgentTokens(message).forEach((token) => {
+        if (!token || stopwords.has(token)) return
+        if (token.length < 2) return
+        countMap.set(token, (countMap.get(token) || 0) + 1)
+      })
+    })
+    return [...countMap.entries()]
+      .sort((a, b) => b[1] - a[1] || b[0].length - a[0].length)
+      .slice(0, 8)
+      .map(([keyword]) => keyword)
+  }
+
+  recordAgentSession(payload = {}) {
+    const now = formatDate(new Date())
+    const sessionId = String(payload.sessionId || '')
+    if (!sessionId) return null
+    const messages = [
+      ...(Array.isArray(payload.history) ? payload.history : []),
+      payload.message ? { role: 'user', content: String(payload.message) } : null,
+      payload.answer ? { role: 'assistant', content: String(payload.answer) } : null,
+    ].filter(Boolean)
+
+    const existing = this.data.agentSessions.find((item) => item.session_id === sessionId)
+    if (existing) {
+      existing.locale = payload.locale || existing.locale || 'zh'
+      existing.messages = [...(existing.messages || []), ...messages]
+      existing.message_count = existing.messages.length
+      existing.last_message = payload.answer || payload.message || existing.last_message || ''
+      existing.keywords = this.extractAgentKeywords(existing.messages.map((item) => item.content))
+      existing.updated_at = now
+      this.saveData()
+      return existing
+    }
+
+    const agentSession = {
+      id: this.nextId('agentSessions'),
+      session_id: sessionId,
+      locale: payload.locale || 'zh',
+      messages,
+      message_count: messages.length,
+      first_message: payload.message || '',
+      last_message: payload.answer || payload.message || '',
+      keywords: this.extractAgentKeywords(messages.map((item) => item.content)),
+      metadata: payload.metadata || {},
+      created_at: now,
+      updated_at: now
+    }
+    this.data.agentSessions.unshift(agentSession)
+    this.saveData()
+    return agentSession
+  }
+
+  getAgentSessions(query = {}) {
+    let result = [...(this.data.agentSessions || [])]
+    if (query.start) {
+      result = result.filter((item) => item.created_at >= query.start)
+    }
+    if (query.end) {
+      result = result.filter((item) => item.created_at <= query.end)
+    }
+    if (query.keyword) {
+      const kw = String(query.keyword).toLowerCase()
+      result = result.filter((item) => {
+        const text = [
+          item.session_id,
+          item.first_message,
+          item.last_message,
+          JSON.stringify(item.messages || []),
+          ...(item.keywords || []),
+        ].join(' ').toLowerCase()
+        return text.includes(kw)
+      })
+    }
+    result.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+    const paged = this.paginate(result, query.page, query.pageSize)
+    return {
+      ...paged,
+      list: paged.list.map((item) => ({
+        ...item,
+        snippet: (item.last_message || item.first_message || '').slice(0, 120),
+      })),
+    }
+  }
+
+  getHotTopics(query = {}) {
+    let sessions = [...(this.data.agentSessions || [])]
+    if (query.start) sessions = sessions.filter((item) => item.created_at >= query.start)
+    if (query.end) sessions = sessions.filter((item) => item.created_at <= query.end)
+    const counter = new Map()
+    sessions.forEach((item) => {
+      ;(item.keywords || []).forEach((keyword) => {
+        counter.set(keyword, (counter.get(keyword) || 0) + 1)
+      })
+    })
+    return [...counter.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh-Hans-CN'))
+      .slice(0, query.limit || 10)
+      .map(([keyword, count]) => ({ keyword, count }))
   }
 
   getLogs(query = {}) {

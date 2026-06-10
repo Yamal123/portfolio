@@ -159,7 +159,7 @@ export function ChatPanel({ isOpen, onClose }: ChatPanelProps) {
         .map(m => ({ role: m.type === 'user' ? 'user' as const : 'assistant' as const, content: m.content }))
 
       await streamAgentChat(
-        { message: msg, history, locale: 'zh' },
+        { sessionId, message: msg, history, locale: 'zh' },
         {
           onStart: (meta) => {
             if (requestIdRef.current !== requestId) return

@@ -1,6 +1,7 @@
 import type { AgentHistoryMessage, AgentRunOutput } from './types'
 
 export interface AgentChatRequest {
+  sessionId?: string
   message: string
   history?: AgentHistoryMessage[]
   locale?: 'zh' | 'en'
