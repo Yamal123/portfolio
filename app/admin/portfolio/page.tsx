@@ -80,7 +80,7 @@ function PortfolioContent() {
       await mutate()
       setSelected(toWorkbench(payload))
       setIsNew(false)
-      toast.success(publish ? '作品集已发布到生产' : '作品集草稿已保存')
+      toast.success(publish ? '作品管理已发布到生产' : '作品管理草稿已保存')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '保存失败')
     } finally {
@@ -91,14 +91,14 @@ function PortfolioContent() {
 
   const remove = async (item: WorkbenchItem) => {
     const message = item.status === 'published'
-      ? '该作品集已发布到生产。删除后前台生产环境会同步下架，确定删除？'
-      : '确定删除该作品集草稿？'
+      ? '该作品已发布到生产。删除后前台生产环境会同步下架，确定删除？'
+      : '确定删除该作品草稿？'
     if (!item.slug || !window.confirm(message)) return
     try {
       await del(`/api/management/projects?slug=${encodeURIComponent(item.slug)}`)
       await mutate()
       if (selected?.slug === item.slug) setSelected(null)
-      toast.success('作品集已删除')
+      toast.success('作品管理已删除')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '删除失败')
     }
@@ -121,7 +121,7 @@ function PortfolioContent() {
   }
 
   return (
-    <AdminLayout title="作品集">
+    <AdminLayout title="作品管理">
       <ContentWorkbench
         items={items}
         selected={selected}

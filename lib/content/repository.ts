@@ -2,6 +2,7 @@ import { and, asc, desc, eq, ilike, isNull, or } from 'drizzle-orm'
 import { getDb } from '@/lib/db'
 import { agentConfigs, articles, industryUpdates, profiles, projects, skills } from '@/lib/db/schema'
 import type { AgentConfigInput, ArticleInput, IndustryUpdateInput, ProfileInput, ProjectInput, SkillInput } from './contracts'
+import { getPublicContact } from './contact-utils'
 
 function projectView(row: typeof projects.$inferSelect) {
   return {
@@ -93,13 +94,7 @@ export async function getPublicProfile() {
   if (!profile) return null
   return {
     ...profile,
-    contact: {
-      ...profile.contact,
-      email: profile.contact.emailDisplayed ? profile.contact.email : '',
-      phone: profile.contact.phoneDisplayed ? profile.contact.phone : '',
-      wechatId: profile.contact.wechatDisplayed ? profile.contact.wechatId : '',
-      wechatQrcode: profile.contact.wechatDisplayed ? profile.contact.wechatQrcode : '',
-    },
+    contact: getPublicContact(profile.contact),
   }
 }
 

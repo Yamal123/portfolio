@@ -80,15 +80,15 @@ function ArticlesContent() {
       setSelected(toWorkbench(payload))
       setIsNew(false)
       if (operation === 'publish') {
-        toast.success('方法论已发布到生产')
+        toast.success('文章管理已发布到生产')
       } else if (operation === 'unpublish') {
-        toast.success('方法论已下架为待发布')
+        toast.success('文章管理已下架为待发布')
       } else if (nextStatus === 'published') {
-        toast.success('方法论已保存并保持已发布')
+        toast.success('文章管理已保存并保持已发布')
       } else if (nextStatus === 'pending') {
-        toast.success('方法论已保存并保持待发布')
+        toast.success('文章管理已保存并保持待发布')
       } else {
-        toast.success('方法论草稿已保存')
+        toast.success('文章管理草稿已保存')
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '保存失败')
@@ -100,16 +100,16 @@ function ArticlesContent() {
 
   const remove = async (item: WorkbenchItem) => {
     const message = item.status === 'published'
-      ? '该方法论已发布到生产。删除后前台生产环境会同步下架，确定删除？'
+      ? '该文章已发布到生产。删除后前台生产环境会同步下架，确定删除？'
       : item.status === 'pending'
-        ? '该方法论处于待发布状态。删除后将彻底移除，确定删除？'
-      : '确定删除该方法论草稿？'
+        ? '该文章处于待发布状态。删除后将彻底移除，确定删除？'
+      : '确定删除该文章草稿？'
     if (!item.slug || !window.confirm(message)) return
     try {
       await del(`/api/management/articles?slug=${encodeURIComponent(item.slug)}`)
       await mutate()
       if (selected?.slug === item.slug) setSelected(null)
-      toast.success('方法论已删除')
+      toast.success('文章管理已删除')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '删除失败')
     }
@@ -132,7 +132,7 @@ function ArticlesContent() {
   }
 
   return (
-    <AdminLayout title="方法论">
+    <AdminLayout title="文章管理">
       <ContentWorkbench
         items={items}
         selected={selected}

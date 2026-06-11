@@ -14,14 +14,20 @@ import {
 
 const menuItems = [
   {
+    key: 'analytics',
+    label: '运营数据',
+    icon: BarChart3,
+    path: '/admin/analytics',
+  },
+  {
     key: 'portfolio',
-    label: '作品集',
+    label: '作品管理',
     icon: Briefcase,
     path: '/admin/portfolio',
   },
   {
     key: 'articles',
-    label: '方法论',
+    label: '文章管理',
     icon: BookOpen,
     path: '/admin/articles',
   },
@@ -30,12 +36,6 @@ const menuItems = [
     label: '行业动态',
     icon: Newspaper,
     path: '/admin/industry',
-  },
-  {
-    key: 'analytics',
-    label: '运营数据',
-    icon: BarChart3,
-    path: '/admin/analytics',
   },
   {
     key: 'logs',

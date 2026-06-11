@@ -1,21 +1,77 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import Image from "next/image"
 import { useLanguage } from "@/contexts/language-context"
 import { useTheme } from "@/contexts/theme-context"
-import { Mail, Linkedin, MessageCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import {
+  BookOpenText,
+  Github,
+  Linkedin,
+  Mail,
+  MessageCircleMore,
+  Phone,
+  QrCode,
+  type LucideIcon,
+} from "lucide-react"
 import useSWR from "swr"
 import { fetchAPI } from "@/lib/api/client"
 import type { ProfileInput } from "@/lib/content/contracts"
+import { getPublicContact, normalizeExternalContactUrl } from "@/lib/content/contact-utils"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 export default function AboutSection() {
   const { language } = useLanguage()
   const { theme } = useTheme()
-  const [hoveredContact, setHoveredContact] = useState<string | null>(null)
-  const [showQRCode, setShowQRCode] = useState(false)
+  const [wechatOpen, setWechatOpen] = useState(false)
   const { data: profile } = useSWR<ProfileInput>('/api/public/profile', fetchAPI)
+  const contact = useMemo(() => (profile ? getPublicContact(profile.contact) : null), [profile])
+  const publicContact = contact as NonNullable<typeof contact> | null
+  const hasAnyContact = Boolean(
+    contact && (contact.email || contact.phone || contact.wechatId || contact.wechatQrcode || contact.github || contact.linkedin || contact.zhihu)
+  )
+
+  const contactCards = useMemo(() => {
+    if (!contact) return []
+    return [
+      contact.email && {
+        key: 'email',
+        label: language === 'zh' ? '邮箱' : 'Email',
+        icon: Mail,
+        href: `mailto:${contact.email}`,
+      },
+      contact.phone && {
+        key: 'phone',
+        label: language === 'zh' ? '电话' : 'Phone',
+        icon: Phone,
+        href: `tel:${contact.phone}`,
+      },
+      contact.github && {
+        key: 'github',
+        label: 'GitHub',
+        icon: Github,
+        href: normalizeExternalContactUrl(contact.github),
+      },
+      contact.linkedin && {
+        key: 'linkedin',
+        label: 'LinkedIn',
+        icon: Linkedin,
+        href: normalizeExternalContactUrl(contact.linkedin),
+      },
+      contact.zhihu && {
+        key: 'zhihu',
+        label: language === 'zh' ? '知乎' : 'Zhihu',
+        icon: BookOpenText,
+        href: normalizeExternalContactUrl(contact.zhihu),
+      },
+    ].filter(Boolean) as Array<{
+      key: string
+      label: string
+      icon: LucideIcon
+      href: string
+    }>
+  }, [contact, language])
 
   return (
     <section id="about" className="relative overflow-hidden py-16 sm:py-24" style={{ background: theme === "dark" ? "#000000" : "#ffffff" }}>
@@ -36,10 +92,10 @@ export default function AboutSection() {
             <div className="absolute -left-4 -top-4 h-full w-full rounded-[2rem] border-2 border-orange-500/20 sm:-left-8 sm:-top-8 sm:rounded-[3rem]" />
             <div className={`absolute -bottom-4 -right-4 h-full w-full rounded-[2rem] border-2 sm:-bottom-8 sm:-right-8 sm:rounded-[3rem] ${theme === "dark" ? "border-gray-800" : "border-gray-200"}`} />
 
-            <div className={`relative aspect-square w-full overflow-hidden rounded-[1.5rem] border sm:rounded-[2.5rem] ${theme === "dark" ? "border-gray-800" : "border-gray-200"}`}>
-              <Image
-                src={profile?.avatar || "/images/profile-avatar.png"}
-                alt={profile?.nickname || "Yu Meng"}
+          <div className={`relative aspect-square w-full overflow-hidden rounded-[1.5rem] border sm:rounded-[2.5rem] ${theme === "dark" ? "border-gray-800" : "border-gray-200"}`}>
+            <Image
+              src={profile?.avatar || "/images/profile-avatar.png"}
+              alt={profile?.nickname || "Yu Meng"}
                 fill
                 className="object-cover"
                 priority
@@ -55,85 +111,99 @@ export default function AboutSection() {
           </div>
         </div>
 
-        <div>
+        <div className="relative">
           <h3 className={`mb-8 text-center text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
             {language === "zh" ? "联系方式" : "Contact"}
           </h3>
-          <div className="flex flex-wrap justify-center gap-4">
-            {profile?.contact.emailDisplayed && (
-              <Button
-                variant="ghost"
-                size="icon"
-                asChild
-                className={`h-14 w-14 rounded-2xl transition-all duration-300 hover:scale-105 ${
-                  theme === "dark" ? "bg-gray-900 text-gray-400 hover:bg-orange-500 hover:text-white" : "bg-gray-100 text-gray-600 hover:bg-orange-500 hover:text-white"
-                }`}
-                onMouseEnter={() => setHoveredContact("email")}
-                onMouseLeave={() => setHoveredContact(null)}
-              >
-                <a href={`mailto:${profile?.contact.email || ''}`}>
-                  <Mail className="h-6 w-6" />
-                </a>
-              </Button>
-            )}
-            {profile?.contact.emailDisplayed && hoveredContact === "email" && (
-              <div className={`absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg px-3 py-2 text-xs shadow-lg ${theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-800 text-white"}`}>
-                {profile?.contact.email}
-              </div>
-            )}
+          {hasAnyContact ? (
+            <TooltipProvider delayDuration={0}>
+              <div className="flex flex-wrap justify-center gap-4">
+                {contactCards.map(({ key, label, icon: Icon, href }) => (
+                  <Tooltip key={key}>
+                    <TooltipTrigger asChild>
+                      <a
+                        href={href}
+                        target={href.startsWith('http') ? '_blank' : undefined}
+                        rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                        aria-label={label}
+                        className={`group flex h-14 w-14 items-center justify-center rounded-2xl border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg ${
+                          theme === "dark"
+                            ? "border-gray-800 bg-gray-900 text-gray-300 hover:border-orange-500/40 hover:bg-orange-500 hover:text-white"
+                            : "border-gray-200 bg-white text-gray-600 hover:border-orange-300 hover:bg-orange-500 hover:text-white"
+                        }`}
+                      >
+                        <Icon className="h-6 w-6" />
+                      </a>
+                    </TooltipTrigger>
+                    <TooltipContent>{label}</TooltipContent>
+                  </Tooltip>
+                ))}
 
-            <Button
-              variant="ghost"
-              size="icon"
-              asChild
-              className={`h-14 w-14 rounded-2xl transition-all duration-300 hover:scale-105 ${
-                theme === "dark" ? "bg-gray-900 text-gray-400 hover:bg-orange-500 hover:text-white" : "bg-gray-100 text-gray-600 hover:bg-orange-500 hover:text-white"
-              }`}
-              onMouseEnter={() => setHoveredContact("linkedin")}
-              onMouseLeave={() => setHoveredContact(null)}
-            >
-              <a href={profile?.contact.linkedin || '#'} target="_blank" rel="noopener noreferrer">
-                <Linkedin className="h-6 w-6" />
-              </a>
-            </Button>
-            {hoveredContact === "linkedin" && (
-              <div className={`absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg px-3 py-2 text-xs shadow-lg ${theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-800 text-white"}`}>
-                LinkedIn
+                {publicContact && (publicContact.wechatId || publicContact.wechatQrcode) ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => setWechatOpen(true)}
+                        className={`group flex h-14 w-14 items-center justify-center rounded-2xl border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg ${
+                          theme === "dark"
+                            ? "border-gray-800 bg-gray-900 text-gray-300 hover:border-orange-500/40 hover:bg-orange-500 hover:text-white"
+                            : "border-gray-200 bg-white text-gray-600 hover:border-orange-300 hover:bg-orange-500 hover:text-white"
+                        }`}
+                      >
+                        {publicContact.wechatQrcode ? <QrCode className="h-6 w-6" /> : <MessageCircleMore className="h-6 w-6" />}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>{language === "zh" ? "微信" : "WeChat"}</TooltipContent>
+                  </Tooltip>
+                ) : null}
               </div>
-            )}
-
-            {profile?.contact.wechatDisplayed && (
-              <div className="relative">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowQRCode(!showQRCode)}
-                  className={`h-14 w-14 rounded-2xl transition-all duration-300 hover:scale-105 ${
-                    theme === "dark" ? "bg-gray-900 text-gray-400 hover:bg-orange-500 hover:text-white" : "bg-gray-100 text-gray-600 hover:bg-orange-500 hover:text-white"
-                  }`}
-                  onMouseEnter={() => setHoveredContact("wechat")}
-                  onMouseLeave={() => setHoveredContact(null)}
-                >
-                  <MessageCircle className="h-6 w-6" />
-                </Button>
-                {hoveredContact === "wechat" && !showQRCode && (
-                  <div className={`absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg px-3 py-2 text-xs shadow-lg ${theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-800 text-white"}`}>
-                    {language === "zh" ? "微信" : "WeChat"}
-                  </div>
-                )}
-                {showQRCode && (
-                  <div className="absolute -bottom-48 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-gray-200 bg-white p-3 shadow-2xl">
-                    {profile.contact.wechatQrcode ? <Image src={profile.contact.wechatQrcode} width={128} height={128} alt="WeChat QR Code" /> : <p className="p-6 text-xs text-gray-500">{profile.contact.wechatId}</p>}
-                    <p className="mt-2 text-center text-xs text-gray-600">
-                      {language === "zh" ? "微信二维码" : "WeChat QR Code"}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+            </TooltipProvider>
+          ) : (
+            <p className={`text-center text-sm ${theme === "dark" ? "text-gray-500" : "text-gray-500"}`}>
+              {language === "zh" ? "暂无可展示的联系方式" : "No public contact methods available."}
+            </p>
+          )}
         </div>
       </div>
+
+      <Dialog open={wechatOpen} onOpenChange={setWechatOpen}>
+        <DialogContent className="max-w-sm border-slate-200 bg-white p-0">
+          <DialogHeader className="border-b border-slate-100 px-6 py-4">
+            <DialogTitle className="text-base font-semibold text-slate-950">
+              {language === "zh" ? "微信联系方式" : "WeChat Contact"}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-slate-500">
+              {contact?.wechatQrcode
+                ? language === "zh"
+                  ? "优先展示二维码，扫码即可添加。"
+                  : "The QR code is shown first for quick contact."
+                : language === "zh"
+                  ? "当前仅提供微信 ID。"
+                  : "Only the WeChat ID is available right now."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 px-6 py-6">
+            {publicContact?.wechatQrcode ? (
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                <img
+                  src={publicContact.wechatQrcode}
+                  alt="WeChat QR Code"
+                  className="mx-auto aspect-square w-full max-w-[240px] rounded-xl object-cover"
+                />
+              </div>
+            ) : null}
+            {publicContact?.wechatId ? (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+                  {language === "zh" ? "微信 ID" : "WeChat ID"}
+                </p>
+                <p className="mt-2 break-all text-base font-semibold text-slate-950">{publicContact.wechatId}</p>
+              </div>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   )
 }

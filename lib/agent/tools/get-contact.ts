@@ -1,4 +1,5 @@
 import { getProfile } from '@/lib/content/repository'
+import { getPublicContact } from '@/lib/content/contact-utils'
 import type { AgentTool } from '../types'
 
 export const getContactTool: AgentTool = {
@@ -8,16 +9,17 @@ export const getContactTool: AgentTool = {
   async execute() {
     const profile = await getProfile()
     if (!profile) return { success: false, error: '联系方式未配置' }
+    const contact = getPublicContact(profile.contact)
     const links = [
-      profile.contact.github && { label: 'GitHub', url: profile.contact.github },
-      profile.contact.linkedin && { label: 'LinkedIn', url: profile.contact.linkedin },
-      profile.contact.zhihu && { label: '知乎', url: profile.contact.zhihu },
-    ].filter(Boolean)
+      contact.github && { label: 'GitHub', url: contact.github },
+      contact.linkedin && { label: 'LinkedIn', url: contact.linkedin },
+      contact.zhihu && { label: '知乎', url: contact.zhihu },
+    ].filter(Boolean) as Array<{ label: string; url: string }>
     return { success: true, data: {
       name: profile.nickname,
-      email: profile.contact.emailDisplayed ? profile.contact.email : '',
-      phone: profile.contact.phoneDisplayed ? profile.contact.phone : '',
-      wechatId: profile.contact.wechatDisplayed ? profile.contact.wechatId : '',
+      email: contact.email,
+      phone: contact.phone,
+      wechatId: contact.wechatId,
       links,
     }}
   },

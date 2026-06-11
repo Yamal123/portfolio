@@ -34,8 +34,7 @@ export function passwordPolicyError(password: string) {
 export function getRequestFingerprint(request: Request) {
   const userAgent = request.headers.get('user-agent') || ''
   const acceptLanguage = request.headers.get('accept-language') || ''
-  const forwarded = request.headers.get('x-forwarded-for') || ''
-  return crypto.createHash('sha256').update([userAgent, acceptLanguage, forwarded].join('|')).digest('hex')
+  return crypto.createHash('sha256').update([userAgent, acceptLanguage].join('|')).digest('hex')
 }
 
 export type SessionPayload = {
